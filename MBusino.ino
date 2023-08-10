@@ -9,7 +9,7 @@ Ein ESP8266 D1 Mini Shield zur Aufnahme verschiedener Messwerte und deren Versan
 ## Hardware
 Das Shield ist ein mit Fritzing konstruiertes Board.
 Der M-Bus wird über einen aufsteckbaren M-Bus Master bereitgestellt.
-https://de.aliexpress.com/item/33008746192 --> der Master!
+https://de.aliexpress.com/item/33008746192.html --> der Master!
 
 Ausser der USB Spannungsversorgung des D1 Mini ist kein weiteres Netzteil nötig.
 
