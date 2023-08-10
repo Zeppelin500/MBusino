@@ -6,8 +6,8 @@ Ein ESP8266 D1 Mini Shield zur Aufnahme verschiedener Messwerte und deren Versan
 - I²C z.B. BME280, Temperatur, rel. Luftfeuchte, Luftdruck
 
 ## Hardware
-Das Shield ist ein mit Fritzing gezeichnetes Board.
-Der M-Bus wird über einen aufsteckbaren M-Bus Master bereitgestellt
+Das Shield ist ein mit Fritzing konstruiertes Board.
+Der M-Bus wird über einen aufsteckbaren M-Bus Master bereitgestellt.
 https://de.aliexpress.com/item/33008746192 --> der Master!
 
 Ausser der USB Spannungsversorgung des D1 Mini ist kein weiteres Netzteil nötig.
