@@ -99,7 +99,7 @@ EspMQTTClient client(
   MQTT_Broker,        // MQTT Broker server ip mit Anführungszeichen eintragen "192.168.x.x"
   "MQTTUsername",   // Can be omitted if not needed
   "MQTTPassword",   // Can be omitted if not needed -- auch Passwort für OTA Update über die Arduino IDE 2
-  "ESPTestClient2",     // Client name that uniquely identify your device
+  "MBusino",     // Client name that uniquely identify your device
   1883              // The MQTT port, default to 1883. this line can be omitted
 );
 
@@ -201,14 +201,14 @@ void loop()
     client.publish("MBusino/bme/Druck", String(druck).c_str()); 
     client.publish("MBusino/bme/Hoehe", String(hoehe).c_str()); 
     client.publish("MBusino/bme/Feuchte", String(feuchte).c_str()); 
-/*    client.publish("MBusino/WMZ/eng", String(WMZ_absolute_energy_kwh).c_str()); // You can activate the retain flag by setting the third parameter to true
-    client.publish("MBusino/WMZ/err", String(WMZ_error_code).c_str()); // You can activate the retain flag by setting the third parameter to true
-    client.publish("MBusino/WMZ/pwr", String(WMZ_power_w).c_str()); // You can activate the retain flag by setting the third parameter to true
-    client.publish("MBusino/WMZ/tvl", String(WMZ_flow_temp_k).c_str()); // You can activate the retain flag by setting the third parameter to true
-    client.publish("MBusino/WMZ/trl", String(WMZ_return_temp_k).c_str()); // You can activate the retain flag by setting the third parameter to true
-    client.publish("MBusino/WMZ/spr", String(WMZ_delta_temp_mk).c_str()); // You can activate the retain flag by setting the third parameter to true
-    client.publish("MBusino/WMZ/dfl", String(WMZ_flow_rate_lph).c_str()); // You can activate the retain flag by setting the third parameter to true
-*/
+    client.publish("MBusino/WMZ/eng", String(WMZ_absolute_energy_kwh).c_str()); 
+    client.publish("MBusino/WMZ/err", String(WMZ_error_code).c_str()); 
+    client.publish("MBusino/WMZ/pwr", String(WMZ_power_w).c_str()); 
+    client.publish("MBusino/WMZ/tvl", String(WMZ_flow_temp_k).c_str()); 
+    client.publish("MBusino/WMZ/trl", String(WMZ_return_temp_k).c_str()); 
+    client.publish("MBusino/WMZ/spr", String(WMZ_delta_temp_mk).c_str()); 
+    client.publish("MBusino/WMZ/dfl", String(WMZ_flow_rate_lph).c_str()); 
+
     timerMQTT = millis();  
   }
   
