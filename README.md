@@ -20,7 +20,7 @@ Ausser der USB Spannungsversorgung des D1 Mini ist kein weiteres Netzteil nötig
 - Beim aktuellen Prototypen ist die Beschriftung von 3V3 und DAT bei den OneWire Sensoren vertauscht (S1-S5).
 
 ## Danke
-Der M-Bus Teil ist ein Extrakt aus https://github.com/NerdyProjects/HousebusNode_Heatpump
+Der M-Bus Teil und die Headerdateien sind ein Extrakt aus https://github.com/NerdyProjects/HousebusNode_Heatpump
 Danke an User NerdyProjects 
 
 
