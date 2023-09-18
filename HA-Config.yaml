@@ -1,0 +1,78 @@
+# eigener MQTT Sensor
+mqtt:
+ sensor:
+    - unique_id: MBusino_S1
+      name: "Temperatur_S1"
+      device_class: temperature
+      state_topic: "MBusino/OneWire/S1"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_S2
+      name: "Temperatur_S2"
+      device_class: temperature
+      state_topic: "MBusino/OneWire/S2"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_S3
+      name: "Temperatur_S3"
+      device_class: temperature
+      state_topic: "MBusino/OneWire/S3"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_S4
+      name: "Temperatur_S4"
+      device_class: temperature
+      state_topic: "MBusino/OneWire/S4"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_S5
+      name: "Temperatur_S5"
+      device_class: temperature
+      state_topic: "MBusino/OneWire/S5"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_ble_temperatur
+      name: "Temperatur"
+      device_class: temperature
+      state_topic: "MBusino/bme/Temperatur"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_ble_hoehe
+      name: "Höhe"
+      device_class: distance
+      state_topic: "MBusino/bme/Hoehe"     
+      unit_of_measurement: "m"
+    - unique_id: MBusino_ble_luftdruck
+      name: "Luftdruck"
+      device_class: atmospheric_pressure
+      state_topic: "MBusino/bme/Druck"     
+      unit_of_measurement: "mbar"
+    - unique_id: MBusino_ble_feuchte
+      name: "relLuftfeuchte"
+      device_class: humidity
+      state_topic: "MBusino/bme/Feuchte"     
+      unit_of_measurement: "%"
+    - unique_id: MBusino_Durchfluss
+      name: "Durchfluss"
+      device_class: gas
+      state_topic: "MBusino/WMZ/dfl"     
+      unit_of_measurement: "l/h"
+    - unique_id: MBusino_VL
+      name: "T-Vorlauf"
+      device_class: temperature
+      state_topic: "MBusino/WMZ/tvl"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_RL
+      name: "T-Rücklauf"
+      device_class: temperature
+      state_topic: "MBusino/WMZ/trl"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_Delta
+      name: "Spreizung"
+      device_class: temperature
+      state_topic: "MBusino/WMZ/spr"     
+      unit_of_measurement: "mK"
+    - unique_id: MBusino_Leistung
+      name: "Leistung"
+      device_class: power
+      state_topic: "MBusino/WMZ/pwr"     
+      unit_of_measurement: "W"
+    - unique_id: MBusino_Energie
+      name: "Energie"
+      device_class: energy
+      state_topic: "MBusino/WMZ/eng"     
+      unit_of_measurement: "kWh"
