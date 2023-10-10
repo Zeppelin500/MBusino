@@ -17,7 +17,7 @@ Ausser der USB Spannungsversorgung des D1 Mini ist kein weiteres Netzteil nötig
 
 - Das Projekt befindet sich im Aufbau. Der Code ist funktionsfähig. M-BUS ist bis jetzt nur mit dem Sensostar U implementiert.
 
-- Beim aktuellen Prototypen ist die Beschriftung von 3V3 und DAT bei den OneWire Sensoren vertauscht (S1-S5). [bei V0.3 behoben]
+- ~~Beim aktuellen Prototypen ist die Beschriftung von 3V3 und DAT bei den OneWire Sensoren vertauscht (S1-S5).~~ [bei V0.3 behoben]
 
 ## Danke
 Der M-Bus Teil und die Headerdateien sind ein Extrakt aus https://github.com/NerdyProjects/HousebusNode_Heatpump
