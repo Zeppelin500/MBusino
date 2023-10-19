@@ -32,16 +32,16 @@ You should have received a copy of the GNU General Public License along with thi
 ****************************************************
 */
 
-#include "EspMQTTClient.h"
+#include <EspMQTTClient.h>
 #include <OneWire.h>              // Libary für den OneWire Bus
 #include <DallasTemperature.h>    //Libary für die Temperatursensoren
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-#include <sensostar.h>            // Libary für den MBus
+
 #include <credentials.h>          // <-- Auskommentieren wenn ihr keine Libary für Eure Zugangsdaten nutzt.
 
-
+#include "sensostar.h"            // Libary für den MBus
 
 
 #define SEALEVELPRESSURE_HPA (1013.25)
