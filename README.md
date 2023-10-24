@@ -23,6 +23,10 @@ Ausser der USB Spannungsversorgung des D1 Mini ist kein weiteres Netzteil nötig
 Der M-Bus Teil und die Headerdateien sind ein Extrakt aus https://github.com/NerdyProjects/HousebusNode_Heatpump
 Danke an User NerdyProjects 
 
+## Aktuelles
+Hier oben unter Discussion sind die aktuellen Entwicklungsideen zu finden. Beteiligung ist gerne gesehen.
+https://github.com/Zeppelin500/MBusino/discussions
+
 
 ## Lizenz
 ****************************************************

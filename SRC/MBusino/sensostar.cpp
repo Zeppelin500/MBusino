@@ -1,4 +1,4 @@
-#include <sensostar.h>
+#include "sensostar.h"
 
 Sensostar::Sensostar(WriteByteFunc write, TimestampMillisecondsFunc getMillis) {
     _write = write;
