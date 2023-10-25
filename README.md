@@ -27,6 +27,8 @@ Danke an User NerdyProjects
 Hier oben unter Discussion sind die aktuellen Entwicklungsideen zu finden. Beteiligung ist gerne gesehen.
 https://github.com/Zeppelin500/MBusino/discussions
 
+* neueste Entwicklung: **MBusino_naked** https://github.com/Zeppelin500/MBusino/tree/main/SRC/MBusino_naked
+
 
 ## Lizenz
 ****************************************************
