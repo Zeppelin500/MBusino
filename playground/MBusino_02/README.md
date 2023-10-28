@@ -3,7 +3,7 @@
 Ein ESP8266 D1 Mini Shield zur Aufnahme verschiedener Messwerte und deren Versand per MQTT
  
 
-## Code funktioniert nur mit der veränderten MBUSPayload Libary. 
+* Code funktioniert nur mit der veränderten MBUSPayload Libary. 
 
 * Jetzt sollten verschiedene M-Bus Slaves ausgelesen werden können. 
 
