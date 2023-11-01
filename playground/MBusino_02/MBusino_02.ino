@@ -33,7 +33,6 @@ You should have received a copy of the GNU General Public License along with thi
 
 #include <credentials.h>          // <-- Auskommentieren wenn ihr keine Libary für Eure Zugangsdaten nutzt.
 
-#include "sensostar.h"            // Libary für den MBus
 
 #include <MBUSPayload.h>        // Libary für das decodieren des Mbus
 #include "ArduinoJson.h"
