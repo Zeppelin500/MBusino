@@ -94,13 +94,6 @@ float temperatur = 0; // Variablen für den BLE280 am I2C
 float druck = 0;
 float hoehe = 0;
 float feuchte = 0;
-int WMZ_absolute_energy_kwh = 0; // Variablen für den Wärmemengenzähler
-int WMZ_power_w = 0;
-int WMZ_flow_temp_k = 0;
-int WMZ_return_temp_k = 0;
-int WMZ_delta_temp_mk = 0 * 10;
-int WMZ_error_code = 0;
-int WMZ_flow_rate_lph = 0;
 
 bool bmeStatus;
 
