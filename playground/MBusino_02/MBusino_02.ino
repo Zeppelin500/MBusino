@@ -33,7 +33,6 @@ You should have received a copy of the GNU General Public License along with thi
 
 #include <credentials.h>          // <-- Auskommentieren wenn ihr keine Libary für Eure Zugangsdaten nutzt.
 
-#include "sensostar.h"            // Libary für den MBus
 
 #include <MBUSPayload.h>        // Libary für das decodieren des Mbus
 #include "ArduinoJson.h"
@@ -95,13 +94,6 @@ float temperatur = 0; // Variablen für den BLE280 am I2C
 float druck = 0;
 float hoehe = 0;
 float feuchte = 0;
-int WMZ_absolute_energy_kwh = 0; // Variablen für den Wärmemengenzähler
-int WMZ_power_w = 0;
-int WMZ_flow_temp_k = 0;
-int WMZ_return_temp_k = 0;
-int WMZ_delta_temp_mk = 0 * 10;
-int WMZ_error_code = 0;
-int WMZ_flow_rate_lph = 0;
 
 bool bmeStatus;
 
