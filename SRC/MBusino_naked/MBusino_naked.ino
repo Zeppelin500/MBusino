@@ -37,6 +37,7 @@ int WMZ_return_temp_k = 0;
 int WMZ_delta_temp_mk = 0;
 int WMZ_error_code = 0;
 int WMZ_flow_rate_lph = 0;
+int WMZ_calc_power_w = 0; // im MBusino berechnete Leistung
 
 
 int MbusInterval = 120000; // Inervall für die MBus Abfragen in Millisekunden --> ohne Netzteil mindestens 120Sekunden (120000)
@@ -105,6 +106,9 @@ void loop()
       client.publish("MBusino/WMZ/trl", String(WMZ_return_temp_k).c_str()); 
       client.publish("MBusino/WMZ/spr", String(WMZ_delta_temp_mk).c_str()); 
       client.publish("MBusino/WMZ/dfl", String(WMZ_flow_rate_lph).c_str());
+      // additional calculation of power because of the sensostar bug.
+      WMZ_calc_power_w = ((float)WMZ_delta_temp_mk / 1000) * WMZ_flow_rate_lph * 1.163;
+      client.publish("MBusino/WMZ/calc_pwr", String(WMZ_calc_power_w).c_str()); 
     }
   }
 }

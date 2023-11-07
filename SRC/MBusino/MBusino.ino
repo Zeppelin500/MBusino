@@ -87,6 +87,7 @@ int WMZ_return_temp_k = 0;
 int WMZ_delta_temp_mk = 0 * 10;
 int WMZ_error_code = 0;
 int WMZ_flow_rate_lph = 0;
+int WMZ_calc_power_w = 0; // im MBusino berechnete Leistung
 
 bool bmeStatus;
 
@@ -232,6 +233,9 @@ void loop()
       WMZ_delta_temp_mk = result.flow_return_difference_temperature * 10;
       WMZ_error_code = result.error;
       WMZ_flow_rate_lph = result.flow_speed;
+      // additional calculation of power because of the sensostar bug.
+      WMZ_calc_power_w = ((float)WMZ_delta_temp_mk / 1000) * WMZ_flow_rate_lph * 1.163;
+      client.publish("MBusino/WMZ/calc_pwr", String(WMZ_calc_power_w).c_str()); 
     }
   }
 }
