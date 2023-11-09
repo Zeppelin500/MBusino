@@ -31,7 +31,7 @@ You have to bring all connected sensors to the same environment, wait a little b
 Manipulate the offset of a single sensor by sending Sensor numbers and values. The transmitted value will be added to the current offset. First chose the Sensor, then send the value. If a sensor number is chosed, you can multiple manipulate the same sensor.
 
 
-## Set all offsets to 0
+## 4. Set all offsets to 0
 ### MQTT Topic: CMBusino/calibrateSet0
 ### MQTT Payload: no matter
 
