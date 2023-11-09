@@ -8,7 +8,7 @@ A new code is in development to find a solution for calibration.
 
 You can calibrate the sensors by send a MQTT message to MBusino
 
-## 1. Build the average of all DS sensors
+## 1. Set the average of all DS sensors
 ### MQTT Topic: CMBusino/calibrateAverage
 ### MQTT Payload: no matter
 
