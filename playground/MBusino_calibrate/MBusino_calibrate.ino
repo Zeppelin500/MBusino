@@ -48,19 +48,19 @@ You should have received a copy of the GNU General Public License along with thi
 */
 
 #include <EspMQTTClient.h>
-#include <OneWire.h>            // Libary für den OneWire Bus
-#include <DallasTemperature.h>  //Libary für die Temperatursensoren
+#include <OneWire.h>            // Library for OneWire Bus
+#include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
-#include <credentials.h>  // <-- Auskommentieren wenn ihr keine Libary für Eure Zugangsdaten nutzt.
+#include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
-#include "sensostar.h"  // Libary für den MBus
-
-#include <MBUSPayload.h>  // Libary für das decodieren des Mbus
+#include <MBUSPayload.h>  // Library for decode M-Bus
 #include "ArduinoJson.h"
 #include <EEPROM.h>
+
+#define MBUSINO_NAME "CMBusino" // If you have more MBusinos, rename it inside quote marks, or it cause some network and MQTT problems. Also you cant reach your MBusino from Arduino IDE
 
 #define MBUS_BAUD_RATE 2400
 #define MBUS_ADDRESS 0xFE  // brodcast
@@ -83,7 +83,7 @@ EspMQTTClient client(
   MQTT_Broker,     // MQTT Broker server ip mit Anführungszeichen eintragen "192.168.x.x"
   "MQTTUsername",  // Can be omitted if not needed
   "MQTTPassword",  // Can be omitted if not needed -- auch Passwort für OTA Update über die Arduino IDE 2
-  "CMBusino",       // Client name that uniquely identify your device
+  MBUSINO_NAME,    // Client name that uniquely identify your device
   1883             // The MQTT port, default to 1883. this line can be omitted
 );
 
@@ -107,7 +107,7 @@ unsigned long loop_start = 0;
 unsigned long last_loop = 0;
 bool firstrun = true;
 int Startadd = 0x13;  // Start address for decoding
-char jsonstring[4080] = { 0 };
+char jsonstring[6144] = { 0 };
 
 float OW[5] = {0};         // Variablen für die DS18B20 Onewire Sensoren S1
 float temperatur = 0;  // Variablen für den BLE280 am I2C
@@ -134,18 +134,14 @@ void calibrationValue(float value);
 void calibrationBME();
 void calibrationSet0();
 
-// ------------------- neuer code für Kalibrierung -----------------------------------
+// ------------------- new code for calibration -----------------------------------
 uint8_t eeAddrCalibrated = 0;
 uint8_t eeAddrOffset[5] = {4,8,12,16,20};  //EEPROM address to start reading from
-
-
-int calibrated = 500;  // zeigt an ob werte im EEPROM liegen
-
+int calibrated = 500;  // shows if EEPROM used befor
 float offset[5] = {0};
-float OWwO[5] = {0};  // Variablen für die DS18B20 Onewire Sensoren mit Offset (One Wire1 with Offset)
+float OWwO[5] = {0};  // Variables for DS18B20 Onewire Sensores with Offset (One Wire1 with Offset)
 bool OWnotconnected[5] = {false};
 uint8_t sensorToCalibrate = 0;
-
 
 
 void setup() {
@@ -153,14 +149,14 @@ void setup() {
 
   EEPROM.begin(512);
   EEPROM.get(eeAddrCalibrated, calibrated);
-  if(calibrated==500){
+  if(calibrated==500){ // if calibrated not 500 the EEPROM is not used befor and full of junk 
     for(uint8_t i = 0; i <=5; i++){
       EEPROM.get(eeAddrOffset[i], offset[i]);
     }
   }
   else{
       for(uint8_t i = 0; i < 5; i++){    
-        EEPROM.put(eeAddrOffset[i], 0);  // copy offset to EEPROM
+        EEPROM.put(eeAddrOffset[i], 0);  // copy offset 0 to EEPROM
       }
       calibrated = 500;
       EEPROM.put(eeAddrCalibrated, calibrated);  // copy the key to EEPROM that the EEPROM is writen and not full of junk.
@@ -187,7 +183,7 @@ void setup() {
   // Optional functionalities of EspMQTTClient
   client.enableHTTPWebUpdater();                                           // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
   client.enableOTA();                                                      // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
-  client.enableLastWillMessage("MBusino/lastwill", "I am going offline");  // You can activate the retain flag by setting the third parameter to true
+  client.enableLastWillMessage(MBUSINO_NAME"/lastwill", "I am going offline");  // You can activate the retain flag by setting the third parameter to true
   client.setMaxPacketSize(6000);
 
   // Vorbereitungen für den BME280
@@ -198,21 +194,21 @@ void setup() {
 // WARNING : YOU MUST IMPLEMENT IT IF YOU USE EspMQTTClient
 void onConnectionEstablished() {
   // sendet eine Nachricht wenn mit MQTT Broker verbunden.
-  client.publish("MBusino/start", "bin hoch gefahren, WLAN und MQTT seht ");
+  client.publish(MBUSINO_NAME"/start", "bin hoch gefahren, WLAN und MQTT seht ");
 
-  client.subscribe("CMBusino/calibrateAverage", [](const String &mqttpayload) {
+  client.subscribe(MBUSINO_NAME"/calibrateAverage", [](const String &mqttpayload) {
     calibrationAverage();
   });
-  client.subscribe("CMBusino/calibrateSensor", [](const String &mqttpayload) {
+  client.subscribe(MBUSINO_NAME"/calibrateSensor", [](const String &mqttpayload) {
     calibrationSensor(mqttpayload.toInt()-1);
   });
-  client.subscribe("CMBusino/calibrateValue", [](const String &mqttpayload) {
+  client.subscribe(MBUSINO_NAME"/calibrateValue", [](const String &mqttpayload) {
     calibrationValue(mqttpayload.toFloat());
   });  
-  client.subscribe("CMBusino/calibrateBME", [](const String &mqttpayload) {
+  client.subscribe(MBUSINO_NAME"/calibrateBME", [](const String &mqttpayload) {
     calibrationBME();
   });
-  client.subscribe("CMBusino/calibrateSet0", [](const String &mqttpayload) {
+  client.subscribe(MBUSINO_NAME"/calibrateSet0", [](const String &mqttpayload) {
     calibrationSet0();
   });    
 }
@@ -263,14 +259,14 @@ void loop() {
   if (millis() > (timerMQTT + publIntervalSensoren)) { //jede Sekunde folgende MQTT Nachrichten senden
     for(uint8_t i = 0; i < 5; i++){
       if(OW[i] != -127){
-        client.publish("CMBusino/OneWire/S" + String(i+1), String(OWwO[i]).c_str());
-        client.publish("CMBusino/OneWire/offset" + String(i+1), String(offset[i]).c_str());
+        client.publish(MBUSINO_NAME"/OneWire/S" + String(i+1), String(OWwO[i]).c_str());
+        client.publish(MBUSINO_NAME"/OneWire/offset" + String(i+1), String(offset[i]).c_str());
       }
     }
-    client.publish("CMBusino/bme/Temperatur", String(temperatur).c_str());
-    client.publish("CMBusino/bme/Druck", String(druck).c_str());
-    client.publish("CMBusino/bme/Hoehe", String(hoehe).c_str());
-    client.publish("CMBusino/bme/Feuchte", String(feuchte).c_str());
+    client.publish(MBUSINO_NAME"/bme/Temperatur", String(temperatur).c_str());
+    client.publish(MBUSINO_NAME"/bme/Druck", String(druck).c_str());
+    client.publish(MBUSINO_NAME"/bme/Hoehe", String(hoehe).c_str());
+    client.publish(MBUSINO_NAME"/bme/Feuchte", String(feuchte).c_str());
 
     timerMQTT = millis();
   }
@@ -291,22 +287,29 @@ void loop() {
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
       
       serializeJsonPretty(root, jsonstring);
-      client.publish("MBusino/MBus/error", String(payload.getError()));  // kann auskommentiert werden wenn es läuft
-      client.publish("MBusino/MBus/jsonstring", String(jsonstring));
+      client.publish(MBUSINO_NAME"/MBus/error", String(payload.getError()));  // kann auskommentiert werden wenn es läuft
+      client.publish(MBUSINO_NAME"/MBus/jsonstring", String(jsonstring));
 
 
       for (uint8_t i=0; i<fields; i++) {
         float value = root[i]["value_scaled"].as<float>();
         uint8_t code = root[i]["code"].as<int>();
 
-        client.publish(String("MBusino/MBus/"+String(i+1)+"_"+payload.getCodeName(code)), String(value,3).c_str());
-        client.publish(String("MBusino/MBus/"+String(i+1)+"_"+payload.getCodeName(code))+"_unit", payload.getCodeUnits(code));
+        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code)), String(value,3).c_str());
+        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code))+"_unit", payload.getCodeUnits(code));
+
+        if (i == 3){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
+          float flow = root[5]["value_scaled"].as<float>();
+          float delta = root[9]["value_scaled"].as<float>();
+          float calc_power =  calc_power = delta * flow * 1163;          
+          client.publish(MBUSINO_NAME"/MBus/4_power_calc", String(calc_power).c_str());           
+        }        
       }
   
     } 
     else {
   //Fehlermeldung
-        client.publish(String("MBusino/MBUSerror"), "no_good_telegram");
+        client.publish(String(MBUSINO_NAME"/MBUSerror"), "no_good_telegram");
     }
   }
 }
@@ -400,7 +403,7 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
 
 void calibrationAverage() {
 
-  client.publish("CMBusino/cal/started", "buliding average");
+  client.publish(MBUSINO_NAME"/cal/started", "buliding average");
 
   float sum = 0;
   uint8_t connected = 0;
@@ -414,9 +417,9 @@ void calibrationAverage() {
       }
     }
   float average = sum / connected;
-  client.publish("CMBusino/cal/connected", String(connected).c_str());
-  client.publish("CMBusino/cal/sum", String(sum).c_str());
-  client.publish("CMBusino/cal/average", String(average).c_str()); 
+  client.publish(MBUSINO_NAME"/cal/connected", String(connected).c_str());
+  client.publish(MBUSINO_NAME"/cal/sum", String(sum).c_str());
+  client.publish(MBUSINO_NAME"/cal/average", String(average).c_str()); 
 
   for(uint8_t i = 0; i < 5; i++){
     if(!OWnotconnected[i]){
@@ -426,7 +429,7 @@ void calibrationAverage() {
   }
   for(uint8_t i = 0; i < 5; i++){
     if(!OWnotconnected[i]){
-      client.publish("CMBusino/cal/offsetS" + String(i+1), String(offset[i]).c_str());
+      client.publish(MBUSINO_NAME"/cal/offsetS" + String(i+1), String(offset[i]).c_str());
     }
   }
   EEPROM.begin(512);
@@ -444,31 +447,31 @@ void calibrationSensor(uint8_t sensor){
       sensorToCalibrate = sensor;
     }
     else{
-      client.publish("CMBusino/cal/offffsetS" + String(sensor+1), "No valid sensor");
+      client.publish(MBUSINO_NAME"/cal/offffsetS" + String(sensor+1), "No valid sensor");
     }
 
 }
 
 void calibrationValue(float value){
-  client.publish("CMBusino/cal/started", "set new offset");
+  client.publish(MBUSINO_NAME"/cal/started", "set new offset");
    
   if(OW[sensorToCalibrate] != -127){
     offset[sensorToCalibrate] += value;
-    client.publish("CMBusino/cal/offsetS" + String(sensorToCalibrate+1), String(offset[sensorToCalibrate]).c_str());
+    client.publish(MBUSINO_NAME"/cal/offsetS" + String(sensorToCalibrate+1), String(offset[sensorToCalibrate]).c_str());
     EEPROM.begin(512);
     EEPROM.put(eeAddrOffset[sensorToCalibrate], offset[sensorToCalibrate]);  // copy offset to EEPROM
     EEPROM.commit();
     EEPROM.end();
   }
   else{
-    client.publish("CMBusino/cal/offsetS" + String(sensorToCalibrate), "No Sensor");
+    client.publish(MBUSINO_NAME"/cal/offsetS" + String(sensorToCalibrate), "No Sensor");
   }
 }
 
 void calibrationBME(){
 
-  client.publish("CMBusino/cal/started", "set BME280 based offset");
-  client.publish("CMBusino/cal/BME", String(temperatur).c_str());
+  client.publish(MBUSINO_NAME"/cal/started", "set BME280 based offset");
+  client.publish(MBUSINO_NAME"/cal/BME", String(temperatur).c_str());
 
   for(uint8_t i = 0; i < 5; i++){
     if(OW[i] == -127){ 
@@ -484,7 +487,7 @@ void calibrationBME(){
   }
   for(uint8_t i = 0; i < 5; i++){
     if(!OWnotconnected[i]){
-      client.publish("CMBusino/cal/offsetS" + String(i+1), String(offset[i]).c_str());
+      client.publish(MBUSINO_NAME"/cal/offsetS" + String(i+1), String(offset[i]).c_str());
     }
   }
   EEPROM.begin(512);
@@ -499,7 +502,7 @@ void calibrationBME(){
 
 void calibrationSet0(){
 
-  client.publish("CMBusino/cal/started", "set all offsets 0");
+  client.publish(MBUSINO_NAME"/cal/started", "set all offsets 0");
 
   for(uint8_t i = 0; i < 5; i++){
     if(OW[i] == -127){ 
@@ -511,7 +514,7 @@ void calibrationSet0(){
   }
   for(uint8_t i = 0; i < 5; i++){
     if(!OWnotconnected[i]){
-      client.publish("CMBusino/cal/offsetS" + String(i+1), String(offset[i]).c_str());
+      client.publish(MBUSINO_NAME"/cal/offsetS" + String(i+1), String(offset[i]).c_str());
     }
   }
   EEPROM.begin(512);
