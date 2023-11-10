@@ -6,7 +6,7 @@ MBusino with calibration capabilitys.
 Most DS18B20 are faked and out of specifications.
 A new code is in development to find a solution for calibration.
 
-You can calibrate the sensors by send a MQTT message to MBusino
+You can calibrate the sensors by sending a MQTT message to MBusino
 
 ## 1. Build the average of all DS sensors
 ### MQTT Topic: CMBusino/calibrateAverage
@@ -129,6 +129,7 @@ void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
 bool mbus_get_response(byte *pdata, unsigned char len_pdata);
 void calibrationAverage();
+void calibrationSensor(uint8_t sensor);
 void calibrationValue(float value);
 void calibrationBME();
 void calibrationSet0();
@@ -143,7 +144,7 @@ int calibrated = 500;  // zeigt an ob werte im EEPROM liegen
 float offset[5] = {0};
 float OWwO[5] = {0};  // Variablen für die DS18B20 Onewire Sensoren mit Offset (One Wire1 with Offset)
 bool OWnotconnected[5] = {false};
-uint8_t sensorToCalibrate = 9;
+uint8_t sensorToCalibrate = 0;
 
 
 
@@ -203,7 +204,7 @@ void onConnectionEstablished() {
     calibrationAverage();
   });
   client.subscribe("CMBusino/calibrateSensor", [](const String &mqttpayload) {
-    sensorToCalibrate = (mqttpayload.toInt()-1);
+    calibrationSensor(mqttpayload.toInt()-1);
   });
   client.subscribe("CMBusino/calibrateValue", [](const String &mqttpayload) {
     calibrationValue(mqttpayload.toFloat());
@@ -436,6 +437,16 @@ void calibrationAverage() {
   }
   EEPROM.commit();
   EEPROM.end();
+}
+
+void calibrationSensor(uint8_t sensor){
+    if((sensor<5) && (OW[sensor]!= -127)){
+      sensorToCalibrate = sensor;
+    }
+    else{
+      client.publish("CMBusino/cal/offffsetS" + String(sensor+1), "No valid sensor");
+    }
+
 }
 
 void calibrationValue(float value){
