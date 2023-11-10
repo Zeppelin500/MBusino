@@ -22,7 +22,7 @@ You will find a 3D-printable PCB case inside the case folder.
 
 To save mony, I place omnibus orders for all parts.
 
-## calibration capabilitys. 
+## calibration capabilities 
 
 Most DS18B20 are faked and out of specifications.
 You can calibrate the sensors by sending a MQTT message to MBusino.
