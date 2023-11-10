@@ -28,30 +28,30 @@ Most DS18B20 are faked and out of specifications.
 You can calibrate the sensors by sending a MQTT message to MBusino.
 
 ### 1. Set the average of all DS sensors
-* MQTT Topic: CMBusino/calibrateAverage
+* MQTT Topic: MBusino/calibrateAverage
 * MQTT Payload: no matter
 
 Make the average of the connected sensors and add an offset to every sensor. After the calibration, all sensors will show the same value.
 You have to bring all connected sensors to the same environment, wait a little bit and send the calibration message.
 
 ### 2. Calibrate to a connected Bosch BME280 Sensor
-* MQTT Topic: CMBusino/calibrateBME
+* MQTT Topic: MBusino/calibrateBME
 * MQTT Payload: no matter
 
 Make an offset for every DS sensor based at the meassured value of the BME sensor. After the calibration, all sensors will show the same value.
 You have to bring all connected sensors to the same environment, wait a little bit and send the calibration message.
 
 ### 3. Calibration by hand
-* MQTT Topic: CMBusino/calibrateSensor
+* MQTT Topic: MBusino/calibrateSensor
 * MQTT Payload: Number of the Sensor to calibrate (only the number). e.g.S3 = 3
-* MQTT Topic: CMBusino/calibrateValue
+* MQTT Topic: MBusino/calibrateValue
 * MQTT Payload: a float number e.g. -0.15
 
 Manipulate the offset of a single sensor by sending Sensor numbers and values. The transmitted value will be added to the current offset. First chose the sensor, then send the value. If a sensor is chosed, you can manipulate multiple times the same sensor.
 
 
 ### 4. Set all offsets to 0
-* MQTT Topic: CMBusino/calibrateSet0
+* MQTT Topic: MBusino/calibrateSet0
 * MQTT Payload: no matter
 
 Self explanatory.
