@@ -6,7 +6,7 @@ MBusino with calibration capabilitys.
 Most DS18B20 are faked and out of specifications.
 A new code is in development to find a solution for calibration.
 
-You can calibrate the sensors by send a MQTT message to MBusino
+You can calibrate the sensors by sending a MQTT message to MBusino
 
 ## 1. Set the average of all DS sensors
 ### MQTT Topic: CMBusino/calibrateAverage
