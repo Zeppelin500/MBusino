@@ -291,7 +291,7 @@ void loop() {
 
 
       for (uint8_t i=0; i<fields; i++) {
-        float value = root[i]["value_scaled"].as<float>();
+        double value = root[i]["value_scaled"].as<double>();
         uint8_t code = root[i]["code"].as<int>();
 
         client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code)), String(value,3).c_str());

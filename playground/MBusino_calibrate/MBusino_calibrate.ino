@@ -60,7 +60,7 @@ You should have received a copy of the GNU General Public License along with thi
 #include "ArduinoJson.h"
 #include <EEPROM.h>
 
-#define MBUSINO_NAME "CMBusino" // If you have more MBusinos, rename it inside quote marks, or it cause some network and MQTT problems. Also you cant reach your MBusino from Arduino IDE
+#define MBUSINO_NAME "MBusino" // If you have more MBusinos, rename it inside quote marks, or it cause some network and MQTT problems. Also you cant reach your MBusino from Arduino IDE
 
 #define MBUS_BAUD_RATE 2400
 #define MBUS_ADDRESS 0xFE  // brodcast
@@ -291,7 +291,7 @@ void loop() {
 
 
       for (uint8_t i=0; i<fields; i++) {
-        float value = root[i]["value_scaled"].as<float>();
+        double value = root[i]["value_scaled"].as<double>();
         uint8_t code = root[i]["code"].as<int>();
 
         client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code)), String(value,3).c_str());
