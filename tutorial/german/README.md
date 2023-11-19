@@ -53,18 +53,20 @@ EspMQTTClient client(
 );
 ```
 
-Diese 3 angaben durch die Eigenen Daten ersetzen. Die daten müssen in anführungszeichen stehen.
+Diese 3 Angaben durch die eigenen Daten ersetzen. Die Daten müssen in Anführungszeichen stehen
 
+```
   WLAN_SSID,       // WLAN-SSID in quote marks "mySSID"
   WLAN_PASSWORD,   // WLAN Password in quote marks "myPassword"
   MQTT_Broker,     // MQTT Broker IP address in quote marks "192.168.x.x"
-
+```
 Das heist aus WLAN_SSID wird "meine_SSID" usw.
 
 auf keinen Fall
 
+```
   MBUSINO_NAME,    // Client name that uniquely identify your device
-
+```
 ändern. hierzu weiter unten mehr.
 
 Jetzt muss noch die Einbindung der credentials.h auskomentiert werden.
