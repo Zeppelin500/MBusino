@@ -102,7 +102,7 @@ Ganz oben der erste define ist die Festlegung des Namens.
 Das funktioniert genau wie in der credentials.h Überall wo der Compiler MBUSINO_NAME findet, wird er es durch "MBusino" ersetzen.
 Wenn ihr mehrere MBusinos nutzt, muss das unbedingt geändert werden, sonst gibt es Netzwerkprobleme und beide sind nicht mehr erreichbar.
 
-## Kompilieren und flashen
+### Kompilieren und flashen
 
 In der IDE unter dem Reiter "Werkzeuge", "Board" --> "Boardverwaltung" nach ESP8266 suchen und installieren. Danach unter Board das "Lolin(Wemos) D1 R2 & mini" auswählen.
 Steckt den D1 Mini an USB an und wählt unter "Werkzeuge" "Port" den richtigen USB Anschluss.
@@ -111,6 +111,13 @@ Links über dem Code den Butten "Überprüfen", der als Haken abgebildet ist dr�
 Das war es. 
 
 Ab jetzt funktioniert auch das OTA update. Hierfür müsst ihr nur den Port auf einen Port mit WLAN Symbol und angezeigter IP Adresse ändern.
+
+
+### MQTT und HomeAssistant
+
+Über die Software MQTT Explorer am PC oder MyMQTT auf Android könnt ihr jetzt sehen was gesendet wird.
+Je nach M-Bus Gerät sehen die Nachrichten unterschiedlich aus. Im Anhang findet ihr eine Beispielauszug der Config für HomeAssistant mit einem Sensostar U.
+Je nach dem was ihr empfangt, muss die Datei angepasst werden.
 
 
 

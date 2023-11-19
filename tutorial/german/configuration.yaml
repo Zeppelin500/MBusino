@@ -1,0 +1,89 @@
+
+
+
+# eigener MQTT Sensor
+mqtt:
+ sensor:
+    - unique_id: esp_S1
+      name: "Temperatur_S1"
+      device_class: temperature
+      state_topic: "ESPonewire/S1"     
+      unit_of_measurement: "°C"
+    - unique_id: esp_S2
+      name: "Temperatur_S2"
+      device_class: temperature
+      state_topic: "ESPonewire/S2"     
+      unit_of_measurement: "°C"
+    - unique_id: esp_S3
+      name: "Temperatur_S3"
+      device_class: temperature
+      state_topic: "ESPonewire/S3"     
+      unit_of_measurement: "°C"
+    - unique_id: esp_S4
+      name: "Temperatur_S4"
+      device_class: temperature
+      state_topic: "ESPonewire/S4"     
+      unit_of_measurement: "°C"
+    - unique_id: esp_S5
+      name: "Temperatur_S5"
+      device_class: temperature
+      state_topic: "ESPonewire/S5"     
+      unit_of_measurement: "°C"
+    - unique_id: esp_temperatur
+      name: "Temperatur"
+      device_class: temperature
+      state_topic: "ESPonewire/bmeTemperatur"     
+      unit_of_measurement: "°C"
+    - unique_id: esp_hoehe
+      name: "Höhe"
+      device_class: distance
+      state_topic: "ESPonewire/bmeHoehe"     
+      unit_of_measurement: "m"
+    - unique_id: esp_luftdruck
+      name: "Luftdruck"
+      device_class: atmospheric_pressure
+      state_topic: "ESPonewire/bmeDruck"     
+      unit_of_measurement: "mbar"
+    - unique_id: esp_feuchte
+      name: "relLuftfeuchte"
+      device_class: humidity
+      state_topic: "ESPonewire/bmeFeuchte"     
+      unit_of_measurement: "%"
+    - unique_id: MBusino_Durchfluss
+      name: "Durchfluss"
+      device_class: gas
+      state_topic: "MBusino/MBus/6_volume_flow"     
+      unit_of_measurement: "m³/h"
+    - unique_id: MBusino_VL
+      name: "T-Vorlauf"
+      device_class: temperature
+      state_topic: "MBusino/MBus/8_flow_temperature"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_RL
+      name: "T-Rücklauf"
+      device_class: temperature
+      state_topic: "MBusino/MBus/9_return_temperature"     
+      unit_of_measurement: "°C"
+    - unique_id: MBusino_Delta
+      name: "Spreizung"
+      device_class: temperature
+      state_topic: "MBusino/MBus/10_temperature_diff"     
+      unit_of_measurement: "K"
+    - unique_id: MBusino_Leistung
+      name: "Leistung"
+      device_class: power
+      state_topic: "MBusino/MBus/4_power"     
+      unit_of_measurement: "W"
+    - unique_id: MBusino_calc_Leistung
+      name: "calc_Leistung"
+      device_class: power
+      state_topic: "MBusino/MBus/4_power_calc"     
+      unit_of_measurement: "W"
+    - unique_id: MBusino_Energie
+      name: "Energie"
+      device_class: energy
+      state_topic: "MBusino/MBus/2_energy"     
+      unit_of_measurement: "Wh"
+
+
+
