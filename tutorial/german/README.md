@@ -82,7 +82,7 @@ wird
 
 ### optional Abfrage- und Veröffenlichungsintervalle festlegen
 
-ein paar Zeilen weiter unten bei der Variableninitialisierung kommen diese 2 Zeilen
+Ein paar Zeilen weiter unten bei der Variableninitialisierung kommen diese 2 Zeilen
 
 ```
 int publIntervalSensoren = 10000;  // publication interval for sensor values in milliseconds
@@ -93,7 +93,7 @@ Hier die Angaben im Milisekunden nach eigenem Wunsch ändern.
 
 ### optional Name ändern
 
-ganz oben der erste define ist die Festlegung des Namens.
+Ganz oben der erste define ist die Festlegung des Namens.
 
 ```
 #define MBUSINO_NAME "MBusino" // If you have more MBusinos, rename it inside quote marks, or it cause some network and MQTT problems. Also you cant reach your MBusino from Arduino IDE
@@ -102,14 +102,16 @@ ganz oben der erste define ist die Festlegung des Namens.
 Das funktioniert genau wie in der credentials.h Überall wo der Compiler MBUSINO_NAME findet, wird er es durch "MBusino" ersetzen.
 Wenn ihr mehrere MBusinos nutzt, muss das unbedingt geändert werden, sonst gibt es Netzwerkprobleme und beide sind nicht mehr erreichbar.
 
-## Kompailieren und flashen
+## Kompilieren und flashen
 
-In der IDE unter dem Reiter "Werkzeuge", "Board" --> "Boardverwaltung" nach ESP8266 suchen und installieren. DAnach unter Board das "Lolin(Wemos) D1 R2 & mini" auswählen.
+In der IDE unter dem Reiter "Werkzeuge", "Board" --> "Boardverwaltung" nach ESP8266 suchen und installieren. Danach unter Board das "Lolin(Wemos) D1 R2 & mini" auswählen.
 Steckt den D1 Mini an USB an und wählt unter "Werkzeuge" "Port" den richtigen USB Anschluss.
 
 Links über dem Code den Butten "Überprüfen", der als Haken abgebildet ist drücken. Lief das ohne Fehler durch, den Butten rechts daneben mit dem Pfeil drücken.
 Das war es. 
 
 Ab jetzt funktioniert auch das OTA update. Hierfür müsst ihr nur den Port auf einen Port mit WLAN Symbol und angezeigter IP Adresse ändern.
+
+
 
 
