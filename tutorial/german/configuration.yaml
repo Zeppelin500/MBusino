@@ -4,50 +4,50 @@
 # eigener MQTT Sensor
 mqtt:
  sensor:
-    - unique_id: esp_S1
+    - unique_id: MBusino_S1
       name: "Temperatur_S1"
       device_class: temperature
-      state_topic: "ESPonewire/S1"     
+      state_topic: "MBusino/OneWire/S1"     
       unit_of_measurement: "°C"
-    - unique_id: esp_S2
+    - unique_id: MBusino_S2
       name: "Temperatur_S2"
       device_class: temperature
-      state_topic: "ESPonewire/S2"     
+      state_topic: "MBusino/OneWire/S2"     
       unit_of_measurement: "°C"
-    - unique_id: esp_S3
+    - unique_id: MBusino_S3
       name: "Temperatur_S3"
       device_class: temperature
-      state_topic: "ESPonewire/S3"     
+      state_topic: "MBusino/OneWire/S3"     
       unit_of_measurement: "°C"
-    - unique_id: esp_S4
+    - unique_id: MBusino_S4
       name: "Temperatur_S4"
       device_class: temperature
-      state_topic: "ESPonewire/S4"     
+      state_topic: "MBusino/OneWire/S4"     
       unit_of_measurement: "°C"
-    - unique_id: esp_S5
+    - unique_id: MBusino_S5
       name: "Temperatur_S5"
       device_class: temperature
-      state_topic: "ESPonewire/S5"     
+      state_topic: "MBusino/OneWire/S5"     
       unit_of_measurement: "°C"
-    - unique_id: esp_temperatur
+    - unique_id: MBusino_temperatur
       name: "Temperatur"
       device_class: temperature
-      state_topic: "ESPonewire/bmeTemperatur"     
+      state_topic: "MBusino/bme/Temperatur"     
       unit_of_measurement: "°C"
-    - unique_id: esp_hoehe
+    - unique_id: MBusino_hoehe
       name: "Höhe"
       device_class: distance
-      state_topic: "ESPonewire/bmeHoehe"     
+      state_topic: "MBusino/bme/Hoehe"     
       unit_of_measurement: "m"
-    - unique_id: esp_luftdruck
+    - unique_id: MBusino_luftdruck
       name: "Luftdruck"
       device_class: atmospheric_pressure
-      state_topic: "ESPonewire/bmeDruck"     
+      state_topic: "MBusino/bme/Druck"     
       unit_of_measurement: "mbar"
-    - unique_id: esp_feuchte
+    - unique_id: MBusino_feuchte
       name: "relLuftfeuchte"
       device_class: humidity
-      state_topic: "ESPonewire/bmeFeuchte"     
+      state_topic: "MBusino/bme/Feuchte"     
       unit_of_measurement: "%"
     - unique_id: MBusino_Durchfluss
       name: "Durchfluss"
