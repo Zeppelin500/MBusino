@@ -120,7 +120,7 @@ Das Passwort ist **MQTTPassword**
 Je nach M-Bus Gerät sehen die Nachrichten unterschiedlich aus. Im Anhang findet ihr eine Beispielauszug der Config für HomeAssistant mit einem Sensostar U.
 Je nach dem was ihr empfangt, muss die Datei angepasst werden.
 
-Die Logik ist folgende, für jeden Wert einen Sensor. state_topic ist das MQTT topic, das ihr im MQTT Eplorer findet.
+Die Logik ist folgende, für jeden Wert einen Sensor. **state_topic** ist das MQTT topic, das ihr im MQTT Eplorer findet.
 ```
 mqtt:
  sensor:
