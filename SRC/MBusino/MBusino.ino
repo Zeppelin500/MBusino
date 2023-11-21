@@ -303,9 +303,14 @@ void loop() {
       for (uint8_t i=0; i<fields; i++) {
         double value = root[i]["value_scaled"].as<double>();
         uint8_t code = root[i]["code"].as<int>();
+        const char* name = root[i]["name"];
+        const char* units = root[i]["units"];
 
-        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code)), String(value,3).c_str());
-        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code))+"_unit", payload.getCodeUnits(code));
+        //two messages per value
+        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)), String(value,3).c_str());
+        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)+"_unit"), units);
+        //or only one message
+        //client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
 
         if (i == 3){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
           float flow = root[5]["value_scaled"].as<float>();
