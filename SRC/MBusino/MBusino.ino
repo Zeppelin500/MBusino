@@ -310,7 +310,7 @@ void loop() {
         if (i == 3){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
           float flow = root[5]["value_scaled"].as<float>();
           float delta = root[9]["value_scaled"].as<float>();
-          float calc_power =  calc_power = delta * flow * 1163;          
+          float calc_power = delta * flow * 1163;          
           client.publish(MBUSINO_NAME"/MBus/4_power_calc", String(calc_power).c_str());           
         }        
       }
