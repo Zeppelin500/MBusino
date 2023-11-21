@@ -278,6 +278,16 @@ void loop() {
     mbus_request_data(MBUS_ADDRESS);
     mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
 
+    /*
+    //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
+    for(uint8_t i = 0; i <= mbus_data[1]+1; i++){                                                             //|
+      char buffer[3];                                                                                         //|
+      sprintf(buffer,"%02X",mbus_data[i]);                                                                    //|
+      client.publish(String(MBUSINO_NAME"/debug/telegram_byte_"+String(i)), String(buffer).c_str());          //|
+    }                                                                                                         //|
+    //--------------------------------------------------------------------------------------------------------------------------    
+    */
+
     if (mbus_good_frame) {
       int packet_size = mbus_data[1] + 6; 
       MBUSPayload payload(255);  

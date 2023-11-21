@@ -1,20 +1,11 @@
 /*
-# MBusino_naked
+# MBusino_naked --> only M-Bus 
 
-MBusino ohne weitere Sensorik, M-Bus pur.
-Überflüssige Bauteile der Leiterplatte können weggelassen werden
+21 October 2023: new code based at MBusino with payload library. You find the old "Sensostar only" code in archive.
 
-## Anleitung
+documentation see MBusino
 
-* Die .ino Datei muss in einen Ordner mit dem selben Namen
-* Die 2 Dateien .h und .cpp müssen entweder in einen gemeinsamen Ordner mit dem selben namen in ....arduino/libaries/ abgelegt werden oder direkt in den Ordner mit der .ino Datei.
-* SSID, WLANpasswort und MQTT-Broker eintragen wie im Code angegeben
-* ggfls. Abfrageintervall (MbusInterval) anpassen
-* erstes flashen erfolgt über USB, danach ist OTA flashen möglich
-
-
-
-## Lizenz
+## Licence
 ****************************************************
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful,
@@ -23,92 +14,212 @@ You should have received a copy of the GNU General Public License along with thi
 ****************************************************
 */
 
-#include <EspMQTTClient.h>    
-#include <Wire.h>
+#include <EspMQTTClient.h>
 
-#include <credentials.h>          // <-- Auskommentieren wenn ihr keine Libary für Eure Zugangsdaten nutzt.
+#include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
-#include "sensostar.h"            // Libary für den MBus
+#include <MBUSPayload.h>  // Library for decode M-Bus
+#include "ArduinoJson.h"
+#include <EEPROM.h>
 
-int WMZ_absolute_energy_kwh = 0; // Variablen für den Wärmemengenzähler
-int WMZ_power_w = 0;
-int WMZ_flow_temp_k = 0;
-int WMZ_return_temp_k = 0;
-int WMZ_delta_temp_mk = 0;
-int WMZ_error_code = 0;
-int WMZ_flow_rate_lph = 0;
-int WMZ_calc_power_w = 0; // im MBusino berechnete Leistung
+#define MBUSINO_NAME "MBusino" // If you have more MBusinos, rename it inside quote marks, or it cause some network and MQTT problems. Also you cant reach your MBusino from Arduino IDE
 
+#define MBUS_BAUD_RATE 2400
+#define MBUS_ADDRESS 0xFE  // brodcast
+#define MBUS_TIMEOUT 1000  // milliseconds
+#define MBUS_DATA_SIZE 510
+#define MBUS_GOOD_FRAME true
+#define MBUS_BAD_FRAME false
 
-int MbusInterval = 120000; // Inervall für die MBus Abfragen in Millisekunden --> ohne Netzteil mindestens 120Sekunden (120000)
-unsigned long timerMbus = 0;
 
 EspMQTTClient client(
-  WLAN_SSID,          // WLAN-SSID mit Anführungszeichen eintragen "meineSSID"
-  WLAN_PASSWORT,     // WLAN Passwort mit Anführungszeichen eintragen "meineSSID"
-  MQTT_Broker,        // MQTT Broker server ip mit Anführungszeichen eintragen "192.168.x.x"
-  "MQTTUsername",   // Can be omitted if not needed
-  "MQTTPassword",   // Can be omitted if not needed -- auch Passwort für OTA Update über die Arduino IDE 2
-  "MBusino",     // Client name that uniquely identify your device
-  1883              // The MQTT port, default to 1883. this line can be omitted
+  WLAN_SSID,       // WLAN-SSID in quote marks "mySSID"
+  WLAN_PASSWORD,   // WLAN Password in quote marks "myPassword"
+  MQTT_Broker,     // MQTT Broker IP address in quote marks "192.168.x.x"
+  "MQTTUsername",  // Can be omitted if not needed
+  "MQTTPassword",  // Can be omitted if not needed -- also password for OTA Update with Arduino IDE 2
+  MBUSINO_NAME,    // Client name that uniquely identify your device
+  1883             // The MQTT port, default to 1883. this line can be omitted
 );
 
-static size_t hm_write(uint8_t c) {
-  return Serial.write(c);
-}
-Sensostar heat_meter(hm_write, millis);
 
-void setup(){
+unsigned long loop_start = 0;
+unsigned long last_loop = 0;
+bool firstrun = true;
+int Startadd = 0x13;  // Start address for decoding
+char jsonstring[6144] = { 0 };
 
+int MbusInterval = 5000;           // interval for MBus request in milliseconds
+
+unsigned long timerMbus = 0;
+
+void mbus_request_data(byte address);
+void mbus_short_frame(byte address, byte C_field);
+bool mbus_get_response(byte *pdata, unsigned char len_pdata);
+void calibrationAverage();
+void calibrationSensor(uint8_t sensor);
+void calibrationValue(float value);
+void calibrationBME();
+void calibrationSet0();
+
+void setup() {
   Serial.begin(2400, SERIAL_8E1);
-  
+
   // Optional functionalities of EspMQTTClient
-  client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
-  client.enableOTA(); // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
-  client.enableLastWillMessage("MBusino/lastwill", "I am going offline");  // You can activate the retain flag by setting the third parameter to true
+  client.enableHTTPWebUpdater();                                           // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
+  client.enableOTA();                                                      // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
+  client.enableLastWillMessage(MBUSINO_NAME"/lastwill", "I am going offline");  // You can activate the retain flag by setting the third parameter to true
+  client.setMaxPacketSize(6000);
+
 }
 
 // This function is called once everything is connected (Wifi and MQTT)
 // WARNING : YOU MUST IMPLEMENT IT IF YOU USE EspMQTTClient
-void onConnectionEstablished()
-{
-  // sendet eine Nachricht wenn mit MQTT Broker verbunden.
-  client.publish("MBusino/start", "bin hoch gefahren, WLAN und MQTT seht "); 
+void onConnectionEstablished() {  // send a message to MQTT broker if connected.
+  client.publish(MBUSINO_NAME"/start", "bin hoch gefahren, WLAN und MQTT seht ");  
 }
 
-void loop()
-{
-  client.loop(); //MQTT Funktion 
-  
-  if (millis() > timerMbus + MbusInterval) {
-    heat_meter.request();
-    timerMbus = millis();
-  }
+void loop() {
+  client.loop();  //MQTT Funktion
+  loop_start = millis();
 
-  while(Serial.available()) {
-    char c = Serial.read();
-    struct sensostar_data result;
-    uint8_t res;
-    res = heat_meter.process(c, &result);
-    if (res) {
-      /* Ergebnis liegt vor in result */
-      WMZ_absolute_energy_kwh = result.total_heat_energy;
-      WMZ_power_w = result.power;
-      WMZ_flow_temp_k = result.flow_temperature;
-      WMZ_return_temp_k = result.return_temperature;
-      WMZ_delta_temp_mk = result.flow_return_difference_temperature * 10;
-      WMZ_error_code = result.error;
-      WMZ_flow_rate_lph = result.flow_speed;
-      client.publish("MBusino/WMZ/eng", String(WMZ_absolute_energy_kwh).c_str()); 
-      client.publish("MBusino/WMZ/err", String(WMZ_error_code).c_str()); 
-      client.publish("MBusino/WMZ/pwr", String(WMZ_power_w).c_str()); 
-      client.publish("MBusino/WMZ/tvl", String(WMZ_flow_temp_k).c_str()); 
-      client.publish("MBusino/WMZ/trl", String(WMZ_return_temp_k).c_str()); 
-      client.publish("MBusino/WMZ/spr", String(WMZ_delta_temp_mk).c_str()); 
-      client.publish("MBusino/WMZ/dfl", String(WMZ_flow_rate_lph).c_str());
-      // additional calculation of power because of the sensostar bug.
-      WMZ_calc_power_w = ((float)WMZ_delta_temp_mk / 1000) * WMZ_flow_rate_lph * 1.163;
-      client.publish("MBusino/WMZ/calc_pwr", String(WMZ_calc_power_w).c_str()); 
+
+  if ((loop_start-last_loop)>= MbusInterval || firstrun) { // 9800 = ~10 seconds
+    last_loop = loop_start; firstrun = false;
+
+    bool mbus_good_frame = false;
+    byte mbus_data[MBUS_DATA_SIZE] = { 0 };
+    mbus_request_data(MBUS_ADDRESS);
+    mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
+    /*
+    //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
+    for(uint8_t i = 0; i <= mbus_data[1]+1; i++){                                                             //|
+      char buffer[3];                                                                                         //|
+      sprintf(buffer,"%02X",mbus_data[i]);                                                                    //|
+      client.publish(String(MBUSINO_NAME"/debug/telegram_byte_"+String(i)), String(buffer).c_str());          //|
+    }                                                                                                         //|
+    //--------------------------------------------------------------------------------------------------------------------------    
+    */
+    if (mbus_good_frame) {
+      int packet_size = mbus_data[1] + 6; 
+      MBUSPayload payload(255);  
+      DynamicJsonDocument jsonBuffer(4080);
+      JsonArray root = jsonBuffer.createNestedArray();  
+      uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
+      
+      serializeJsonPretty(root, jsonstring);
+      client.publish(MBUSINO_NAME"/MBus/error", String(payload.getError()));  // kann auskommentiert werden wenn es läuft
+      client.publish(MBUSINO_NAME"/MBus/jsonstring", String(jsonstring));
+
+
+      for (uint8_t i=0; i<fields; i++) {
+        double value = root[i]["value_scaled"].as<double>();
+        uint8_t code = root[i]["code"].as<int>();
+
+        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code)), String(value,3).c_str());
+        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+payload.getCodeName(code))+"_unit", payload.getCodeUnits(code));
+
+        if (i == 3){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
+          float flow = root[5]["value_scaled"].as<float>();
+          float delta = root[9]["value_scaled"].as<float>();
+          float calc_power =  calc_power = delta * flow * 1163;          
+          client.publish(MBUSINO_NAME"/MBus/4_power_calc", String(calc_power).c_str());           
+        }        
+      }
+  
+    } 
+    else {
+  //Fehlermeldung
+        client.publish(String(MBUSINO_NAME"/MBUSerror"), "no_good_telegram");
     }
   }
 }
+
+void mbus_request_data(byte address) {
+  mbus_short_frame(address, 0x5b);
+}
+
+void mbus_short_frame(byte address, byte C_field) {
+  byte data[6];
+
+  data[0] = 0x10;
+  data[1] = C_field;
+  data[2] = address;
+  data[3] = data[1] + data[2];
+  data[4] = 0x16;
+  data[5] = '\0';
+
+  Serial.write((char *)data);
+}
+
+bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
+  byte bid = 0;             // current byte of response frame
+  byte bid_end = 255;       // last byte of frame calculated from length byte sent
+  byte bid_checksum = 255;  // checksum byte of frame (next to last)
+  byte len = 0;
+  byte checksum = 0;
+  bool long_frame_found = false;
+  bool complete_frame = false;
+  bool frame_error = false;
+
+  unsigned long timer_start = millis();
+  while (!frame_error && !complete_frame && (millis() - timer_start) < MBUS_TIMEOUT) {
+    while (Serial.available()) {
+      byte received_byte = (byte)Serial.read();
+
+      // Try to skip noise
+      if (bid == 0 && received_byte != 0xE5 && received_byte != 0x68) {
+        continue;
+      }
+
+      if (bid > len_pdata) {
+        return MBUS_BAD_FRAME;
+      }
+      pdata[bid] = received_byte;
+
+      // Single Character (ACK)
+      if (bid == 0 && received_byte == 0xE5) {
+        return MBUS_GOOD_FRAME;
+      }
+
+      // Long frame start
+      if (bid == 0 && received_byte == 0x68) {
+        long_frame_found = true;
+      }
+
+      if (long_frame_found) {
+        // 2nd byte is the frame length
+        if (bid == 1) {
+          len = received_byte;
+          bid_end = len + 4 + 2 - 1;
+          bid_checksum = bid_end - 1;
+        }
+
+        if (bid == 2 && received_byte != len) {  // 3rd byte is also length, check that its the same as 2nd byte
+          frame_error = true;
+        }
+        if (bid == 3 && received_byte != 0x68) {
+          ;  // 4th byte is the start byte again
+          frame_error = true;
+        }
+        if (bid > 3 && bid < bid_checksum) checksum += received_byte;  // Increment checksum during data portion of frame
+
+        if (bid == bid_checksum && received_byte != checksum) {  // Validate checksum
+          frame_error = true;
+        }
+        if (bid == bid_end && received_byte == 0x16) {  // Parse frame if still valid
+          complete_frame = true;
+        }
+      }
+      bid++;
+    }
+  }
+
+  if (complete_frame && !frame_error) {
+    return MBUS_GOOD_FRAME;
+  } else {
+    return MBUS_BAD_FRAME;
+  }
+}
+
+
