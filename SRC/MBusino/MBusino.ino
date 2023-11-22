@@ -1,42 +1,11 @@
 /*
 # MBusino_calibrate 
 
-MBusino with calibration capabilitys. 
+M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 
-Most DS18B20 are faked and out of specifications.
-A new code is in development to find a solution for calibration.
-
-You can calibrate the sensors by sending a MQTT message to MBusino
-
-## 1. Build the average of all DS sensors
-### MQTT Topic: CMBusino/calibrateAverage
-### MQTT Payload: no matter
-
-Make the average of the connected sensors and add an offset to every sensor. After the calibration, all sensors will show the same value.
-You have to bring all connected sensors to the same environment, wait a little bit and send the calibration message.
-
-## 2. Calibrate to a connected Bosch BME280 Sensor
-### MQTT Topic: CMBusino/calibrateBME
-### MQTT Payload: no matter
-
-Make an offset for every DS sensor based at the meassured value of the BME sensor. After the calibration, all sensors will show the same value.
-You have to bring all connected sensors to the same environment, wait a little bit and send the calibration message.
-
-## 3. Calibration by hand
-### MQTT Topic: CMBusino/calibrateSensor
-### MQTT Payload: Number of the Sensor to calibrate (only the number). e.g.S3 = 3
-### MQTT Topic: CMBusino/calibrateValue
-### MQTT Payload: a float number e.g. -0.15
-
-Manipulate the offset of a single sensor by sending Sensor numbers and values. The transmitted value will be added to the current offset. First chose the Sensor, then send the value. If a sensor number is chosed, you can multiple manipulate the same sensor.
-
-
-## Set all offsets to 0
-### MQTT Topic: CMBusino/calibrateSet0
-### MQTT Payload: no matter
-
-Self explanatory.
-
+- M-Bus e.g. heatmeter 
+- OneWire 5x e.g. DS18B20, temperature
+- I²C e.g.. BME280, temperatur, r. humidity, air pressure
 
 ## Licence
 ****************************************************
@@ -56,7 +25,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 #include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
-#include <MBUSPayload.h>  // Library for decode M-Bus
+#include <MBusinoLib.h>  // Library for decode M-Bus
 #include "ArduinoJson.h"
 #include <EEPROM.h>
 
@@ -290,7 +259,7 @@ void loop() {
 
     if (mbus_good_frame) {
       int packet_size = mbus_data[1] + 6; 
-      MBUSPayload payload(255);  
+      MBusinoLib payload(255);  
       DynamicJsonDocument jsonBuffer(4080);
       JsonArray root = jsonBuffer.createNestedArray();  
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 

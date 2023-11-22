@@ -10,10 +10,11 @@ https://docs.arduino.cc/software/ide-v2
 Zuerst muss die nötige Ordnerstruktur erstellt werden.
 Während der Installation der Arduino IDE wurde ein Ordner namens "Arduino" angelegt, in dem alle Programme liegen werden. 
 
-* In diesem Ordner ".../Arduino" einen Ordner mit dem Namen MBusino erstellen. 
+* In diesem Ordner ".../Arduino" einen Ordner mit dem Namen **MBusino** bzw. **MBusino_naked** erstellen. 
 * In den Ordner "MBusino" die Datei MBusino.ino ablegen. Die Datei findet ihr in der Repo unter SRC. 
-* Unter https://github.com/Zeppelin500/mbus-payload den Butten "Code" ausklappen und dann Download ZIP drücken.
-* Die ZIP unter Arduino/libraries entpacken, so das am Ende die Ordnerstrucktur .../Arduino/libraries/mbus-payload vorhanden ist. Diese Library ist verändert und funktioniert im Gegensatz zur Originalen. Wenn ihr diesen Schritt nicht durchführt, läd er die originale Bibliothek und ihr habt keine Funktion.
+* Die eigene MBusinoLib ist jetzt im Library Manager. Daher benötigt man die folgenden 2 Punkte nicht mehr!
+* ~~Unter https://github.com/Zeppelin500/mbus-payload den Butten "Code" ausklappen und dann Download ZIP drücken.~~
+* ~~Die ZIP unter Arduino/libraries entpacken, so das am Ende die Ordnerstrucktur .../Arduino/libraries/mbus-payload vorhanden ist. Diese Library ist verändert und funktioniert im Gegensatz zur Originalen. Wenn ihr diesen Schritt nicht durchführt, läd er die originale Bibliothek und ihr habt keine Funktion.~~
 
 ### Code anpassen
 

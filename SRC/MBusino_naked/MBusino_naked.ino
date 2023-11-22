@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 #include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
-#include <MBUSPayload.h>  // Library for decode M-Bus
+#include <MBusinoLib.h>  // Library for decode M-Bus
 #include "ArduinoJson.h"
 #include <EEPROM.h>
 
@@ -102,7 +102,7 @@ void loop() {
     */
     if (mbus_good_frame) {
       int packet_size = mbus_data[1] + 6; 
-      MBUSPayload payload(255);  
+      MBusinoLib payload(255);  
       DynamicJsonDocument jsonBuffer(4080);
       JsonArray root = jsonBuffer.createNestedArray();  
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
@@ -124,14 +124,14 @@ void loop() {
         //or only one message
         //client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
 
-/*
+
         if (i == 3){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
           float flow = root[5]["value_scaled"].as<float>();
           float delta = root[9]["value_scaled"].as<float>();
           float calc_power = delta * flow * 1163;          
           client.publish(MBUSINO_NAME"/MBus/4_power_calc", String(calc_power).c_str());           
         }  
-*/      
+      
       }
   
     } 
