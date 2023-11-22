@@ -65,9 +65,9 @@ Self explanatory.
 
 - M-Bus is only tested with a "Engelmann Sensostar U", but should work with other M-Bus divices. If you have M-Bus issues, let me know.
 
-- Code will only work with the modified MBUSPayload library. 
+- ~~Code will only work with the modified MBUSPayload library.~~
 
-https://github.com/Zeppelin500/mbus-payload
+~~https://github.com/Zeppelin500/mbus-payload~~
 
 ## Credits
 * AllWize for the library to decode M-Bus
