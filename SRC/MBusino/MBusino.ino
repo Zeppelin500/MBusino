@@ -270,13 +270,20 @@ void loop() {
 
 
       for (uint8_t i=0; i<fields; i++) {
-        double value = root[i]["value_scaled"].as<double>();
         uint8_t code = root[i]["code"].as<int>();
         const char* name = root[i]["name"];
         const char* units = root[i]["units"];
-
+        uint8_t ascii = root[i]["ascii"].as<int>(); //0 = double, 1 = ASCII, 2 = both; 
+        double value = root[i]["value_scaled"].as<double>(); 
+        const char* valueString = root[i]["value_string"];           
+        
         //two messages per value
-        client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)), String(value,3).c_str());
+        if (ascii > 0){
+          client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_vs_"+String(name)), valueString); // send the value if a ascii value is aviable (variable length)
+        }
+        if(ascii != 1){
+          client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)), String(value,3).c_str()); // send the value if a real value is aviable (standard)
+        }
         client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)+"_unit"), units);
         //or only one message
         //client.publish(String(MBUSINO_NAME"/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
