@@ -20,8 +20,7 @@ You should have received a copy of the GNU General Public License along with thi
 #include <OneWire.h>            // Library for OneWire Bus
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
-//#include <Adafruit_Sensor.h>
-//#include <Adafruit_BME280.h>
+
 
 #include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
@@ -31,6 +30,11 @@ You should have received a copy of the GNU General Public License along with thi
 
 #define MBUSINO_NAME "MBusino" // If you have more MBusinos, rename it inside quote marks, or it cause some network and MQTT problems. Also you cant reach your MBusino from Arduino IDE
 #define DS_EXTENSION 7 // Number of possible OnWires, only 5 or 7 are possible
+
+#if DS_EXTENSION != 7
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+#endif
 
 #define MBUS_BAUD_RATE 2400
 #define MBUS_ADDRESS 0xFE  // brodcast
@@ -45,10 +49,13 @@ You should have received a copy of the GNU General Public License along with thi
 #define ONE_WIRE_BUS4 14  //D5
 #define ONE_WIRE_BUS5 0   //D3
 
+#if DS_EXTENSION == 7
 #define ONE_WIRE_BUS6 5   //D1
 #define ONE_WIRE_BUS7 4   //D2
-
-//#define SEALEVELPRESSURE_HPA (1013.25)
+#else
+#define SEALEVELPRESSURE_HPA (1013.25)
+Adafruit_BME280 bme;  // I2C
+#endif
 
 EspMQTTClient client(
   WLAN_SSID,       // WLAN-SSID in quote marks "mySSID"
@@ -60,7 +67,6 @@ EspMQTTClient client(
   1883             // The MQTT port, default to 1883. this line can be omitted
 );
 
-//Adafruit_BME280 bme;  // I2C
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire1(ONE_WIRE_BUS1);
@@ -68,9 +74,10 @@ OneWire oneWire2(ONE_WIRE_BUS2);
 OneWire oneWire3(ONE_WIRE_BUS3);
 OneWire oneWire4(ONE_WIRE_BUS4);
 OneWire oneWire5(ONE_WIRE_BUS5);
-
+#if DS_EXTENSION == 7
 OneWire oneWire6(ONE_WIRE_BUS6);
 OneWire oneWire7(ONE_WIRE_BUS7);
+#endif
 
 // Pass our oneWire reference to Dallas Temperature.
 DallasTemperature sensor1(&oneWire1);
@@ -78,9 +85,10 @@ DallasTemperature sensor2(&oneWire2);
 DallasTemperature sensor3(&oneWire3);
 DallasTemperature sensor4(&oneWire4);
 DallasTemperature sensor5(&oneWire5);
-
+#if DS_EXTENSION == 7
 DallasTemperature sensor6(&oneWire6);
 DallasTemperature sensor7(&oneWire7);
+#endif
 
 unsigned long loop_start = 0;
 unsigned long last_loop = 0;
@@ -88,13 +96,14 @@ bool firstrun = true;
 int Startadd = 0x13;  // Start address for decoding
 char jsonstring[6144] = { 0 };
 
-float OW[5] = {0};         // variables for DS18B20 Onewire sensors 
+float OW[DS_EXTENSION] = {0};         // variables for DS18B20 Onewire sensors 
+#if DS_EXTENSION != 7
 float temperatur = 0;      // Variablen für den BLE280 am I2C
 float druck = 0;
 float hoehe = 0;
 float feuchte = 0;
-
 bool bmeStatus;
+#endif
 
 int publIntervalSensoren = 10000;  // publication interval for sensor values in milliseconds
 int MbusInterval = 5000;           // interval for MBus request in milliseconds
@@ -110,9 +119,10 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata);
 void calibrationAverage();
 void calibrationSensor(uint8_t sensor);
 void calibrationValue(float value);
-//void calibrationBME();
 void calibrationSet0();
-
+#if DS_EXTENSION != 7
+void calibrationBME();
+#endif
 // ------------------- new code for calibration -----------------------------------
 uint8_t eeAddrCalibrated = 0;
 uint8_t eeAddrOffset[7] = {4,8,12,16,20,24,28};  //EEPROM address to start reading from
@@ -151,9 +161,10 @@ void setup() {
   sensor3.setWaitForConversion(false);  // makes it async
   sensor4.setWaitForConversion(false);  // makes it async
   sensor5.setWaitForConversion(false);  // makes it async
-
+  #if DS_EXTENSION == 7
   sensor6.setWaitForConversion(false);  // makes it async
   sensor7.setWaitForConversion(false);  // makes it async
+  #endif
 
   // Start up the library
   sensor1.begin();
@@ -161,9 +172,10 @@ void setup() {
   sensor3.begin();
   sensor4.begin();
   sensor5.begin();
-
+  #if DS_EXTENSION == 7
   sensor6.begin();
   sensor7.begin();
+  #endif
 
   // Optional functionalities of EspMQTTClient
   client.enableHTTPWebUpdater();                                           // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
@@ -171,8 +183,10 @@ void setup() {
   client.enableLastWillMessage(MBUSINO_NAME"/lastwill", "I am going offline");  // You can activate the retain flag by setting the third parameter to true
   client.setMaxPacketSize(6000);
 
+  #if DS_EXTENSION != 7
   // Vorbereitungen für den BME280
-  //bmeStatus = bme.begin(0x76);
+  bmeStatus = bme.begin(0x76);
+  #endif
 }
 
 // This function is called once everything is connected (Wifi and MQTT)
@@ -189,9 +203,11 @@ void onConnectionEstablished() {  // send a message to MQTT broker if connected.
   client.subscribe(MBUSINO_NAME"/calibrateValue", [](const String &mqttpayload) {
     calibrationValue(mqttpayload.toFloat());
   });  
-//  client.subscribe(MBUSINO_NAME"/calibrateBME", [](const String &mqttpayload) {
-//    calibrationBME();
-//  });
+  #if DS_EXTENSION != 7
+  client.subscribe(MBUSINO_NAME"/calibrateBME", [](const String &mqttpayload) {
+    calibrationBME();
+  });
+  #endif
   client.subscribe(MBUSINO_NAME"/calibrateSet0", [](const String &mqttpayload) {
     calibrationSet0();
   });    
@@ -203,9 +219,10 @@ void sensorRefresh1() {           //stößt aktuallisierte Sensorwerte aus den O
   sensor3.requestTemperatures();
   sensor4.requestTemperatures();
   sensor5.requestTemperatures();
-
+  #if DS_EXTENSION == 7
   sensor6.requestTemperatures();
   sensor7.requestTemperatures();
+  #endif
 }
 void sensorRefresh2() {  //holt die aktuallisierten Sensorwerte aus den OneWire Sensoren
   OW[0] = sensor1.getTempCByIndex(0);
@@ -213,26 +230,26 @@ void sensorRefresh2() {  //holt die aktuallisierten Sensorwerte aus den OneWire 
   OW[2] = sensor3.getTempCByIndex(0);
   OW[3] = sensor4.getTempCByIndex(0);
   OW[4] = sensor5.getTempCByIndex(0);
-
+  #if DS_EXTENSION == 7
   OW[5] = sensor5.getTempCByIndex(0);
   OW[6] = sensor5.getTempCByIndex(0);
-
+  #endif
 
   OWwO[0] = OW[0] + offset[0];  // Messwert plus Offset from calibration
   OWwO[1] = OW[1] + offset[1];
   OWwO[2] = OW[2] + offset[2];
   OWwO[3] = OW[3] + offset[3];
   OWwO[4] = OW[4] + offset[4];
-
+  #if DS_EXTENSION == 7
   OWwO[5] = OW[5] + offset[5];
   OWwO[6] = OW[6] + offset[6];
-
-/*
+  #else
   temperatur = bme.readTemperature();
   druck = bme.readPressure() / 100.0F;
   hoehe = bme.readAltitude(SEALEVELPRESSURE_HPA);
   feuchte = bme.readHumidity();
-  */
+  #endif
+
 }
 
 
@@ -259,12 +276,12 @@ void loop() {
         client.publish(MBUSINO_NAME"/OneWire/offset" + String(i+1), String(offset[i]).c_str());
       }
     }
-    /*
+    #if DS_EXTENSION != 7
     client.publish(MBUSINO_NAME"/bme/Temperatur", String(temperatur).c_str());
     client.publish(MBUSINO_NAME"/bme/Druck", String(druck).c_str());
     client.publish(MBUSINO_NAME"/bme/Hoehe", String(hoehe).c_str());
     client.publish(MBUSINO_NAME"/bme/Feuchte", String(feuchte).c_str());
-*/
+    #endif
     timerMQTT = millis();
   }
 
@@ -481,7 +498,7 @@ void calibrationValue(float value){
     client.publish(MBUSINO_NAME"/cal/offsetS" + String(sensorToCalibrate), "No Sensor");
   }
 }
-/*
+#if DS_EXTENSION != 7
 void calibrationBME(){
 
   client.publish(MBUSINO_NAME"/cal/started", "set BME280 based offset");
@@ -513,7 +530,8 @@ void calibrationBME(){
   EEPROM.commit();
   EEPROM.end();
 }
-*/
+#endif
+
 void calibrationSet0(){
 
   client.publish(MBUSINO_NAME"/cal/started", "set all offsets 0");
