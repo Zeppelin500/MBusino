@@ -231,8 +231,8 @@ void sensorRefresh2() {  //holt die aktuallisierten Sensorwerte aus den OneWire 
   OW[3] = sensor4.getTempCByIndex(0);
   OW[4] = sensor5.getTempCByIndex(0);
   #if DS_EXTENSION == 7
-  OW[5] = sensor5.getTempCByIndex(0);
-  OW[6] = sensor5.getTempCByIndex(0);
+  OW[5] = sensor6.getTempCByIndex(0);
+  OW[6] = sensor7.getTempCByIndex(0);
   #endif
 
   OWwO[0] = OW[0] + offset[0];  // Messwert plus Offset from calibration
