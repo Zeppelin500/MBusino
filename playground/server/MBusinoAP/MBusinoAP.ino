@@ -15,7 +15,8 @@ You should have received a copy of the GNU General Public License along with thi
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+#include <ESPAsyncWebSrv.h> //<ESP8266WebServer.h>
+#include <ESPAsyncTCP.h>
 
 //#include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
@@ -95,11 +96,13 @@ bool bmeStatus;
 
 int publIntervalSensoren = 10000;  // publication interval for sensor values in milliseconds
 int MbusInterval = 5000;           // interval for MBus request in milliseconds
+bool mbusReq = false;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerSensorRefresh1 = 0;
 unsigned long timerSensorRefresh2 = 0;
 unsigned long timerMbus = 0;
+unsigned long timerMbus2 = 0;
 unsigned long timer = 0;
 
 void mbus_request_data(byte address);
@@ -124,6 +127,7 @@ uint8_t sensorToCalibrate = 0;
 
 
 void setup() {
+  Serial.setRxBufferSize(256);
   Serial.begin(MBUS_BAUD_RATE, SERIAL_8E1);
 
   EEPROM.begin(512);
@@ -321,13 +325,18 @@ void loop() {
     timerMQTT = millis();
   }
 
-  if((loop_start-last_loop)>= MbusInterval || firstrun) { 
-    last_loop = loop_start; 
-    firstrun = false;
-
+  if(millis() - timerMbus > MbusInterval){//          ((loop_start-last_loop)>= MbusInterval || firstrun) { 
+    timerMbus = millis();
+    timerMbus2 = millis();
+    mbusReq = true;
+    //last_loop = loop_start; 
+    //firstrun = false;
+    mbus_request_data(MBUS_ADDRESS);
+  }
+  if(millis() - timerMbus2 > 1000 && mbusReq == true){
+    mbusReq = false;
     bool mbus_good_frame = false;
     byte mbus_data[MBUS_DATA_SIZE] = { 0 };
-    mbus_request_data(MBUS_ADDRESS);
     mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
 
     /*
@@ -407,9 +416,14 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
   bool long_frame_found = false;
   bool complete_frame = false;
   bool frame_error = false;
-
+  uint16_t j = 0;
   unsigned long timer_start = millis();
-  while (!frame_error && !complete_frame && (millis() - timer_start) < MBUS_TIMEOUT) {
+
+  while (!frame_error && !complete_frame){//&& (millis() - timer_start) < MBUS_TIMEOUT) {
+    j++;
+    if(j>500){
+      frame_error = true;
+    }
     while (Serial.available()) {
       byte received_byte = (byte)Serial.read();
 
