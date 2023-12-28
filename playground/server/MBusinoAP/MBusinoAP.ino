@@ -82,6 +82,8 @@ struct settings {
   char mqttPswrd[30];  
 } userData = {};
 
+bool mqttcon = false;
+
 unsigned long loop_start = 0;
 unsigned long last_loop = 0;
 bool firstrun = true;
@@ -160,7 +162,7 @@ void setup() {
   byte tries = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    if (tries++ > 30) {
+    if (tries++ > 10) {
       WiFi.mode(WIFI_AP);
       WiFi.softAP("MBusino Setup Portal"); //, "secret");
       break;
@@ -196,7 +198,7 @@ void setup() {
   }
 
   // Optional functionalities of EspMQTTClient
-  client.enableHTTPWebUpdater();                                 // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
+  //client.enableHTTPWebUpdater();                                 // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
   client.enableOTA("mbusino"); 
   char buffer[30] = {0};
   sprintf(buffer, userData.mbusinoName, "/lastwill");                    // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
@@ -212,6 +214,7 @@ void setup() {
 // This function is called once everything is connected (Wifi and MQTT)
 // WARNING : YOU MUST IMPLEMENT IT IF YOU USE EspMQTTClient
 void onConnectionEstablished() {  // send a message to MQTT broker if connected.
+  mqttcon = true;
   client.publish(String(userData.mbusinoName) + "/start", "bin hoch gefahren, WLAN und MQTT seht ");
   if(userData.extension > 0){
     client.subscribe(String(userData.mbusinoName) + "/calibrateAverage", [](const String &mqttpayload) {
@@ -278,7 +281,9 @@ void sensorRefresh2() {  //holt die aktuallisierten Sensorwerte aus den OneWire 
 void loop() {
   client.loop();  //MQTT Funktion
   loop_start = millis();
-  server.handleClient();
+  //if(mqttcon == false){
+    server.handleClient();
+  //}
  
   
   ////////////////////////////////////////////////////
@@ -349,6 +354,9 @@ void loop() {
     }                                                                                                         //|
     //--------------------------------------------------------------------------------------------------------------------------    
     */
+    //mbus_good_frame = true;
+    //byte mbus_data2[] = {0x68,0xC1,0xC1,0x68,0x08,0x00,0x72,0x09,0x34,0x75,0x73,0xC5,0x14,0x00,0x0D,0x43,0x00,0x00,0x00,0x04,0x78,0x41,0x63,0x65,0x04,0x04,0x06,0xAA,0x29,0x00,0x00,0x04,0x13,0x40,0xA1,0x75,0x00,0x04,0x2B,0x00,0x00,0x00,0x00,0x14,0x2B,0x3C,0xF3,0x00,0x00,0x04,0x3B,0x48,0x06,0x00,0x00,0x14,0x3B,0x4E,0x0E,0x00,0x00,0x02,0x5B,0x19,0x00,0x02,0x5F,0x19,0x00,0x02,0x61,0xFA,0xFF,0x02,0x23,0xAC,0x08,0x04,0x6D,0x03,0x2A,0xF1,0x2A,0x44,0x06,0x92,0x0C,0x00,0x00,0x44,0x13,0x2D,0x9B,0x1C,0x00,0x42,0x6C,0xDF,0x2C,0x01,0xFD,0x17,0x00,0x03,0xFD,0x0C,0x05,0x00,0x00,0x84,0x10,0x06,0x1A,0x00,0x00,0x00,0xC4,0x10,0x06,0x05,0x00,0x00,0x00,0x84,0x20,0x06,0x00,0x00,0x00,0x00,0xC4,0x20,0x06,0x00,0x00,0x00,0x00,0x84,0x30,0x06,0x00,0x00,0x00,0x00,0xC4,0x30,0x06,0x00,0x00,0x00,0x00,0x84,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0x75,0x16};
+
 
     if (mbus_good_frame) {
       int packet_size = mbus_data[1] + 6; 
@@ -358,9 +366,9 @@ void loop() {
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
       char jsonstring[6144] = { 0 };
       
-      serializeJsonPretty(root, jsonstring);
+      //serializeJsonPretty(root, jsonstring);
       client.publish(String(userData.mbusinoName) + "/MBus/error", String(payload.getError()));  // kann auskommentiert werden wenn es läuft
-      client.publish(String(userData.mbusinoName) + "/MBus/jsonstring", String(jsonstring));
+      //client.publish(String(userData.mbusinoName) + "/MBus/jsonstring", String(jsonstring));
 
       for (uint8_t i=0; i<fields; i++) {
         uint8_t code = root[i]["code"].as<int>();
@@ -380,8 +388,9 @@ void loop() {
           float flow = root[5]["value_scaled"].as<float>();
           float delta = root[9]["value_scaled"].as<float>();
           float calc_power = delta * flow * 1163;          
-          client.publish(String(userData.mbusinoName) + "/MBus/4_power_calc", String(calc_power).c_str());           
-        }         
+          client.publish(String(userData.mbusinoName) + "/MBus/4_power_calc", String(calc_power).c_str());                    
+        }   
+        yield();      
       }
     } 
     else {
@@ -422,7 +431,7 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
 
   while (!frame_error && !complete_frame){//&& (millis() - timer_start) < MBUS_TIMEOUT) {
     j++;
-    if(j>500){
+    if(j>255){
       frame_error = true;
     }
     while (Serial.available()) {
@@ -473,6 +482,7 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
         }
       }
       bid++;
+      yield();
     }
   }
 
