@@ -15,8 +15,9 @@ You should have received a copy of the GNU General Public License along with thi
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
 #include <ESP8266WiFi.h>
-#include <ESPAsyncWebSrv.h> //<ESP8266WebServer.h>
-#include <ESPAsyncTCP.h>
+#include <ESP8266WebServer.h>
+//#include <ESPAsyncWebSrv.h> //<ESP8266WebServer.h>
+//#include <ESPAsyncTCP.h>
 
 //#include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
