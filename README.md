@@ -71,7 +71,8 @@ Self explanatory.
 * SSID "MBusino Setup Portal" (no Password) IP: 192.168.4.1
 * If MbusinoAP do not find a known network, he start an AP for 5 minutes. After this period, he will restart and search again.
 * In known networks, you will find the IP of the portal in our router.
-![MBusino_Setup](pictures/MBusino_Setup_Portal.jpg)
+
+<img src="pictures/MBusino_Setup_Portal.jpg" width="300" height="600">
 
 ## Credits
 * AllWize for the library to decode M-Bus
