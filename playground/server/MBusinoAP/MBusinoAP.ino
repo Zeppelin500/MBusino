@@ -364,11 +364,12 @@ void loop() {
       DynamicJsonDocument jsonBuffer(4080);
       JsonArray root = jsonBuffer.createNestedArray();  
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
-      char jsonstring[6144] = { 0 };
-      
-      //serializeJsonPretty(root, jsonstring);
+      char jsonstring[2048] = { 0 };
+      yield();
+      serializeJson(root, jsonstring);
       client.publish(String(userData.mbusinoName) + "/MBus/error", String(payload.getError()));  // kann auskommentiert werden wenn es läuft
-      //client.publish(String(userData.mbusinoName) + "/MBus/jsonstring", String(jsonstring));
+      yield();
+      client.publish(String(userData.mbusinoName) + "/MBus/jsonstring", String(jsonstring));
 
       for (uint8_t i=0; i<fields; i++) {
         uint8_t code = root[i]["code"].as<int>();
