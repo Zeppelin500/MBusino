@@ -84,6 +84,7 @@ struct settings {
 } userData = {};
 
 bool mqttcon = false;
+bool apMode = false;
 
 int Startadd = 0x13;  // Start address for decoding
 
@@ -167,6 +168,7 @@ void setup() {
     if (tries++ > 10) {
       WiFi.mode(WIFI_AP);
       WiFi.softAP("MBusino Setup Portal"); //, "secret");
+      apMode = true;
       break;
     }
   }
@@ -245,7 +247,9 @@ void loop() {
   //if(mqttcon == false){
     server.handleClient();
   //}
- 
+  if(apMode == true && millis() > 300000){
+    ESP.restart();
+  }
   
   ////////////////////////////////////////////////////
   if(timer+10000<millis()){
@@ -259,7 +263,7 @@ void loop() {
     client.publish("server/name", String(userData.mbusinoName)); 
     client.publish("server/extension", String(userData.extension)); 
     client.publish("server/mbusInterval", String(userData.mbusInterval)); 
-    client.publish("server/sensorInterval", String(userData.sensorInterval)); 
+    client.publish("server/sensorInterval", String(userData.sensorInterval));     
   }
   ///////////////////////////////////////////////////////////
   
