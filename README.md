@@ -5,7 +5,7 @@ M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 - OneWire 5x e.g. DS18B20, temperature
 - I²C e.g.. BME280, temperatur, r. humidity, air pressure
 
-* the old "Sensostar only" code is archived.
+**NEW** MBusinoAP with Access Point setup Portal **NEW**
 
 ## Hardware
 The PCB is designed with fritzing.
@@ -65,9 +65,13 @@ Self explanatory.
 
 - M-Bus is only tested with a "Engelmann Sensostar U", but should work with other M-Bus divices. If you have M-Bus issues, let me know.
 
-- ~~Code will only work with the modified MBUSPayload library.~~
+## MBusinoAP
 
-~~https://github.com/Zeppelin500/mbus-payload~~
+* MBusinoAP WiFi Setup Portal
+* SSID "MBusino Setup Portal" (no Password) IP: 192.168.4.1
+* If MbusinoAP do not find a known network, he start an AP for 5 minutes. After this period, he will restart and search again.
+* In known networks, you will find the IP of the portal in our router.
+![MBusino_Setup](pictures/MBusino_Setup_Portal.jpg)
 
 ## Credits
 * AllWize for the library to decode M-Bus
@@ -92,3 +96,4 @@ You should have received a copy of the GNU General Public License along with thi
 ![PCB](/pictures/MBusino_V05_Leiterplatte.png)
 ![Bild](pictures/MBusino.jpg)
 ![Bild](pictures/case.jpg)
+

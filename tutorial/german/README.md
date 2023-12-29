@@ -1,5 +1,7 @@
 # MBusino Tutorial deutsch
 
+**MBusinoAP** ist jetzt online, AP für AccessPoint mit Setup Portal. Keine Anpassungen am Code nötig. Siehe unten.
+
 ### nötige Software
 
 "Arduino IDE 2" downloaden und installieren.
@@ -16,14 +18,14 @@ Während der Installation der Arduino IDE wurde ein Ordner namens "Arduino" ange
 * ~~Unter https://github.com/Zeppelin500/mbus-payload den Butten "Code" ausklappen und dann Download ZIP drücken.~~
 * ~~Die ZIP unter Arduino/libraries entpacken, so das am Ende die Ordnerstrucktur .../Arduino/libraries/mbus-payload vorhanden ist. Diese Library ist verändert und funktioniert im Gegensatz zur Originalen. Wenn ihr diesen Schritt nicht durchführt, läd er die originale Bibliothek und ihr habt keine Funktion.~~
 
-### Code anpassen
+### Code anpassen --> entfällt bei MBusinoAP
 
 * Arduino IDE 2 öffnen.
 * Im Reiter "Datei" auf "Öffnen" drücken, zur MBusino.ino navigieren und diese öffnen.
 * oben im Code stehen hinter #include alle benötigten Bibliotheken. Darum braucht ihr euch aber nicht kümmern, denn der integrierte Library Manager läd diese automatisch nach, falls sie noch fehlen.
 * Die Bibliothek credentials.h stellt eine persönliche Bibliothek dar, die automatisch beim compilieren Eure Zugangsdaten in den Code bringt. Das hat den Vorteil, dass man neuere Versionen des Codes einfach nachladen kann, ohne jedes mal die Zugangsdaten wieder neu eintragen zu müssen.
 
-### Option1: credentials.h
+### Option1: credentials.h --> entfällt bei MBusinoAP
 
 In .../Arduino/libraries/ den Ordner Credentials erstellen und dort die Beispieldatei credentials.h mit folgendem Inhalt (Auf die eigenen Zgangsdaten angepasst) ablegen. Beispeildatei ist hier im Tutorial Ordner abgelegt
 
@@ -38,7 +40,7 @@ In .../Arduino/libraries/ den Ordner Credentials erstellen und dort die Beispiel
 Dieser Codeschnipsel macht nichts anders, als überall dort, wo er den Code hinter define, z.B. WLAN_SSID findet, durch "meine_SSID" zu ersetzen.
 
 
-### Option2 Zugansdaten eintragen
+### Option2 Zugansdaten eintragen --> entfällt bei MBusinoAP
 
 relativ weit oben im MBusino Code kommt dieser Block:
 ```
@@ -81,7 +83,7 @@ wird
 ```
 Zwei "/" bedeuten in der Programiersprache C, dass die nachfolgenen Zeichen in der selben Zeile nicht kompiliert werden.
 
-### *optional -* Abfrage- und Veröffenlichungsintervalle festlegen
+### *optional -* Abfrage- und Veröffenlichungsintervalle festlegen --> entfällt bei MBusinoAP
 
 Ein paar Zeilen weiter unten bei der Variableninitialisierung kommen diese 2 Zeilen
 
@@ -92,7 +94,7 @@ int MbusInterval = 10000;           // interval for MBus request in milliseconds
 
 Hier die Angaben im Milisekunden nach eigenem Wunsch ändern.
 
-### *optional -* Name ändern
+### *optional -* Name ändern --> entfällt bei MBusinoAP
 
 Ganz oben der erste **define** ist die Festlegung des Namens.
 
@@ -121,7 +123,7 @@ Das Passwort ist **MQTTPassword**
 Je nach M-Bus Gerät sehen die Nachrichten unterschiedlich aus. Im Anhang findet ihr eine Beispielauszug der Config für HomeAssistant mit einem Sensostar U.
 Je nach dem was ihr empfangt, muss die Datei angepasst werden.
 
-Die Logik ist folgende, für jeden Wert einen Sensor. **state_topic** ist das MQTT topic, das ihr im MQTT Eplorer findet.
+Die Logik ist folgende, für jeden Wert einen Sensor. **state_topic** ist das MQTT topic, das ihr im MQTT Explorer findet.
 ```
 mqtt:
  sensor:
@@ -132,5 +134,14 @@ mqtt:
       unit_of_measurement: "W"
 ```
 
+## MBusino AP
+
+* flashen siehe oben. Keinerlei anpassungen nötig.
+* MBusinoAP stellt ein WLan Setup Portal zur Verfügung.
+* Mit der SSID "MBusino Setup Portal" (ohne Passwort) verbinden und auf IP: 192.168.4.1 gehen.
+* Daten eingeben, Speichern, reseten
+
+Wenn der MbusinoAP beim hochfahren kein bekanntes Netzwerk findet, stellt er für 5 Minuten den AP bereit, danach resettet er selbstständig und sucht.
+Im Wlan findet ihr das Portal dauerhaft. IP müsst ihr in der Fritzbox o.ä. suchen.
 
 
