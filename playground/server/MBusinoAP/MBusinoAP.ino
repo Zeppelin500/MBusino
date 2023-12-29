@@ -16,10 +16,9 @@ You should have received a copy of the GNU General Public License along with thi
 #include <Wire.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-//#include <ESPAsyncWebSrv.h> //<ESP8266WebServer.h>
+//#include <ESPAsyncWebSrv.h> 
 //#include <ESPAsyncTCP.h>
 
-//#include <credentials.h>  // <-- comment it out if you use no library for WLAN access data.
 
 #include <MBusinoLib.h>  // Library for decode M-Bus
 #include <ArduinoJson.h>
@@ -79,14 +78,13 @@ struct settings {
   uint16_t mqttPort;
   uint16_t extension;
   char mqttUser[30];
-  char mqttPswrd[30];  
+  char mqttPswrd[30]; 
+  uint16_t sensorInterval;
+  uint16_t mbusInterval; 
 } userData = {};
 
 bool mqttcon = false;
 
-unsigned long loop_start = 0;
-unsigned long last_loop = 0;
-bool firstrun = true;
 int Startadd = 0x13;  // Start address for decoding
 
 float OW[7] = {0};         // variables for DS18B20 Onewire sensors 
@@ -97,8 +95,8 @@ float feuchte = 0;
 bool bmeStatus;
 
 
-int publIntervalSensoren = 10000;  // publication interval for sensor values in milliseconds
-int MbusInterval = 5000;           // interval for MBus request in milliseconds
+int sensorInterval = 10000;  // publication interval for sensor values in milliseconds
+int mbusInterval = 5000;           // interval for MBus request in milliseconds
 bool mbusReq = false;
 
 unsigned long timerMQTT = 15000;
@@ -151,6 +149,10 @@ void setup() {
   if(credentialsSaved == 500){
     EEPROM.get(100, userData );
   }
+  else{
+    userData.sensorInterval = 10000;
+    userData.mbusInterval = 10000;
+  }
   EEPROM.commit();
   EEPROM.end();
   client.setMqttClientName(userData.mbusinoName);
@@ -200,9 +202,9 @@ void setup() {
   // Optional functionalities of EspMQTTClient
   //client.enableHTTPWebUpdater();                                 // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
   client.enableOTA("mbusino"); 
-  char buffer[30] = {0};
-  sprintf(buffer, userData.mbusinoName, "/lastwill");                    // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
-  client.enableLastWillMessage(buffer , "I am going offline");  // You can activate the retain flag by setting the third parameter to true
+  char lwBuffer[30] = {0};
+  sprintf(lwBuffer, userData.mbusinoName, "/lastwill");                    // Enable OTA (Over The Air) updates. Password defaults to MQTTPassword. Port is the default OTA port. Can be overridden with enableOTA("password", port).
+  client.enableLastWillMessage(lwBuffer , "I am going offline");  // You can activate the retain flag by setting the third parameter to true
   client.setMaxPacketSize(6000);
 
   if(userData.extension == 5){
@@ -237,50 +239,9 @@ void onConnectionEstablished() {  // send a message to MQTT broker if connected.
   }  
 }
 
-void sensorRefresh1() {           //stößt aktuallisierte Sensorwerte aus den OneWire Sensoren an
-  sensor1.requestTemperatures();  // Send the command to get temperatures
-  sensor2.requestTemperatures();
-  sensor3.requestTemperatures();
-  sensor4.requestTemperatures();
-  sensor5.requestTemperatures();
-  if(userData.extension == 7){
-    sensor6.requestTemperatures();
-    sensor7.requestTemperatures();
-  }
-}
-void sensorRefresh2() {  //holt die aktuallisierten Sensorwerte aus den OneWire Sensoren
-  OW[0] = sensor1.getTempCByIndex(0);
-  OW[1] = sensor2.getTempCByIndex(0);
-  OW[2] = sensor3.getTempCByIndex(0);
-  OW[3] = sensor4.getTempCByIndex(0);
-  OW[4] = sensor5.getTempCByIndex(0);
-  if(userData.extension == 7){
-    OW[5] = sensor6.getTempCByIndex(0);
-    OW[6] = sensor7.getTempCByIndex(0);
-  }
-
-  OWwO[0] = OW[0] + offset[0];  // Messwert plus Offset from calibration
-  OWwO[1] = OW[1] + offset[1];
-  OWwO[2] = OW[2] + offset[2];
-  OWwO[3] = OW[3] + offset[3];
-  OWwO[4] = OW[4] + offset[4];
-  if(userData.extension == 7){
-    OWwO[5] = OW[5] + offset[5];
-    OWwO[6] = OW[6] + offset[6];
-  }
-  else{
-    temperatur = bme.readTemperature();
-    druck = bme.readPressure() / 100.0F;
-    hoehe = bme.readAltitude(SEALEVELPRESSURE_HPA);
-    feuchte = bme.readHumidity();
-  }
-
-}
-
 
 void loop() {
   client.loop();  //MQTT Funktion
-  loop_start = millis();
   //if(mqttcon == false){
     server.handleClient();
   //}
@@ -289,7 +250,6 @@ void loop() {
   ////////////////////////////////////////////////////
   if(timer+10000<millis()){
     timer = millis();
-    client.publish("server/test", "hallo"); 
     client.publish("server/ssid", String(userData.ssid)); 
     client.publish("server/password", String(userData.password)); 
     client.publish("server/broker", String(userData.broker)); 
@@ -298,7 +258,8 @@ void loop() {
     client.publish("server/pswd", String(userData.mqttPswrd)); 
     client.publish("server/name", String(userData.mbusinoName)); 
     client.publish("server/extension", String(userData.extension)); 
-    mbus_request_data(MBUS_ADDRESS);
+    client.publish("server/mbusInterval", String(userData.mbusInterval)); 
+    client.publish("server/sensorInterval", String(userData.sensorInterval)); 
   }
   ///////////////////////////////////////////////////////////
   
@@ -314,7 +275,7 @@ void loop() {
       timerSensorRefresh2 = millis();
     }
   }  
-  if (millis() > (timerMQTT + publIntervalSensoren)) { //MQTT Nachrichten senden
+  if (millis() > (timerMQTT + sensorInterval)) { //MQTT Nachrichten senden
     for(uint8_t i = 0; i < userData.extension; i++){
       if(OW[i] != -127){
         client.publish(String(userData.mbusinoName) + "/OneWire/S" + String(i+1), String(OWwO[i]).c_str());
@@ -331,12 +292,10 @@ void loop() {
     timerMQTT = millis();
   }
 
-  if(millis() - timerMbus > MbusInterval){//          ((loop_start-last_loop)>= MbusInterval || firstrun) { 
+  if(millis() - timerMbus > mbusInterval){
     timerMbus = millis();
     timerMbus2 = millis();
     mbusReq = true;
-    //last_loop = loop_start; 
-    //firstrun = false;
     mbus_request_data(MBUS_ADDRESS);
   }
   if(millis() - timerMbus2 > 1000 && mbusReq == true){
@@ -401,6 +360,45 @@ void loop() {
   }
 }
 
+void sensorRefresh1() {           //stößt aktuallisierte Sensorwerte aus den OneWire Sensoren an
+  sensor1.requestTemperatures();  // Send the command to get temperatures
+  sensor2.requestTemperatures();
+  sensor3.requestTemperatures();
+  sensor4.requestTemperatures();
+  sensor5.requestTemperatures();
+  if(userData.extension == 7){
+    sensor6.requestTemperatures();
+    sensor7.requestTemperatures();
+  }
+}
+void sensorRefresh2() {  //holt die aktuallisierten Sensorwerte aus den OneWire Sensoren
+  OW[0] = sensor1.getTempCByIndex(0);
+  OW[1] = sensor2.getTempCByIndex(0);
+  OW[2] = sensor3.getTempCByIndex(0);
+  OW[3] = sensor4.getTempCByIndex(0);
+  OW[4] = sensor5.getTempCByIndex(0);
+  if(userData.extension == 7){
+    OW[5] = sensor6.getTempCByIndex(0);
+    OW[6] = sensor7.getTempCByIndex(0);
+  }
+
+  OWwO[0] = OW[0] + offset[0];  // Messwert plus Offset from calibration
+  OWwO[1] = OW[1] + offset[1];
+  OWwO[2] = OW[2] + offset[2];
+  OWwO[3] = OW[3] + offset[3];
+  OWwO[4] = OW[4] + offset[4];
+  if(userData.extension == 7){
+    OWwO[5] = OW[5] + offset[5];
+    OWwO[6] = OW[6] + offset[6];
+  }
+  else{
+    temperatur = bme.readTemperature();
+    druck = bme.readPressure() / 100.0F;
+    hoehe = bme.readAltitude(SEALEVELPRESSURE_HPA);
+    feuchte = bme.readHumidity();
+  }
+}
+
 void mbus_request_data(byte address) {
   mbus_short_frame(address, 0x5b);
 }
@@ -428,9 +426,8 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
   bool complete_frame = false;
   bool frame_error = false;
   uint16_t j = 0;
-  unsigned long timer_start = millis();
 
-  while (!frame_error && !complete_frame){//&& (millis() - timer_start) < MBUS_TIMEOUT) {
+  while (!frame_error && !complete_frame){
     j++;
     if(j>255){
       frame_error = true;
@@ -625,16 +622,22 @@ void handlePortal() {
   if (server.method() == HTTP_POST) {
     char bufferStr[6] = {0};
     char bufferStr2[6] = {0};
+    char bufferStr3[6] = {0};
+    char bufferStr4[6] = {0};    
     strncpy(userData.ssid,     server.arg("ssid").c_str(),     sizeof(userData.ssid) );
     strncpy(userData.password, server.arg("password").c_str(), sizeof(userData.password) );
     strncpy(userData.mbusinoName, server.arg("deviceName").c_str(), sizeof(userData.mbusinoName) );
     strncpy(userData.broker, server.arg("broker").c_str(), sizeof(userData.broker) );
     strncpy(bufferStr, server.arg("mqttPort").c_str(), sizeof(bufferStr) );
     strncpy(bufferStr2, server.arg("extension").c_str(), sizeof(bufferStr2) );
+    strncpy(bufferStr3, server.arg("sensorInterval").c_str(), sizeof(bufferStr3) );
+    strncpy(bufferStr4, server.arg("mbusInterval").c_str(), sizeof(bufferStr4) );
     strncpy(userData.mqttUser, server.arg("mqttUser").c_str(), sizeof(userData.mqttUser) );
     strncpy(userData.mqttPswrd, server.arg("mqttPswrd").c_str(), sizeof(userData.mqttPswrd) );
     userData.mqttPort = atoi(bufferStr);
     userData.extension = atoi(bufferStr2);
+    userData.sensorInterval = 1000 * atoi(bufferStr3);
+    userData.mbusInterval = 1000 * atoi(bufferStr4);
     userData.ssid[server.arg("ssid").length()] = '\0';
     userData.password[server.arg("password").length()] = '\0';
     userData.mbusinoName[server.arg("deviceName").length()] = '\0';
@@ -651,6 +654,6 @@ void handlePortal() {
     server.send(200,   "text/html",  "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Wifi Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#f5f5f5;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />Please restart the device.<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>" );
   } else {
 
-    server.send(200,   "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>MBusino Setup</title><style>*,::after,::before{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#fff;background-color:#438287}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da}button{cursor:pointer;border:1px solid transparent;color:#fff;background-color:#304648;border-color:#304648;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto}h1{text-align:center}</style></head><body><main class='form-signin'><form action='/' method='post'><h1 class=''><i>MBusino</i> Setup</h1><br><div class='form-floating'><label>SSID</label><input type='text' class='form-control' name='ssid'></div><div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div><div class='form-floating'><label>Device Name</label><input type='text' value='MBusino' class='form-control' name='deviceName'></div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'><option value='5'>5x DS18B20 + BME</option><option value='7'>7x DS18B20 no BME</option><option value='0'>only M-Bus</option></select><br><br><div class='form-floating'><label>MQTT Broker</label><input type='text' class='form-control' name='broker'></div><div class='form-floating'><label>MQTT Port</label><input type='text' value='1883' class='form-control' name='mqttPort'></div><div class='form-floating'><label>MQTT User (optional)</label><input type='text' class='form-control' name='mqttUser'></div><div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div><br><br><button type='submit'>Save</button><p style='text-align:right'><a href='https://www.github.com/zeppelin500/mbusino' style='color:#fff'>MBusino</a></p></form></main></body></html>" );
+    server.send(200,   "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>MBusino Setup</title><style>*,::after,::before{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#fff;background-color:#438287}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da}button{cursor:pointer;border:1px solid transparent;color:#fff;background-color:#304648;border-color:#304648;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto}h1{text-align:center}</style></head><body><main class='form-signin'><form action='/' method='post'><h1 class=''><i>MBusino</i>Setup</h1><br><div class='form-floating'><label>SSID</label><input type='text' class='form-control' name='ssid'></div><div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div><div class='form-floating'><label>Device Name</label><input type='text' value='MBusino' class='form-control' name='deviceName'></div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'><option value='5'>5x DS18B20 + BME</option><option value='7'>7x DS18B20 no BME</option><option value='0'>only M-Bus</option></select><br><br><div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='5' class='form-control' name='sensorInterval'></div><div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='120' class='form-control' name='mbusInterval'></div><div class='form-floating'><label>MQTT Broker</label><input type='text' class='form-control' name='broker'></div><div class='form-floating'><label>MQTT Port</label><input type='text' value='1883' class='form-control' name='mqttPort'></div><div class='form-floating'><label>MQTT User (optional)</label><input type='text' class='form-control' name='mqttUser'></div><div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div><br><br><button type='submit'>Save</button><p style='text-align:right'><a href='https://www.github.com/zeppelin500/mbusino' style='color:#fff'>MBusino</a></p></form></main></body></html>" );
   }
 }
