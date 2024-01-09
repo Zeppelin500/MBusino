@@ -158,6 +158,8 @@ void setup() {
   }
   EEPROM.commit();
   EEPROM.end();
+
+  WiFi.hostname(userData.mbusinoName);
   client.setMqttClientName(userData.mbusinoName);
   client.setMqttServer(userData.broker, userData.mqttUser, userData.mqttPswrd, userData.mqttPort);
 
@@ -256,16 +258,16 @@ void loop() {
   /////////////////for debug///////////////////////////////////
   if((millis()-timer) >10000){
     timer = millis();
-    client.publish(String(userData.mbusinoName) + "eeprom/ssid", String(userData.ssid)); 
-    //client.publish(String(userData.mbusinoName) + "eeprom/password", String(userData.password)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/broker", String(userData.broker)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/port", String(userData.mqttPort)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/user", String(userData.mqttUser)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/pswd", String(userData.mqttPswrd)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/name", String(userData.mbusinoName)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/extension", String(userData.extension)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/mbusInterval", String(userData.mbusInterval)); 
-    client.publish(String(userData.mbusinoName) + "eeprom/sensorInterval", String(userData.sensorInterval));     
+    client.publish(String(userData.mbusinoName) + "/eeprom/ssid", String(userData.ssid)); 
+    //client.publish(String(userData.mbusinoName) + "/eeprom/password", String(userData.password)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/broker", String(userData.broker)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/port", String(userData.mqttPort)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/user", String(userData.mqttUser)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/pswd", String(userData.mqttPswrd)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/name", String(userData.mbusinoName)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/extension", String(userData.extension)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/mbusInterval", String(userData.mbusInterval)); 
+    client.publish(String(userData.mbusinoName) + "/eeprom/sensorInterval", String(userData.sensorInterval));     
   }
   ///////////////////////////////////////////////////////////
   
@@ -660,6 +662,6 @@ void handlePortal() {
     server.send(200,   "text/html",  "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Wifi Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#f5f5f5;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />Please restart the device.<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>" );
   } else {
 
-    server.send(200,   "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>MBusino Setup</title><style>*,::after,::before{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#fff;background-color:#438287}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da}button{cursor:pointer;border:1px solid transparent;color:#fff;background-color:#304648;border-color:#304648;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto}h1{text-align:center}</style></head><body><main class='form-signin'><form action='/' method='post'><h1 class=''><i>MBusino</i>Setup</h1><br><div class='form-floating'><label>SSID</label><input type='text' class='form-control' name='ssid'></div><div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div><div class='form-floating'><label>Device Name</label><input type='text' value='MBusino' class='form-control' name='deviceName'></div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'><option value='5'>5x DS18B20 + BME</option><option value='7'>7x DS18B20 no BME</option><option value='0'>only M-Bus</option></select><br><br><div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='5' class='form-control' name='sensorInterval'></div><div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='120' class='form-control' name='mbusInterval'></div><div class='form-floating'><label>MQTT Broker</label><input type='text' class='form-control' name='broker'></div><div class='form-floating'><label>MQTT Port</label><input type='text' value='1883' class='form-control' name='mqttPort'></div><div class='form-floating'><label>MQTT User (optional)</label><input type='text' class='form-control' name='mqttUser'></div><div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div><br><br><button type='submit'>Save</button><p style='text-align:right'><a href='https://www.github.com/zeppelin500/mbusino' style='color:#fff'>MBusino</a></p></form></main></body></html>" );
+    server.send(200,   "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>MBusino Setup</title><style>*,::after,::before{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#fff;background-color:#438287}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da}button{cursor:pointer;border:1px solid transparent;color:#fff;background-color:#304648;border-color:#304648;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto}h1{text-align:center}</style></head><body><main class='form-signin'><form action='/' method='post'><h1 class=''><i>MBusino</i> Setup</h1><br><div class='form-floating'><label>SSID</label><input type='text' class='form-control' name='ssid'></div><div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div><div class='form-floating'><label>Device Name</label><input type='text' value='MBusino' class='form-control' name='deviceName'></div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'><option value='5'>5x DS18B20 + BME</option><option value='7'>7x DS18B20 no BME</option><option value='0'>only M-Bus</option></select><br><br><div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='5' class='form-control' name='sensorInterval'></div><div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='120' class='form-control' name='mbusInterval'></div><div class='form-floating'><label>MQTT Broker</label><input type='text' class='form-control' name='broker'></div><div class='form-floating'><label>MQTT Port</label><input type='text' value='1883' class='form-control' name='mqttPort'></div><div class='form-floating'><label>MQTT User (optional)</label><input type='text' class='form-control' name='mqttUser'></div><div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div><br>All Fields will be saved, empty fields delete the values<br><button type='submit'>Save</button><p style='text-align:right'><a href='https://www.github.com/zeppelin500/mbusino' style='color:#fff'>MBusino</a></p></form></main></body></html>" );
   }
 }
