@@ -10,7 +10,7 @@ M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 ## Hardware
 The PCB is designed with fritzing.
 M-Bus is provided by a piggyback M-Bus master.
-https://de.aliexpress.com/item/33008746192.html --> the Master!
+https://de.aliexpress.com/item/33008746192.html --> the Master! (the picture at ali shows a different board, but you will receive the right one)
 
 Beside the USB power supply of D1 mini is no other adapter necessary.
 
