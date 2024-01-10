@@ -1,7 +1,7 @@
 # MBusino
 M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 
-- M-Bus e.g. heatmeter 
+- M-Bus e.g. heatmeter (only one device at the moment)
 - OneWire 5x e.g. DS18B20, temperature
 - I²C e.g.. BME280, temperatur, r. humidity, air pressure
 
@@ -63,7 +63,7 @@ Self explanatory.
 
 - Do not use 2 Boards simultaneously without changing MBUSINO_NAME or it cause in network problems, both boards becomes unreachable. #define MBUSINO_NAME "MBusino"
 
-- M-Bus is only tested with a "Engelmann Sensostar U", but should work with other M-Bus divices. If you have M-Bus issues, let me know.
+- M-Bus is only tested with a "Engelmann Sensostar U", but should work with other M-Bus devices. If you have M-Bus issues, let me know.
 
 ## MBusinoAP
 
