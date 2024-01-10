@@ -144,4 +144,10 @@ mqtt:
 Wenn der MbusinoAP beim hochfahren kein bekanntes Netzwerk findet, stellt er für 5 Minuten den AP bereit, danach resettet er selbstständig und sucht.
 Im Wlan findet ihr das Portal dauerhaft. IP müsst ihr in der Fritzbox o.ä. suchen.
 
+### Hinweise zur Dateneingabe:
+
+* Bei MQTT Broker kann eine IP oder eine Adresse eingegeben weren. z.B. **192.168.1.7** oder **test.mosquitto.org** kein https:// oder mqtt:// nur die Adresse
+* Beim Speichern werden immer alle Felder auf einmal gespeichert, die Daten liegen dann im EEPROM bzw Flash und sind dauerhaft verfügbar. Werden Felder leer gelassen, sind nach dem speichern vormals gespeicherte Inhalte gelöscht.
+* Bei mehreren Geräten im Netzwerk unbedingt verschiedene Namen vergeben, sonst sind sie nicht mehr erreichbar. 
+
 
