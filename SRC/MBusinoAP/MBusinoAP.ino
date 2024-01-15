@@ -97,9 +97,6 @@ float hoehe = 0;
 float feuchte = 0;
 bool bmeStatus;
 
-
-int sensorInterval = 10000;  // publication interval for sensor values in milliseconds
-int mbusInterval = 5000;           // interval for MBus request in milliseconds
 bool mbusReq = false;
 
 unsigned long timerMQTT = 15000;
@@ -283,7 +280,7 @@ void loop() {
       timerSensorRefresh2 = millis();
     }
   }  
-  if (millis() > (timerMQTT + sensorInterval)) { //MQTT Nachrichten senden
+  if (millis() > (timerMQTT + userData.sensorInterval)) { //MQTT Nachrichten senden
     for(uint8_t i = 0; i < userData.extension; i++){
       if(OW[i] != -127){
         client.publish(String(userData.mbusinoName) + "/OneWire/S" + String(i+1), String(OWwO[i]).c_str());
@@ -300,7 +297,7 @@ void loop() {
     timerMQTT = millis();
   }
 
-  if(millis() - timerMbus > mbusInterval){
+  if(millis() - timerMbus > userData.mbusInterval){
     timerMbus = millis();
     timerMbus2 = millis();
     mbusReq = true;
