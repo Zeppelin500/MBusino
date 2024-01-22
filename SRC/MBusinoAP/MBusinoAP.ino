@@ -294,6 +294,9 @@ void loop() {
       client.publish(String(userData.mbusinoName) + "/bme/Hoehe", String(hoehe).c_str());
       client.publish(String(userData.mbusinoName) + "/bme/Feuchte", String(feuchte).c_str());
     }
+    long rssi = WiFi.RSSI();
+    client.publish(String(userData.mbusinoName) + "/RSSI", String(rssi).c_str());  
+
     timerMQTT = millis();
   }
 

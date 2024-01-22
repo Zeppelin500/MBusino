@@ -1,8 +1,6 @@
 /*
 # MBusino_naked --> only M-Bus 
 
-21 October 2023: new code based at MBusino with payload library. You find the old "Sensostar only" code in archive.
-
 documentation see MBusino
 
 ## Licence
@@ -52,15 +50,11 @@ char jsonstring[6144] = { 0 };
 int MbusInterval = 5000;           // interval for MBus request in milliseconds
 
 unsigned long timerMbus = 0;
+unsigned long timerRssi = 0;
 
 void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
 bool mbus_get_response(byte *pdata, unsigned char len_pdata);
-void calibrationAverage();
-void calibrationSensor(uint8_t sensor);
-void calibrationValue(float value);
-void calibrationBME();
-void calibrationSet0();
 
 void setup() {
   Serial.begin(2400, SERIAL_8E1);
@@ -141,6 +135,12 @@ void loop() {
   //Fehlermeldung
         client.publish(String(MBUSINO_NAME"/MBUSerror"), "no_good_telegram");
     }
+  }
+
+  if(millis() - timerRssi > 2000){
+    long rssi = WiFi.RSSI();
+    client.publish(MBUSINO_NAME"/RSSI", String(rssi).c_str());  
+    timerRssi = millis();
   }
 }
 

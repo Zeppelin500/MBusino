@@ -236,6 +236,10 @@ void loop() {
     client.publish(MBUSINO_NAME"/bme/Hoehe", String(hoehe).c_str());
     client.publish(MBUSINO_NAME"/bme/Feuchte", String(feuchte).c_str());
 
+    long rssi = WiFi.RSSI();
+    client.publish(MBUSINO_NAME"/RSSI", String(rssi).c_str());  
+  }
+
     timerMQTT = millis();
   }
 
