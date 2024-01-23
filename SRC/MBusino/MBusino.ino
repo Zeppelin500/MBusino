@@ -34,7 +34,7 @@ You should have received a copy of the GNU General Public License along with thi
 #define MBUS_BAUD_RATE 2400
 #define MBUS_ADDRESS 0xFE  // brodcast
 #define MBUS_TIMEOUT 1000  // milliseconds
-#define MBUS_DATA_SIZE 510
+#define MBUS_DATA_SIZE 254
 #define MBUS_GOOD_FRAME true
 #define MBUS_BAD_FRAME false
 
@@ -238,7 +238,7 @@ void loop() {
 
     long rssi = WiFi.RSSI();
     client.publish(MBUSINO_NAME"/RSSI", String(rssi).c_str());  
-  }
+  
 
     timerMQTT = millis();
   }
