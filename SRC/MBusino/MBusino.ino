@@ -238,7 +238,6 @@ void loop() {
 
     long rssi = WiFi.RSSI();
     client.publish(MBUSINO_NAME"/RSSI", String(rssi).c_str());  
-  
 
     timerMQTT = millis();
   }
