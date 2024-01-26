@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License along with thi
 #include <ESPAsyncWebSrv.h> 
 #include <ESPAsyncTCP.h>
 #include <DNSServer.h>
+#include <ArduinoOTA.h>
 
 #include <MBusinoLib.h>  // Library for decode M-Bus
 #include <ArduinoJson.h>
@@ -315,11 +316,14 @@ void setup() {
     // Vorbereitungen für den BME280
     bmeStatus = bme.begin(0x76);
   }
+  ArduinoOTA.setPassword((const char *)"mbusino");
+  ArduinoOTA.begin();
 }
 
 
 void loop() {
   client.loop();  //MQTT Funktion
+  ArduinoOTA.handle();
   if(apMode == true){
     dnsServer.processNextRequest();
   }
