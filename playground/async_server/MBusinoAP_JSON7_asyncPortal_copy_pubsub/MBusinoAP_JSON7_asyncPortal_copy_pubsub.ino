@@ -18,10 +18,11 @@ You should have received a copy of the GNU General Public License along with thi
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
 #include <ESP8266WiFi.h>
-#include <ESPAsyncWebSrv.h> 
+#include <ESPAsyncWebServer.h> 
 #include <ESPAsyncTCP.h>
 #include <DNSServer.h>
-#include <ArduinoOTA.h>
+#include <AsyncElegantOTA.h>
+//#include <ArduinoOTA.h>
 
 #include <MBusinoLib.h>  // Library for decode M-Bus
 #include <ArduinoJson.h>
@@ -280,6 +281,8 @@ void setup() {
     dnsServer.start(53, "*", WiFi.softAPIP());
   }
   server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);//only when requested from AP
+  //AsyncElegantOTA.setPassword((const char *)"mbusino");
+  AsyncElegantOTA.begin(&server);
   server.begin();
 
   //char lwBuffer[30] = {0};
@@ -316,14 +319,14 @@ void setup() {
     // Vorbereitungen für den BME280
     bmeStatus = bme.begin(0x76);
   }
-  ArduinoOTA.setPassword((const char *)"mbusino");
-  ArduinoOTA.begin();
+  //ArduinoOTA.setPassword((const char *)"mbusino");
+  //ArduinoOTA.begin();
 }
 
 
 void loop() {
   client.loop();  //MQTT Funktion
-  ArduinoOTA.handle();
+  //ArduinoOTA.handle();
   if(apMode == true){
     dnsServer.processNextRequest();
   }
@@ -360,6 +363,7 @@ void loop() {
     client.publish(String(String(userData.mbusinoName) + "/eeprom/extension").c_str(), String(userData.extension).c_str()); 
     client.publish(String(String(userData.mbusinoName) + "/eeprom/mbusInterval").c_str(), String(userData.mbusInterval).c_str()); 
     client.publish(String(String(userData.mbusinoName) + "/eeprom/sensorInterval").c_str(), String(userData.sensorInterval).c_str());     
+    client.publish(String(String(userData.mbusinoName) + "/IP").c_str(), String(WiFi.localIP().toString()).c_str());
   }
   ///////////////////////////////////////////////////////////
   
