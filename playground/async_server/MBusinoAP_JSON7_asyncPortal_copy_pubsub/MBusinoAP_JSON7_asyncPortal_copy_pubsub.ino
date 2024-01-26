@@ -12,17 +12,15 @@ You should have received a copy of the GNU General Public License along with thi
 ****************************************************
 */
 
-//#include <EspMQTTClient.h>
+
 #include <PubSubClient.h>
 #include <OneWire.h>            // Library for OneWire Bus
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
 #include <ESP8266WiFi.h>
-//#include <ESP8266WebServer.h>
 #include <ESPAsyncWebSrv.h> 
 #include <ESPAsyncTCP.h>
 #include <DNSServer.h>
-
 
 #include <MBusinoLib.h>  // Library for decode M-Bus
 #include <ArduinoJson.h>
@@ -49,8 +47,6 @@ You should have received a copy of the GNU General Public License along with thi
 #define SEALEVELPRESSURE_HPA (1013.25)
 Adafruit_BME280 bme;  // I2C
 
-//ESP8266WebServer    server(80);
-//EspMQTTClient client;
 WiFiClient espClient;
 PubSubClient client(espClient);
 DNSServer dnsServer;
@@ -94,6 +90,7 @@ struct settings {
 bool mqttcon = false;
 bool apMode = false;
 bool credentialsReceived = false;
+uint16_t conCounter = 0;
 
 int Startadd = 0x13;  // Start address for decoding
 
@@ -111,7 +108,7 @@ unsigned long timerSensorRefresh1 = 0;
 unsigned long timerSensorRefresh2 = 0;
 unsigned long timerMbus = 0;
 unsigned long timerMbus2 = 0;
-unsigned long timer = 0;
+unsigned long timerDebug = 0;
 unsigned long timerReconnect = 0;
 
 void mbus_request_data(byte address);
@@ -122,7 +119,7 @@ void calibrationSensor(uint8_t sensor);
 void calibrationValue(float value);
 void calibrationSet0();
 void calibrationBME();
-
+void setupServer();
 
 uint8_t eeAddrCalibrated = 0;
 uint8_t eeAddrCredentialsSaved = 32;
@@ -231,112 +228,6 @@ public:
   }
 };
 
-void setupServer(){
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send_P(200, "text/html", index_html); 
-      //Serial.println("Client Connected");
-  });
-    
-  server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
-      String inputMessage;
-      String inputParam;
-
-      if (request->hasParam("ssid")) {
-        inputMessage = request->getParam("ssid")->value();
-        inputParam = "ssid";
-        if(inputMessage != NULL){
-          inputMessage.toCharArray(userData.ssid, sizeof(userData.ssid));
-          credentialsReceived = true;
-        }
-      }
-
-      if (request->hasParam("password")) {
-        inputMessage = request->getParam("password")->value();
-        inputParam = "password";
-        if(inputMessage != NULL){
-          inputMessage.toCharArray(userData.password, sizeof(userData.password));
-          credentialsReceived = true;
-        }
-      }
-
-      if (request->hasParam("name")) {
-        inputMessage = request->getParam("name")->value();
-        inputParam = "name";
-        if(inputMessage != NULL){
-          inputMessage.toCharArray(userData.mbusinoName, sizeof(userData.mbusinoName));
-          credentialsReceived = true;
-        }
-      }
-
-      if (request->hasParam("broker")) {
-        inputMessage = request->getParam("broker")->value();
-        inputParam = "broker";
-        if(inputMessage != NULL){
-          inputMessage.toCharArray(userData.broker, sizeof(userData.broker));
-          credentialsReceived = true;
-        }
-      }
-
-      if (request->hasParam("mqttPort")) {
-        inputMessage = request->getParam("mqttPort")->value();
-        inputParam = "mqttPort";
-        if(inputMessage != NULL){
-          userData.mqttPort = inputMessage.toInt();
-          credentialsReceived = true;
-        }
-      }
-
-      if (request->hasParam("extension")) {
-        inputMessage = request->getParam("extension")->value();
-        inputParam = "extension";
-        if(inputMessage != NULL){
-          userData.extension = inputMessage.toInt();
-          credentialsReceived = true;
-          }
-      }
-
-      if (request->hasParam("sensorInterval")) {
-        inputMessage = request->getParam("sensorInterval")->value();
-        inputParam = "sensorInterval";
-        if(inputMessage != NULL){
-          userData.sensorInterval = inputMessage.toInt()  * 1000;
-          credentialsReceived = true;
-          }
-      }
-
-      if (request->hasParam("mbusInterval")) {
-        inputMessage = request->getParam("mbusInterval")->value();
-        inputParam = "mbusInterval";
-          if(inputMessage != NULL){
-            userData.mbusInterval = inputMessage.toInt() * 1000;
-            credentialsReceived = true;
-          }
-      }
-
-      if (request->hasParam("mqttUser")) {
-        inputMessage = request->getParam("mqttUser")->value();
-        inputParam = "mqttUser";
-        if(inputMessage != NULL){
-          inputMessage.toCharArray(userData.mqttUser, sizeof(userData.mqttUser));
-          credentialsReceived = true;
-        }
-      }
-
-      if (request->hasParam("mqttPswrd")) {
-        inputMessage = request->getParam("mqttPswrd")->value();
-        inputParam = "mqttPswrd";
-        if(inputMessage != NULL){
-          inputMessage.toCharArray(userData.mqttPswrd, sizeof(userData.mqttPswrd));
-          credentialsReceived = true;
-        }
-      }
-
-      request->send(200, "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Wifi Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#f5f5f5;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />Please restart the device.<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>");
-      //request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
-  });
-}
-
-
 void setup() {
   Serial.setRxBufferSize(256);
   Serial.begin(MBUS_BAUD_RATE, SERIAL_8E1);
@@ -369,8 +260,6 @@ void setup() {
   WiFi.hostname(userData.mbusinoName);
   client.setServer(userData.broker, userData.mqttPort);
   client.setCallback(callback);
-  //client.setMqttClientName(userData.mbusinoName);
-  //client.setMqttServer(userData.broker, userData.mqttUser, userData.mqttPswrd, userData.mqttPort);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(userData.ssid, userData.password);
@@ -392,10 +281,9 @@ void setup() {
   server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);//only when requested from AP
   server.begin();
 
-  char lwBuffer[30] = {0};
-  sprintf(lwBuffer, userData.mbusinoName, "/lastwill");     
-  //client.enableLastWillMessage(lwBuffer , "I am going offline"); 
-  client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,0,false,"I am going offline");
+  //char lwBuffer[30] = {0};
+  //sprintf(lwBuffer, userData.mbusinoName, "/lastwill");     
+  //client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,0,false,"I am going offline");
   client.setBufferSize(6000);
   // OneWire vorbereiten
   if(userData.extension > 0){
@@ -428,47 +316,19 @@ void setup() {
     bmeStatus = bme.begin(0x76);
   }
 }
-/*
-// This function is called once everything is connected (Wifi and MQTT)
-// WARNING : YOU MUST IMPLEMENT IT IF YOU USE EspMQTTClient
-void onConnectionEstablished() {  // send a message to MQTT broker if connected.
-  mqttcon = true;
-  client.publish(String(userData.mbusinoName) + "/start", "bin hoch gefahren, WLAN und MQTT seht ");
-  if(userData.extension > 0){
-    client.subscribe(String(userData.mbusinoName) + "/calibrateAverage", [](const String &mqttpayload) {
-      calibrationAverage();
-    });
-    client.subscribe(String(userData.mbusinoName) + "/calibrateSensor", [](const String &mqttpayload) {
-      calibrationSensor(mqttpayload.toInt()-1);
-    });
-    client.subscribe(String(userData.mbusinoName) + "/calibrateValue", [](const String &mqttpayload) {
-      calibrationValue(mqttpayload.toFloat());
-    });  
-    if(userData.extension == 5){
-      client.subscribe(String(userData.mbusinoName) + "/calibrateBME", [](const String &mqttpayload) {
-        calibrationBME();
-    });
-    }
-    client.subscribe(String(userData.mbusinoName) + "/calibrateSet0", [](const String &mqttpayload) {
-      calibrationSet0();
-    });  
-  }  
-}
-*/
+
 
 void loop() {
   client.loop();  //MQTT Funktion
   if(apMode == true){
     dnsServer.processNextRequest();
   }
-  //if(mqttcon == false){
-  //  server.handleClient();
-  //}
+
   if(apMode == true && millis() > 300000){
     ESP.restart();
   }
 
-  if (!client.connected() && espClient.connected() && (millis() - timerReconnect) > 5000) {
+  if (!client.connected() && ((millis() - timerReconnect) > 5000)) { //espClient.connected() &&
     reconnect();
     timerReconnect = millis();
   }
@@ -484,8 +344,8 @@ void loop() {
   }
   
   /////////////////for debug///////////////////////////////////
-  if((millis()-timer) >10000){
-    timer = millis();
+  if((millis()-timerDebug) >10000){
+    timerDebug = millis();
     client.publish(String(String(userData.mbusinoName) + "/eeprom/ssid").c_str(), userData.ssid); 
     //client.publish(String(String(userData.mbusinoName) + "/eeprom/password").c_str(), String(userData.password)); 
     client.publish(String(String(userData.mbusinoName) + "/eeprom/broker").c_str(), userData.broker); 
@@ -854,77 +714,151 @@ void calibrationSet0(){
   EEPROM.commit();
   EEPROM.end();
 }
-/*
-void handlePortal() {
 
-  
-  if (server.method() == HTTP_POST) {
-    char bufferStr[6] = {0};
-    char bufferStr2[6] = {0};
-    char bufferStr3[6] = {0};
-    char bufferStr4[6] = {0};    
-    strncpy(userData.ssid,     server.arg("ssid").c_str(),     sizeof(userData.ssid) );
-    strncpy(userData.password, server.arg("password").c_str(), sizeof(userData.password) );
-    strncpy(userData.mbusinoName, server.arg("deviceName").c_str(), sizeof(userData.mbusinoName) );
-    strncpy(userData.broker, server.arg("broker").c_str(), sizeof(userData.broker) );
-    strncpy(bufferStr, server.arg("mqttPort").c_str(), sizeof(bufferStr) );
-    strncpy(bufferStr2, server.arg("extension").c_str(), sizeof(bufferStr2) );
-    strncpy(bufferStr3, server.arg("sensorInterval").c_str(), sizeof(bufferStr3) );
-    strncpy(bufferStr4, server.arg("mbusInterval").c_str(), sizeof(bufferStr4) );
-    strncpy(userData.mqttUser, server.arg("mqttUser").c_str(), sizeof(userData.mqttUser) );
-    strncpy(userData.mqttPswrd, server.arg("mqttPswrd").c_str(), sizeof(userData.mqttPswrd) );
-    userData.mqttPort = atoi(bufferStr);
-    userData.extension = atoi(bufferStr2);
-    userData.sensorInterval = 1000 * atoi(bufferStr3);
-    userData.mbusInterval = 1000 * atoi(bufferStr4);
-    userData.ssid[server.arg("ssid").length()] = '\0';
-    userData.password[server.arg("password").length()] = '\0';
-    userData.mbusinoName[server.arg("deviceName").length()] = '\0';
-    userData.broker[server.arg("broker").length()] = '\0';
-    userData.mqttUser[server.arg("mqttUser").length()] = '\0';
-    userData.mqttPswrd[server.arg("mqttPswrd").length()] = '\0';
-    EEPROM.begin(512);
-    EEPROM.put(100, userData);
-    credentialsSaved = 500;
-    EEPROM.put(eeAddrCredentialsSaved, credentialsSaved);
-    EEPROM.commit();
-    EEPROM.end();
-
-    server.send(200,   "text/html",  "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Wifi Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#f5f5f5;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />Please restart the device.<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>" );
-  } else {
-
-    server.send(200,   "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>MBusino Setup</title><style>*,::after,::before{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#fff;background-color:#438287}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da}button{cursor:pointer;border:1px solid transparent;color:#fff;background-color:#304648;border-color:#304648;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto}h1{text-align:center}</style></head><body><main class='form-signin'><form action='/' method='post'><h1 class=''><i>MBusino</i> Setup</h1><br><div class='form-floating'><label>SSID</label><input type='text' class='form-control' name='ssid'></div><div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div><div class='form-floating'><label>Device Name</label><input type='text' value='MBusino' class='form-control' name='deviceName'></div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'><option value='5'>5x DS18B20 + BME</option><option value='7'>7x DS18B20 no BME</option><option value='0'>only M-Bus</option></select><br><br><div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='5' class='form-control' name='sensorInterval'></div><div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='120' class='form-control' name='mbusInterval'></div><div class='form-floating'><label>MQTT Broker</label><input type='text' class='form-control' name='broker'></div><div class='form-floating'><label>MQTT Port</label><input type='text' value='1883' class='form-control' name='mqttPort'></div><div class='form-floating'><label>MQTT User (optional)</label><input type='text' class='form-control' name='mqttUser'></div><div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div><br>All Fields will be saved, empty fields delete the values<br><button type='submit'>Save</button><p style='text-align:right'><a href='https://www.github.com/zeppelin500/mbusino' style='color:#fff'>MBusino</a></p></form></main></body></html>" );
-  }
-}
-*/
 void reconnect() {
   // Loop until we're reconnected
   char lwBuffer[30] = {0};
   sprintf(lwBuffer, userData.mbusinoName, "/lastwill");
   if (client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,0,false,"I am going offline")) {
     // Once connected, publish an announcement...
-    client.publish(String(String(userData.mbusinoName) + "/reconnect").c_str(), "connected again");
+    if(conCounter == 0){
+      client.publish(String(String(userData.mbusinoName) + "/start").c_str(), "Bin hochgefahren, WLAN und MQTT steht");
+    }
+    else{
+      client.publish(String(String(userData.mbusinoName) + "/reconnect").c_str(), String("reconnected again:" + String(conCounter) + "_times").c_str());
+    }
     // ... and resubscribe
-    client.subscribe("inTopic");
+    client.subscribe(String(String(userData.mbusinoName) + "/calibrateAverage").c_str());
+    client.subscribe(String(String(userData.mbusinoName) + "/calibrateSensor").c_str());
+    client.subscribe(String(String(userData.mbusinoName) + "/calibrateValue").c_str());
+    client.subscribe(String(String(userData.mbusinoName) + "/calibrateBME").c_str());
+    client.subscribe(String(String(userData.mbusinoName) + "/calibrateSet0").c_str());
   }
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  //Serial.print("Message arrived [");
-  //Serial.print(topic);
-  //Serial.print("] ");
-  //for (int i = 0; i < length; i++) {
-    //Serial.print((char)payload[i]);
-  //}
-  //Serial.println();
-
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+  if(userData.extension > 0){
+    if (strcmp(topic,String(String(userData.mbusinoName) + "/calibrateAverage").c_str())==0){  
+      calibrationAverage();
+    }
+    if (strcmp(topic,String(String(userData.mbusinoName) + "/calibrateSensor").c_str())==0){  
+      calibrationSensor(atoi((char*)payload)-1);
+    }
+    if (strcmp(topic,String(String(userData.mbusinoName) + "/calibrateValue").c_str())==0){  
+      calibrationValue(atof((char*)payload));
+    }  
+    if(userData.extension == 5){
+      if (strcmp(topic,String(String(userData.mbusinoName) + "/calibrateBME").c_str())==0){  
+        calibrationBME();
+      }
+    }
+    if (strcmp(topic,String(String(userData.mbusinoName) + "/calibrateSet0").c_str())==0){  
+      calibrationSet0();
+    } 
   }
+}   
 
+void setupServer(){
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send_P(200, "text/html", index_html); 
+      //Serial.println("Client Connected");
+  });
+    
+  server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
+      String inputMessage;
+      String inputParam;
+
+      if (request->hasParam("ssid")) {
+        inputMessage = request->getParam("ssid")->value();
+        inputParam = "ssid";
+        if(inputMessage != NULL){
+          inputMessage.toCharArray(userData.ssid, sizeof(userData.ssid));
+          credentialsReceived = true;
+        }
+      }
+
+      if (request->hasParam("password")) {
+        inputMessage = request->getParam("password")->value();
+        inputParam = "password";
+        if(inputMessage != NULL){
+          inputMessage.toCharArray(userData.password, sizeof(userData.password));
+          credentialsReceived = true;
+        }
+      }
+
+      if (request->hasParam("name")) {
+        inputMessage = request->getParam("name")->value();
+        inputParam = "name";
+        if(inputMessage != NULL){
+          inputMessage.toCharArray(userData.mbusinoName, sizeof(userData.mbusinoName));
+          credentialsReceived = true;
+        }
+      }
+
+      if (request->hasParam("broker")) {
+        inputMessage = request->getParam("broker")->value();
+        inputParam = "broker";
+        if(inputMessage != NULL){
+          inputMessage.toCharArray(userData.broker, sizeof(userData.broker));
+          credentialsReceived = true;
+        }
+      }
+
+      if (request->hasParam("mqttPort")) {
+        inputMessage = request->getParam("mqttPort")->value();
+        inputParam = "mqttPort";
+        if(inputMessage != NULL){
+          userData.mqttPort = inputMessage.toInt();
+          credentialsReceived = true;
+        }
+      }
+
+      if (request->hasParam("extension")) {
+        inputMessage = request->getParam("extension")->value();
+        inputParam = "extension";
+        if(inputMessage != NULL){
+          userData.extension = inputMessage.toInt();
+          credentialsReceived = true;
+          }
+      }
+
+      if (request->hasParam("sensorInterval")) {
+        inputMessage = request->getParam("sensorInterval")->value();
+        inputParam = "sensorInterval";
+        if(inputMessage != NULL){
+          userData.sensorInterval = inputMessage.toInt()  * 1000;
+          credentialsReceived = true;
+          }
+      }
+
+      if (request->hasParam("mbusInterval")) {
+        inputMessage = request->getParam("mbusInterval")->value();
+        inputParam = "mbusInterval";
+          if(inputMessage != NULL){
+            userData.mbusInterval = inputMessage.toInt() * 1000;
+            credentialsReceived = true;
+          }
+      }
+
+      if (request->hasParam("mqttUser")) {
+        inputMessage = request->getParam("mqttUser")->value();
+        inputParam = "mqttUser";
+        if(inputMessage != NULL){
+          inputMessage.toCharArray(userData.mqttUser, sizeof(userData.mqttUser));
+          credentialsReceived = true;
+        }
+      }
+
+      if (request->hasParam("mqttPswrd")) {
+        inputMessage = request->getParam("mqttPswrd")->value();
+        inputParam = "mqttPswrd";
+        if(inputMessage != NULL){
+          inputMessage.toCharArray(userData.mqttPswrd, sizeof(userData.mqttPswrd));
+          credentialsReceived = true;
+        }
+      }
+
+      request->send(200, "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Wifi Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#f5f5f5;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />Please restart the device.<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>");
+      //request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
+  });
 }
