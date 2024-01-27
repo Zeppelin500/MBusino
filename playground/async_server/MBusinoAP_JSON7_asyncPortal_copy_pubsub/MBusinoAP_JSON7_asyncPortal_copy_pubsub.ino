@@ -372,6 +372,8 @@ void loop() {
     client.publish(String(String(userData.mbusinoName) + "/settings/sensorInterval").c_str(), String(userData.sensorInterval).c_str());     
     client.publish(String(String(userData.mbusinoName) + "/settings/IP").c_str(), String(WiFi.localIP().toString()).c_str());
     client.publish(String(String(userData.mbusinoName) + "/settings/MQTTreconnections").c_str(), String(conCounter-1).c_str());
+    long rssi = WiFi.RSSI();
+    client.publish(String(String(userData.mbusinoName) + "/settings/RSSI").c_str(), String(rssi).c_str()); 
   }
   ///////////////////////////////////////////////////////////
   
@@ -401,10 +403,7 @@ void loop() {
       client.publish(String(String(userData.mbusinoName) + "/bme/Hoehe").c_str(), String(hoehe).c_str());
       client.publish(String(String(userData.mbusinoName) + "/bme/Feuchte").c_str(), String(feuchte).c_str());
     }
-    long rssi = WiFi.RSSI();
-    client.publish(String(String(userData.mbusinoName) + "/RSSI").c_str(), String(rssi).c_str());  
-
-    timerMQTT = millis();
+     timerMQTT = millis();
   }
 
   if(millis() - timerMbus > userData.mbusInterval){
@@ -875,7 +874,7 @@ void setupServer(){
         }
       }
 
-      request->send(200, "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>Wifi Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#f5f5f5;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />Please restart the device.<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>");
+      request->send(200, "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>MBusino Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#FFF;background-color:#438287;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1>Wifi Setup</h1> <br/> <p>Your settings have been saved successfully!<br />MBusino restart now!<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>");
       //request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
   });
 }
