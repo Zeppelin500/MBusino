@@ -22,7 +22,7 @@ You should have received a copy of the GNU General Public License along with thi
 #include <ESPAsyncTCP.h>
 #include <DNSServer.h>
 #include <AsyncElegantOTA.h>
-//#include <ArduinoOTA.h>
+#include <ArduinoOTA.h>
 
 #include <MBusinoLib.h>  // Library for decode M-Bus
 #include <ArduinoJson.h>
@@ -104,6 +104,7 @@ float feuchte = 0;
 bool bmeStatus;
 
 bool mbusReq = false;
+bool waitForRestart = false;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerSensorRefresh1 = 0;
@@ -112,6 +113,7 @@ unsigned long timerMbus = 0;
 unsigned long timerMbus2 = 0;
 unsigned long timerDebug = 0;
 unsigned long timerReconnect = 0;
+unsigned long timerRestart = 0;
 
 void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
@@ -206,10 +208,11 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class='form-floating'><label>MQTT Broker</label><input type='text' class='form-control' name='broker'></div>
         <div class='form-floating'><label>MQTT Port</label><input type='text' value='1883' class='form-control' name='mqttPort'></div>
         <div class='form-floating'><label>MQTT User (optional)</label><input type='text' class='form-control' name='mqttUser'></div>
-        <div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div><br>All Fields will be saved, empty fields delete the values<br>
+        <div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div>
+        <br>
         <button type='submit'>Save</button>
-        <input type='submit' value='Submit'>
-        <p style='text-align:right'><a href='https://www.github.com/zeppelin500/mbusino' style='color:#fff'>MBusino</a></p>
+        <p style='text-align:right'><a href='/update' style='color:#3F4CFB'>update</a></p>
+        <p style='text-align:right'><a href='https://www.github.com/zeppelin500/mbusino' style='color:#3F4CFB'>MBusino</a></p>
       </form>
     </main>
   </body>
@@ -281,14 +284,13 @@ void setup() {
     dnsServer.start(53, "*", WiFi.softAPIP());
   }
   server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);//only when requested from AP
-  //AsyncElegantOTA.setPassword((const char *)"mbusino");
+  ArduinoOTA.setPassword((const char *)"mbusino");
   AsyncElegantOTA.begin(&server);
+  ArduinoOTA.begin(&server);
   server.begin();
 
-  //char lwBuffer[30] = {0};
-  //sprintf(lwBuffer, userData.mbusinoName, "/lastwill");     
-  //client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,0,false,"I am going offline");
   client.setBufferSize(6000);
+
   // OneWire vorbereiten
   if(userData.extension > 0){
     sensor1.setWaitForConversion(false);  // makes it async
@@ -319,14 +321,13 @@ void setup() {
     // Vorbereitungen für den BME280
     bmeStatus = bme.begin(0x76);
   }
-  //ArduinoOTA.setPassword((const char *)"mbusino");
-  //ArduinoOTA.begin();
+
 }
 
 
 void loop() {
   client.loop();  //MQTT Funktion
-  //ArduinoOTA.handle();
+  ArduinoOTA.handle();
   if(apMode == true){
     dnsServer.processNextRequest();
   }
@@ -340,30 +341,37 @@ void loop() {
     timerReconnect = millis();
   }
 
-  if(credentialsReceived==true){
+  if(credentialsReceived == true && waitForRestart == false){
     EEPROM.begin(512);
     EEPROM.put(100, userData);
     credentialsSaved = 500;
     EEPROM.put(eeAddrCredentialsSaved, credentialsSaved);
     EEPROM.commit();
     EEPROM.end();
+    timerRestart = millis();
+    waitForRestart = true;
+  }
+
+  if(credentialsReceived==true && (millis() - timerRestart) > 1000){
     ESP.restart();
   }
+
   
   /////////////////for debug///////////////////////////////////
   if((millis()-timerDebug) >10000){
     timerDebug = millis();
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/ssid").c_str(), userData.ssid); 
-    //client.publish(String(String(userData.mbusinoName) + "/eeprom/password").c_str(), String(userData.password)); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/broker").c_str(), userData.broker); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/port").c_str(), String(userData.mqttPort).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/user").c_str(), userData.mqttUser); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/pswd").c_str(), userData.mqttPswrd); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/name").c_str(), userData.mbusinoName); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/extension").c_str(), String(userData.extension).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/mbusInterval").c_str(), String(userData.mbusInterval).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/eeprom/sensorInterval").c_str(), String(userData.sensorInterval).c_str());     
-    client.publish(String(String(userData.mbusinoName) + "/IP").c_str(), String(WiFi.localIP().toString()).c_str());
+    client.publish(String(String(userData.mbusinoName) + "/settings/ssid").c_str(), userData.ssid); 
+    //client.publish(String(String(userData.mbusinoName) + "/settings/password").c_str(), String(userData.password)); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/broker").c_str(), userData.broker); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/port").c_str(), String(userData.mqttPort).c_str()); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/user").c_str(), userData.mqttUser); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/pswd").c_str(), userData.mqttPswrd); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/name").c_str(), userData.mbusinoName); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/extension").c_str(), String(userData.extension).c_str()); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/mbusInterval").c_str(), String(userData.mbusInterval).c_str()); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/sensorInterval").c_str(), String(userData.sensorInterval).c_str());     
+    client.publish(String(String(userData.mbusinoName) + "/settings/IP").c_str(), String(WiFi.localIP().toString()).c_str());
+    client.publish(String(String(userData.mbusinoName) + "/settings/MQTTreconnections").c_str(), String(conCounter-1).c_str());
   }
   ///////////////////////////////////////////////////////////
   
@@ -729,11 +737,12 @@ void reconnect() {
   sprintf(lwBuffer, userData.mbusinoName, "/lastwill");
   if (client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,0,false,"I am going offline")) {
     // Once connected, publish an announcement...
-    if(conCounter == 0){
+    conCounter++;
+    if(conCounter == 1){
       client.publish(String(String(userData.mbusinoName) + "/start").c_str(), "Bin hochgefahren, WLAN und MQTT steht");
     }
     else{
-      client.publish(String(String(userData.mbusinoName) + "/reconnect").c_str(), String("reconnected again:" + String(conCounter) + "_times").c_str());
+      client.publish(String(String(userData.mbusinoName) + "/reconnect").c_str(), "Online again!");
     }
     // ... and resubscribe
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateAverage").c_str());
