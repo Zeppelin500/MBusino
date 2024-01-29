@@ -2,6 +2,8 @@
 
 **MBusinoAP** ist jetzt online, AP für AccessPoint mit Setup Portal. Keine Anpassungen am Code nötig. Siehe unten.
 
+Ihr könnt euch auch alle Schritte sparen und den Code online Flashen, siehe ganz unten.
+
 ### nötige Software
 
 "Arduino IDE 2" downloaden und installieren.
@@ -149,5 +151,32 @@ Im Wlan findet ihr das Portal dauerhaft. IP müsst ihr in der Fritzbox o.ä. suc
 * Bei MQTT Broker kann eine IP oder eine Adresse eingegeben weren. z.B. **192.168.1.7** oder **test.mosquitto.org** kein https:// oder mqtt:// nur die Adresse
 * Beim Speichern werden immer alle Felder auf einmal gespeichert, die Daten liegen dann im EEPROM bzw Flash und sind dauerhaft verfügbar. Werden Felder leer gelassen, sind nach dem speichern vormals gespeicherte Inhalte gelöscht.
 * Bei mehreren Geräten im Netzwerk unbedingt verschiedene Namen vergeben, sonst sind sie nicht mehr erreichbar. 
+
+## You can flash the MBusino with https://web.esphome.io
+
+1. Download the Bin from https://github.com/Zeppelin500/MBusino/blob/main/SRC/MBusinoAP/build/esp8266.esp8266.d1_mini/MBusinoAP.ino.bin
+
+2. open https://web.esphome.io with the Chrome-Browser
+
+3. Connect your 8266er with the COM-Port XX
+
+4. Click on "INSTALL" not "PREPARE FOR FIRST USER
+![Step4](https://github.com/Zeppelin500/MBusino/assets/32666091/7ff901e5-4994-49f9-a2c1-f914df4c7fb3)
+
+5. Click on "Datei auswählen" and chose MBusinoAP.ino.bin
+![Step5](https://github.com/Zeppelin500/MBusino/assets/32666091/221017c4-1a4b-4e81-8c4e-e0d9ce51a9d1)
+
+6. Click on "INSTALL"
+![Step6](https://github.com/Zeppelin500/MBusino/assets/32666091/b70db0ed-884b-4ca2-9f67-002f8dbabd9b)
+
+7. Wait for finishing the Flash-Process
+![Step7](https://github.com/Zeppelin500/MBusino/assets/32666091/5b327ce6-a832-4b6d-8381-7ecec4572459)
+
+8. Flashing is completed successfully 
+![Step8](https://github.com/Zeppelin500/MBusino/assets/32666091/782f9d0a-45da-4c94-b262-aa562115c390)
+
+9. Search the MBusino Wlan Access-Point "MBusino Setup Portal" with your Smartphone
+
+10. Configure your Mqtt-Broker and your WLAN
 
 
