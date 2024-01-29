@@ -87,7 +87,7 @@ struct settings {
   char mqttPswrd[30]; 
   uint32_t sensorInterval;
   uint32_t mbusInterval; 
-} userData = {};
+} userData = {"SSID","Password","MBusino","192.168.1.7",1883,5,"mqttUser","mqttPasword",5000,120000};
 
 bool mqttcon = false;
 bool apMode = false;
@@ -161,7 +161,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
       .form-control {
         display: block;
-        width: 100%;
+        width: 100%%;
         height: calc(1.5em + .75rem + 2px);
         border: 1px solid #ced4da
       }
@@ -176,11 +176,11 @@ const char index_html[] PROGMEM = R"rawliteral(
         font-size: 1.25rem;
         line-height: 1.5;
         border-radius: .3rem;
-        width: 100%
+        width: 100%%
       }
 
       .form-signin {
-        width: 100%;
+        width: 100%%;
         max-width: 400px;
         padding: 15px;
         margin: auto
@@ -195,19 +195,19 @@ const char index_html[] PROGMEM = R"rawliteral(
     <main class='form-signin'>
       <form action='/get'>
         <h1 class=''><i>MBusino</i> Setup</h1><br>
-        <div class='form-floating'><label>SSID</label><input type='text' class='form-control' name='ssid'></div>
+        <div class='form-floating'><label>SSID</label><input type='text' value='%s' class='form-control' name='ssid'></div>
         <div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div>
-        <div class='form-floating'><label>Device Name</label><input type='text' value='MBusino' class='form-control' name='name'>
+        <div class='form-floating'><label>Device Name</label><input type='text' value='%s' class='form-control' name='name'>
         </div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'>
           <option value='5'>5x DS18B20 + BME</option>
           <option value='7'>7x DS18B20 no BME</option>
           <option value='0'>only M-Bus</option>
         </select><br><br>
-        <div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='5' class='form-control' name='sensorInterval'></div>
-        <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='120' class='form-control' name='mbusInterval'></div>
-        <div class='form-floating'><label>MQTT Broker</label><input type='text' class='form-control' name='broker'></div>
-        <div class='form-floating'><label>MQTT Port</label><input type='text' value='1883' class='form-control' name='mqttPort'></div>
-        <div class='form-floating'><label>MQTT User (optional)</label><input type='text' class='form-control' name='mqttUser'></div>
+        <div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='%u' class='form-control' name='sensorInterval'></div>
+        <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='%u' class='form-control' name='mbusInterval'></div>
+        <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' name='broker'></div>
+        <div class='form-floating'><label>MQTT Port</label><input type='text' value='%u' class='form-control' name='mqttPort'></div>
+        <div class='form-floating'><label>MQTT User (optional)</label><input type='text' value='%s' class='form-control' name='mqttUser'></div>
         <div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div>
         <br>
         <button type='submit'>Save</button>
@@ -217,6 +217,8 @@ const char index_html[] PROGMEM = R"rawliteral(
     </main>
   </body>
 </html>)rawliteral";
+
+char html_buffer[sizeof(index_html)+200] = {0};
 
 class CaptiveRequestHandler : public AsyncWebHandler {
 public:
@@ -229,7 +231,7 @@ public:
   }
 
   void handleRequest(AsyncWebServerRequest *request) {
-    request->send_P(200, "text/html", index_html); 
+    request->send_P(200, "text/html", html_buffer); 
   }
 };
 
@@ -255,12 +257,11 @@ void setup() {
   if(credentialsSaved == 500){
     EEPROM.get(100, userData );
   }
-  else{
-    userData.sensorInterval = 10000;
-    userData.mbusInterval = 10000;
-  }
+
   EEPROM.commit();
   EEPROM.end();
+
+  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
 
   WiFi.hostname(userData.mbusinoName);
   client.setServer(userData.broker, userData.mqttPort);
@@ -355,7 +356,6 @@ void loop() {
   if(credentialsReceived==true && (millis() - timerRestart) > 1000){
     ESP.restart();
   }
-
   
   /////////////////for debug///////////////////////////////////
   if((millis()-timerDebug) >10000){
@@ -776,8 +776,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setupServer(){
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send_P(200, "text/html", index_html); 
-      //Serial.println("Client Connected");
+  request->send_P(200, "text/html", html_buffer); 
+  //Serial.println("Client Connected");
   });
     
   server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
