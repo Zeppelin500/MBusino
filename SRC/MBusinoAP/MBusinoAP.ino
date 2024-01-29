@@ -199,10 +199,11 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div>
         <div class='form-floating'><label>Device Name</label><input type='text' value='%s' class='form-control' name='name'>
         </div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'>
-          <option value='5'>5x DS18B20 + BME</option>
-          <option value='7'>7x DS18B20 no BME</option>
-          <option value='0'>only M-Bus</option>
-        </select><br><br>
+          <option value='5'>(5) 5x DS18B20 + BME</option>
+          <option value='7'>(7) 7x DS18B20 no BME</option>
+          <option value='0'>(0) only M-Bus</option>
+          <option value='' selected>choose option</option>
+        </select>  stored: %u <br><br>
         <div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='%u' class='form-control' name='sensorInterval'></div>
         <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='%u' class='form-control' name='mbusInterval'></div>
         <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' name='broker'></div>
@@ -261,7 +262,7 @@ void setup() {
   EEPROM.commit();
   EEPROM.end();
 
-  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
+  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
 
   WiFi.hostname(userData.mbusinoName);
   client.setServer(userData.broker, userData.mqttPort);
