@@ -248,7 +248,7 @@ void setup() {
     }
   }
   else{
-      for(uint8_t i = 0; i < userData.extension; i++){    
+      for(uint8_t i = 0; i < 7; i++){    
         EEPROM.put(eeAddrOffset[i], 0);  // copy offset 0 to EEPROM
       }
       calibrated = 500;
