@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.7.0-brightgreen.svg)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.7.0-brightgreen.svg)](CHANGELOG.md)<br/>
 M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 
 - M-Bus e.g. heatmeter (only one device at the moment)
