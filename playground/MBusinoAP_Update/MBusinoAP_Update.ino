@@ -257,6 +257,7 @@ const char update_html[] PROGMEM = R"rawliteral(
   <body>
     <main class='form-signin'>
        	<h1 class=''><i>MBusino</i> update</h1><br>
+          <p style='text-align:center'> select a xxx.bin file </p><br>
 			    <form style='text-align:center' method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'>
          	</form><br/>
           <p style='text-align:center'> MBusino will restart after update </p><br>
