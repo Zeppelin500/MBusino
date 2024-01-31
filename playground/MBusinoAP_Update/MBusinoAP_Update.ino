@@ -259,7 +259,7 @@ const char update_html[] PROGMEM = R"rawliteral(
        	<h1 class=''><i>MBusino</i> update</h1><br>
 			    <form style='text-align:center' method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'>
          	</form><br/>
-          <p style='text-align:center'> MBusino will resart after update </p><br>
+          <p style='text-align:center'> MBusino will restart after update </p><br>
           <p style='text-align:center'><a href='/' style='color:#3F4CFB'>home</a></p>
     </main>
   </body>
