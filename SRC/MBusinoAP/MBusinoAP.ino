@@ -21,7 +21,6 @@ You should have received a copy of the GNU General Public License along with thi
 #include <ESPAsyncWebServer.h> 
 #include <ESPAsyncTCP.h>
 #include <DNSServer.h>
-#include <AsyncElegantOTA.h>
 #include <ArduinoOTA.h>
 
 #include <MBusinoLib.h>  // Library for decode M-Bus
@@ -30,6 +29,8 @@ You should have received a copy of the GNU General Public License along with thi
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+
+#define MBUSINO_VERSION "0.7.1"
 
 #define MBUS_BAUD_RATE 2400
 #define MBUS_ADDRESS 0xFE  // brodcast
@@ -53,6 +54,8 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 DNSServer dnsServer;
 AsyncWebServer server(80);
+AsyncWebSocket ws("/ws"); // access at ws://[esp ip]/ws
+AsyncEventSource events("/events"); // event source (Server-Sent events)
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire1(ONE_WIRE_BUS1);
@@ -221,6 +224,48 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 char html_buffer[sizeof(index_html)+200] = {0};
 
+const char update_html[] PROGMEM = R"rawliteral(
+<!doctype html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>MBusino update</title>
+    <style>
+      *,
+      ::after,
+      ::before {
+        box-sizing: border-box
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans';
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #fff;
+        background-color: #438287
+      }
+
+      h1 {
+        text-align: center
+      }
+    </style>
+  </head>
+  <body>
+    <main class='form-signin'>
+       	<h1 class=''><i>MBusino</i> update</h1><br>
+          <p style='text-align:center'> select a xxx.bin file </p><br>
+			    <form style='text-align:center' method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'>
+         	</form><br/>
+          <p style='text-align:center'> MBusino will restart after update </p><br>
+          <p style='text-align:center'><a href='/' style='color:#3F4CFB'>home</a></p>
+    </main>
+  </body>
+</html>)rawliteral";
+
+
 class CaptiveRequestHandler : public AsyncWebHandler {
 public:
   CaptiveRequestHandler() {}
@@ -286,8 +331,52 @@ void setup() {
     dnsServer.start(53, "*", WiFi.softAPIP());
   }
   server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);//only when requested from AP
+
+  //attach AsyncWebSocket
+ // ws.onEvent(onEvent);
+  server.addHandler(&ws);
+
+  // attach AsyncEventSource
+  server.addHandler(&events);
+
+  // Simple Firmware Update Form
+  server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
+    //request->send(200, "text/html", "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>");
+    request->send(200, "text/html", update_html);    
+  });
+  server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
+    waitForRestart = !Update.hasError();
+    if(Update.hasError()==true){
+      timerRestart = millis();
+    }
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", waitForRestart?"success, restart now":"FAIL");
+    response->addHeader("Connection", "close");
+    request->send(response);
+  },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+    if(!index){
+      //Serial.printf("Update Start: %s\n", filename.c_str());
+      Update.runAsync(true);
+      if(!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)){
+        Update.printError(Serial);
+      }
+    }
+    if(!Update.hasError()){
+      if(Update.write(data, len) != len){
+        Update.printError(Serial);
+      }
+    }
+    if(final){
+      if(Update.end(true)){
+        //Serial.printf("Update Success: %uB\n", index+len);
+      } else {
+        Update.printError(Serial);
+      }
+    }
+  });
   ArduinoOTA.setPassword((const char *)"mbusino");
-  AsyncElegantOTA.begin(&server);
+  server.onNotFound(onRequest);
+
+  //AsyncElegantOTA.begin(&server);
   ArduinoOTA.begin(&server);
   server.begin();
 
@@ -354,7 +443,7 @@ void loop() {
     waitForRestart = true;
   }
 
-  if(credentialsReceived==true && (millis() - timerRestart) > 1000){
+  if(waitForRestart==true && (millis() - timerRestart) > 1000){
     ESP.restart();
   }
   
@@ -375,6 +464,7 @@ void loop() {
     client.publish(String(String(userData.mbusinoName) + "/settings/MQTTreconnections").c_str(), String(conCounter-1).c_str());
     long rssi = WiFi.RSSI();
     client.publish(String(String(userData.mbusinoName) + "/settings/RSSI").c_str(), String(rssi).c_str()); 
+    client.publish(String(String(userData.mbusinoName) + "/settings/version").c_str(), MBUSINO_VERSION); 
   }
   ///////////////////////////////////////////////////////////
   
@@ -878,4 +968,9 @@ void setupServer(){
       request->send(200, "text/html", "<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>MBusino Setup</title><style>*,::after,::before{box-sizing:border-box;}body{margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans';font-size:1rem;font-weight:400;line-height:1.5;color:#FFF;background-color:#438287;}.form-control{display:block;width:100%;height:calc(1.5em + .75rem + 2px);border:1px solid #ced4da;}button{border:1px solid transparent;color:#fff;background-color:#007bff;border-color:#007bff;padding:.5rem 1rem;font-size:1.25rem;line-height:1.5;border-radius:.3rem;width:100%}.form-signin{width:100%;max-width:400px;padding:15px;margin:auto;}h1,p{text-align: center}</style> </head> <body><main class='form-signin'> <h1><i>MBusino</i> Setup</h1> <br/> <p>Your settings have been saved successfully!<br />MBusino restart now!<br />MQTT should now work. <br /> If you find the Acces Point network again, your credentials were wrong.</p></main></body></html>");
       //request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
   });
+}
+
+void onRequest(AsyncWebServerRequest *request){
+  //Handle Unknown Request
+  request->send(404);
 }
