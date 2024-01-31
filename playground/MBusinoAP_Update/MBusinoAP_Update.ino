@@ -225,6 +225,47 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 char html_buffer[sizeof(index_html)+200] = {0};
 
+const char update_html[] PROGMEM = R"rawliteral(
+<!doctype html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>MBusino update</title>
+    <style>
+      *,
+      ::after,
+      ::before {
+        box-sizing: border-box
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans';
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #fff;
+        background-color: #438287
+      }
+
+      h1 {
+        text-align: center
+      }
+    </style>
+  </head>
+  <body>
+    <main class='form-signin'>
+       	<h1 class=''><i>MBusino</i> update</h1><br>
+			    <form style='text-align:center' method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'>
+         	</form><br/>
+          <p style='text-align:center'> MBusino will resart after update </p><br>
+          <p style='text-align:center'><a href='/' style='color:#3F4CFB'>home</a></p>
+    </main>
+  </body>
+</html>)rawliteral";
+
+
 class CaptiveRequestHandler : public AsyncWebHandler {
 public:
   CaptiveRequestHandler() {}
@@ -301,51 +342,14 @@ void setup() {
   // Simple Firmware Update Form
   server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
     //request->send(200, "text/html", "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>");
-    request->send(200, "text/html", "<!doctype html>
-<html lang='en'>
-  <head>
-    <meta charset='utf-8'>
-    <meta name='viewport' content='width=device-width,initial-scale=1'>
-    <title>MBusino update</title>
-    <style>
-      *,
-      ::after,
-      ::before {
-        box-sizing: border-box
-      }
-
-      body {
-        margin: 0;
-        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans';
-        font-size: 1rem;
-        font-weight: 400;
-        line-height: 1.5;
-        color: #fff;
-        background-color: #438287
-      }
-
-      h1 {
-        text-align: center
-      }
-    </style>
-  </head>
-  <body>
-    <main class='form-signin'>
-       	<h1 class=''><i>MBusino</i> update</h1><br>
-			    <form style='text-align:center' method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'>
-         	</form><br/>
-          <p style='text-align:center'> MBusino will resart after update </p><br>
-          <p style='text-align:center'><a href='/' style='color:#3F4CFB'>home</a></p>
-    </main>
-  </body>
-</html>");    
+    request->send(200, "text/html", update_html);    
   });
   server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
     waitForRestart = !Update.hasError();
     if(Update.hasError()==true){
       timerRestart = millis();
     }
-    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", waitForRestart?"OK":"FAIL");
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", waitForRestart?"success, restart now":"FAIL");
     response->addHeader("Connection", "close");
     request->send(response);
   },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
