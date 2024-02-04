@@ -30,8 +30,8 @@ EspSoftwareSerial::UART ESP8266Serial;
 
 #define MBUS_BAUD_RATE 2400
 #define MBUS_SLAVES 2  // Number of M-Bus Devices at the Bus
-#define MBUS_ADDRESS_1 0x00   // Adress of Slave 1
-#define MBUS_ADDRESS_2 0x01   // Adress of Slave 2
+#define MBUS_ADDRESS_1 0x01   // Adress of Slave 1
+#define MBUS_ADDRESS_2 0x02   // Adress of Slave 2
 #define MBUS_TIMEOUT 1000  // milliseconds
 #define MBUS_DATA_SIZE 510
 #define MBUS_GOOD_FRAME true
@@ -48,7 +48,9 @@ EspMQTTClient client(
   1883             // The MQTT port, default to 1883. this line can be omitted
 );
 
-uint8_t mbusAdress[MBUS_SLAVES] = {MBUS_ADDRESS_1,MBUS_ADDRESS_2};
+uint8_t mbusAddress[MBUS_SLAVES] = {MBUS_ADDRESS_1,MBUS_ADDRESS_2};
+uint8_t currentAddress = 0;
+
 unsigned long loop_start = 0;
 unsigned long last_loop = 0;
 bool firstrun = true;
@@ -62,11 +64,15 @@ unsigned long timerMbus = 0;
 void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
 bool mbus_get_response(byte *pdata, unsigned char len_pdata);
+void mbus_normalize(byte address);
+void mbus_clearRXbuffer();
 void calibrationAverage();
 void calibrationSensor(uint8_t sensor);
 void calibrationValue(float value);
 void calibrationBME();
 void calibrationSet0();
+
+
 
 void setup() {
   //Serial.begin(2400, SERIAL_8E1);
@@ -97,7 +103,9 @@ void loop() {
     for(uint8_t k=0;k<MBUS_SLAVES;k++){
       bool mbus_good_frame = false;
       byte mbus_data[MBUS_DATA_SIZE] = { 0 };
-      mbus_request_data(mbusAdress[k]);
+      currentAddress = mbusAddress[k];
+      mbus_clearRXbuffer();
+      mbus_request_data(mbusAddress[k]);
       mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
       /*
       //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
@@ -150,6 +158,7 @@ void loop() {
           client.publish(String(MBUSINO_NAME"_Slave"+String(k+1)+"/MBUSerror"), "no_good_telegram");
       }
     }
+    mbus_normalize(currentAddress);
   } // ende - interner vermerk
 }
 
@@ -237,6 +246,16 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
     return MBUS_GOOD_FRAME;
   } else {
     return MBUS_BAD_FRAME;
+  }
+}
+
+void mbus_normalize(byte address) {
+  mbus_short_frame(address,0x40);
+}
+
+void mbus_clearRXbuffer(){
+  while (customSerial->available()) {
+    byte received_byte = (byte)customSerial->read();
   }
 }
 
