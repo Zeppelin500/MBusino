@@ -95,7 +95,7 @@ private:
         }else if(this->unit=="m3") {
             return "water";
         }else if(this->unit =="m3/h"){
-            return "measurement";
+            return String("");
         } else {
             return String("");
         }

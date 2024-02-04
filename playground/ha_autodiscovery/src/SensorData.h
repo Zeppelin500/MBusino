@@ -25,10 +25,17 @@ public:
         oss += "\"state_topic\":\"" + state_topic + "\",";
         oss += "\"name\":\"" + name + "\",";
         oss += "\"value_template\":\"" + value_template + "\",";
-        oss += "\"unit_of_meas\":\"" + unit_of_meas + "\",";
-        oss += "\"state_class\":\"" + state_class + "\",";
+        if (!unit_of_meas.isEmpty()) {
+            oss += "\"unit_of_meas\":\"" + unit_of_meas + "\",";
+        }
+        // checking state_class for null and empty, if nothing is present then no entry is made in JSON
+        if (!state_class.isEmpty()) {
+            oss += "\"state_class\":\"" + state_class + "\",";
+        }
         oss += "\"device\":" + device.toJsonString(mbusinoName) + ",";
-        oss += "\"device_class\":\"" + device_class+ "\",";
+        if (!device_class.isEmpty()) {
+            oss += "\"device_class\":\"" + device_class+ "\",";
+        }
         oss += "\"availability_mode\":\"" + availability_mode + "\"";
 
         oss += "}";
