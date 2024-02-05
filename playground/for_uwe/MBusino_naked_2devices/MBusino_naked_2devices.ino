@@ -96,7 +96,7 @@ void calibrationSet0();
 void setup() {
   //Serial.begin(2400, SERIAL_8E1);
   customSerial = &ESP8266Serial;
-  customSerial->begin(MBUS_BAUD_RATE, SWSERIAL_8E1,5,4,false); // mbus uses 8E1 encoding
+  customSerial->begin(MBUS_BAUD_RATE, SWSERIAL_8E1,5,4,false,254); // mbus uses 8E1 encoding
 
   // Optional functionalities of EspMQTTClient
   client.enableHTTPWebUpdater();                                           // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overridded with enableHTTPWebUpdater("user", "password").
