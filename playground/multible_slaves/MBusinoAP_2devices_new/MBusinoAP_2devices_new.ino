@@ -539,16 +539,17 @@ void loop() {
     }
     currentAddress = mbusAddress[addressCounter];
     addressCounter++;
-    mbus_clearRXbuffer();
+    mbus_normalize(currentAddress);
     mbusCleared = true;
   }
 
-  if(millis() - timerMbus1 > 1000 && mbusCleared == true){
+  if(millis() - timerMbus1 > 500 && mbusCleared == true){
     mbusReq = true;
     mbusCleared = false;
+    mbus_clearRXbuffer();
     mbus_request_data(currentAddress);
   }
-  if(millis() - timerMbus2 > 2000 && mbusReq == true){
+  if(millis() - timerMbus1 > 1500 && mbusReq == true){
     mbusReq = false;
     bool mbus_good_frame = false;
     byte mbus_data[MBUS_DATA_SIZE] = { 0 };

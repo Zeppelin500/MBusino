@@ -539,16 +539,17 @@ void loop() {
     }
     currentAddress = mbusAddress[addressCounter];
     addressCounter++;
-    mbus_clearRXbuffer();
+    mbus_normalize(currentAddress);
     mbusCleared = true;
   }
 
-  if(millis() - timerMbus1 > 1000 && mbusCleared == true){
+  if(millis() - timerMbus1 > 300 && mbusCleared == true){
     mbusReq = true;
     mbusCleared = false;
+    mbus_clearRXbuffer();
     mbus_request_data(currentAddress);
   }
-  if(millis() - timerMbus2 > 2000 && mbusReq == true){
+  if(millis() - timerMbus1 > 1300 && mbusReq == true){
     mbusReq = false;
     bool mbus_good_frame = false;
     byte mbus_data[MBUS_DATA_SIZE] = { 0 };
@@ -574,10 +575,8 @@ void loop() {
       JsonArray root = jsonBuffer.add<JsonArray>();  
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
       char jsonstring[2048] = { 0 };
-      yield();
       serializeJson(root, jsonstring);
       client.publish(String(String(userData.mbusinoName) + "/Slave"+String(addressCounter)+ "/MBus/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
-      yield();
       client.publish(String(String(userData.mbusinoName) + "/Slave"+String(addressCounter)+ "/MBus/jsonstring").c_str(), jsonstring);
 
       for (uint8_t i=0; i<fields; i++) {
@@ -599,15 +598,13 @@ void loop() {
           float delta = root[9]["value_scaled"].as<float>();
           float calc_power = delta * flow * 1163;          
           client.publish(String(String(userData.mbusinoName) +"/Slave"+String(addressCounter)+ "/MBus/4_power_calc").c_str(), String(calc_power).c_str());                    
-        }   
-        yield();      
+        }      
       }
     } 
     else {
   //Fehlermeldung
         client.publish(String(String(userData.mbusinoName)  +"/Slave"+String(addressCounter)+ "/MBUSerror").c_str(), "no_good_telegram");
     }
-    mbus_normalize(currentAddress);
   }
 }
 
@@ -741,7 +738,6 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
         }
       }
       bid++;
-      yield();
     }
   }
 
