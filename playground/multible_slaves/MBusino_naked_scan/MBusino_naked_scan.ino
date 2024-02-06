@@ -126,7 +126,7 @@ void loop() {
   }
 
   if((millis() - setTimer) > 10000 && setAdress == true){
-    mbus_set_address(0xFE, 0x02);
+    mbus_set_address(0x05, 0x00);
     client.publish(String(MBUSINO_NAME"/setAdress"), "done");
     setAdress = false;
     scanTimer = millis(); 
@@ -169,7 +169,7 @@ void mbus_short_frame(byte address, byte C_field) {
   data[4] = 0x16;
   data[5] = '\0';
 
-  Serial.write((char *)data);
+  Serial.write((char *)data,5);
 }
 
 bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
@@ -283,6 +283,6 @@ void mbus_set_address(byte oldaddress, byte newaddress) {
   data[11] = 0x16;
   data[12] = '\0';
   
-  Serial.write((char*)data);
+  Serial.write((char*)data,12);
 }
 
