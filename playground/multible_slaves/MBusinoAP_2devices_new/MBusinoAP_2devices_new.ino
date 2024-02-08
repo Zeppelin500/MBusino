@@ -675,7 +675,7 @@ void mbus_short_frame(byte address, byte C_field) {
   data[4] = 0x16;
   data[5] = '\0';
 
-  Serial.write((char *)data);
+  Serial.write((char *)data,5);
 }
 
 bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
