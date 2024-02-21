@@ -534,13 +534,15 @@ void loop() {
       client.publish(String(String(userData.mbusinoName) + "/MBus/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
       yield();
       client.publish(String(String(userData.mbusinoName) + "/MBus/jsonstring").c_str(), jsonstring);
+      uint8_t address = mbus_data[5];
+      client.publish(String(String(userData.mbusinoName) + "/MBus/address").c_str(), String(address).c_str());        
 
       for (uint8_t i=0; i<fields; i++) {
         uint8_t code = root[i]["code"].as<int>();
         const char* name = root[i]["name"];
         const char* units = root[i]["units"];           
         double value = root[i]["value_scaled"].as<double>(); 
-        const char* valueString = root[i]["value_string"];            
+        const char* valueString = root[i]["value_string"];                
 
         //two messages per value, values comes as number or as ASCII string or both
         client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
