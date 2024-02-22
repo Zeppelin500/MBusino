@@ -33,14 +33,14 @@
 
 * With multible MBusino in network, you have to change the name or it caouse in network problems .
 * Minimum for intervalls is Sensors 2 sec., M-Bus 4 sec. 
-* At MQTT Broker you can set an IP or a addresse- E.g. **192.168.1.7** oder **test.mosquitto.org** no https:// oder mqtt:// only addresse
+* At MQTT Broker you can set an IP or a address. E.g. **192.168.1.7** oder **test.mosquitto.org** no https:// oder mqtt:// only addresse
 
 
 If MBusino do not find a known network, Accesspoint will accessable for 5 minutes. after this periode he restart and search again.
 You will find the IP in your router.
 
 
-## MQTT und HomeAssistant
+## MQTT and HomeAssistant
 
 With the Software **MQTT Explorer** at PC or **MyMQTT** at your mobile you will see the mqtt messages.
 in attachement you will find a HA Config file as example. But you have to change something to your MQTT messages.
@@ -56,7 +56,7 @@ mqtt:
       unit_of_measurement: "W"
 ```
 
-## MBusino updaten
+## MBusino update
 
 With the ESPHome Webtool, you will loose al your datas during update. Use instead  **[IP_of_MBusino]/update** and all datas will retain.
 
