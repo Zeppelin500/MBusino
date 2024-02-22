@@ -1,12 +1,11 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.7.0-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.7.2-brightgreen.svg)](CHANGELOG.md)<br/>
 M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 
 - M-Bus e.g. heatmeter (only one device at the moment)
 - OneWire 5x e.g. DS18B20, temperature
 - I²C e.g.. BME280, temperatur, r. humidity, air pressure
 
-**NEW** MBusinoAP with Access Point setup Portal **NEW**
 
 ## Hardware
 The PCB is designed with fritzing.
@@ -62,13 +61,13 @@ Self explanatory.
 ## known issues
 - Flashing over USB is only possible, if the M-Bus master is not connected. OTA update work fine.
 
-- Do not use 2 Boards simultaneously without changing MBUSINO_NAME or it cause in network problems, both boards becomes unreachable. #define MBUSINO_NAME "MBusino"
+- Do not use 2 Boards simultaneously without changing thr Name or it cause in network problems, both boards becomes unreachable. 
 
 - M-Bus is tested with a "Engelmann Sensostar U" and some other slaves, it should work with most M-Bus devices. If you have M-Bus issues, let me know.
 
-## MBusinoAP
+## Access Point to configure
 
-* MBusinoAP WiFi Setup Portal
+* MBusino WiFi Setup Portal
 * SSID "MBusino Setup Portal" (no Password) IP: 192.168.4.1
 * If MbusinoAP do not find a known network, he start an AP for 5 minutes. After this period, he will restart and search again.
 * In known networks, you will find the IP of the portal in your router.
@@ -77,7 +76,7 @@ Self explanatory.
 
 ## Credits
 * AllWize for the MbusPayload library -- the first code base of the MBusinoLib to decode M-Bus
-* HWHardsoft for the M-Bus communication
+* HWHardsoft and TrystanLea for the M-Bus communication
 
 ## Current topics
 
@@ -85,8 +84,7 @@ https://github.com/Zeppelin500/MBusino/discussions
 
 ## Tutorial
 
-only german
-https://github.com/Zeppelin500/MBusino/tree/main/tutorial/german
+https://github.com/Zeppelin500/MBusino/tree/main/tutorial
 
 ## Licence
 ****************************************************

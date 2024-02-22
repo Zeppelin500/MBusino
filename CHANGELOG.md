@@ -3,6 +3,22 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.7.2] - 2024-02-22
+
+### Add
+
+- M-Bus Address
+
+### Changed
+
+- MBusinoAP with Accesspoint is now standard, renamed to MBusino. Old MBusino code without accesspoint is in archive
+
+- Split the MBusino code in deferent .h files for a better clarity  
+
+- English tutorial
+
+- Some improfements at Readme an german tutorial
+
 ## [0.7.1] - 2024-01-31
 
 ### Changed

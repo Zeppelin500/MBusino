@@ -329,10 +329,10 @@ const char setAddress_html[] PROGMEM = R"rawliteral(
         <h1 class=''><i>MBusino</i> set M-Bus address</h1><br>
         <p style='text-align:center'> ! only one M-Bus Slave should be connected ! </p><br>
         </div><br><label for='newAddress'>New M-Bus Address:</label><br><select name='newAddress' id='newAddress'>
-          <option value='1'>0x01</option>
-          <option value='2'>0x02</option>
-          <option value='3'>0x03</option>
-          <option value='0' selected>0x00</option>
+          <option value='1'>1</option>
+          <option value='2'>2</option>
+          <option value='3'>3</option>
+          <option value='0' selected>0</option>
         </select><br><br>
         <br>
         <button type='submit'>Save</button>
@@ -681,11 +681,10 @@ void loop() {
       JsonArray root = jsonBuffer.add<JsonArray>();  
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
       char jsonstring[2048] = { 0 };
-      yield();
+      uint8_t address = mbus_data[5]; 
       serializeJson(root, jsonstring);
-      client.publish(String(String(userData.mbusinoName) + "/Slave"+String(addressCounter)+ "/MBus/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
-      yield();
-      client.publish(String(String(userData.mbusinoName) + "/Slave"+String(addressCounter)+ "/MBus/jsonstring").c_str(), jsonstring);
+      client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
+      client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/jsonstring").c_str(), jsonstring);     
 
       for (uint8_t i=0; i<fields; i++) {
         uint8_t code = root[i]["code"].as<int>();
@@ -695,24 +694,24 @@ void loop() {
         const char* valueString = root[i]["value_string"];            
 
         //two messages per value, values comes as number or as ASCII string or both
-        client.publish(String(String(userData.mbusinoName) +"/Slave"+String(addressCounter)+ "/MBus/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
-        client.publish(String(String(userData.mbusinoName) +"/Slave"+String(addressCounter)+ "/MBus/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
-        client.publish(String(String(userData.mbusinoName) +"/Slave"+String(addressCounter)+ "/MBus/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
+        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
+        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
+        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
         //or only one message
-        //client.publish(String(String(userData.mbusinoName) +"/Slave"+String(addressCounter)+ "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
+        //client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
 
         if (i == 3){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
           float flow = root[5]["value_scaled"].as<float>();
           float delta = root[9]["value_scaled"].as<float>();
           float calc_power = delta * flow * 1163;          
-          client.publish(String(String(userData.mbusinoName) +"/Slave"+String(addressCounter)+ "/MBus/4_power_calc").c_str(), String(calc_power).c_str());                    
+          client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/4_power_calc").c_str(), String(calc_power).c_str());                    
         }   
         yield();      
       }
     } 
     else {
   //Fehlermeldung
-        client.publish(String(String(userData.mbusinoName)  +"/Slave"+String(addressCounter)+ "/MBUSerror").c_str(), "no_good_telegram");
+        client.publish(String(String(userData.mbusinoName)  +"/MBus/SlaveAddress"+String(currentAddress)+ "/MBUSerror").c_str(), "no_good_telegram");
     }
     mbus_normalize(currentAddress);
   }

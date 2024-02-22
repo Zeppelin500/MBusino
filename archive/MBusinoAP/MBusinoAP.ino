@@ -29,8 +29,9 @@ You should have received a copy of the GNU General Public License along with thi
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include "html.h"
 
-#define MBUSINO_VERSION "0.7.1"
+#define MBUSINO_VERSION "0.7.2"
 
 #define MBUS_BAUD_RATE 2400
 #define MBUS_ADDRESS 0xFE  // brodcast
