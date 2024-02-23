@@ -16,8 +16,8 @@ For the ESP32 S2 are 3 different .bin files created.
 * if connected, load all 3 .bin files as follows with the offset
 
 * Offset 0x 1000    MBusino3S.ino.bootloader.bin
-* Offset 0x 1000    MBusino3S.ino.partitions.bin
-* Offset 0x 1000    MBusino3S.ino.bin 
+* Offset 0x 8000    MBusino3S.ino.partitions.bin
+* Offset 0x 10000    MBusino3S.ino.bin 
 
 --> done
 
