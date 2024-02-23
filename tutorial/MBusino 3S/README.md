@@ -16,7 +16,8 @@ The Pinout configuration of the ESP32 S2 mini is exactly the same like D1 mini. 
 * Note, that the M-Bus interval is the time between the M-Bus requests. So if you use 3 slaves and set the interval to 10 seconds. Every single master will answer in a 30 second interval. Minimum is 4 or 5 seconds before the bus were stumbling.
 * In delivery condition, the address is 0.
 
-![MBusino3Sconfig](https://github.com/Zeppelin500/MBusino/blob/main/pictures/3Sconfig.png | width=100)
+
+<img src="https://github.com/Zeppelin500/MBusino/blob/main/pictures/3Sconfig.png" width="300">
 
 ## Change the primary addresses of your slaves
 
