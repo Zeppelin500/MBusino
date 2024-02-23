@@ -29,12 +29,12 @@ The Pinout configuration of the ESP32 S2 mini is exactly the same like D1 mini. 
 
 ## Output
 
-The MQTT output of the MBusino3S is different to the MBusino!
+The MQTT topic output of the MBusino3S is different to the MBusino!
 MBus Address is now part of the MQTT topic. So you have to change your Home Assistant config.
 
-MBusino:
+MBusino MBus topic:
 **MBusino/MBus/6_volume_flow**
 
-MBusino3S:
+MBusino3S MBus topic::
 **MBusino/MBus/SlaveAddress3/6_volume_flow**
 
