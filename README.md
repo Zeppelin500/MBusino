@@ -6,15 +6,17 @@ M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 - OneWire 5x e.g. DS18B20, temperature
 - I²C e.g.. BME280, temperatur, r. humidity, air pressure
 
+### Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Sensors
+The Board is usable for "only M-Bus" or "only sensor meassuring" as well.  
 
 ## Hardware
 The PCB is designed with fritzing.
 M-Bus is provided by a piggyback M-Bus master.
-https://de.aliexpress.com/item/33008746192.html --> the Master! (the picture at ali shows a different board, but you will receive the right one)
+https://de.aliexpress.com/item/33008746192.html --> the Master **NOT the Slave!** (the picture at ali shows a different board, but you will receive the right one)
+
+Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini only the [MBusino3S Code](https://github.com/Zeppelin500/MBusino/tree/main/tutorial/MBusino3S)
 
 Beside the USB power supply of D1 mini is no other adapter necessary.
-
-The Board is usable for only M-Bus (see MBusino_naked code) or only sensor meassuring as well.  
 
 Use 2,54mm terminals or JST XH to connect the DS18B20
 
