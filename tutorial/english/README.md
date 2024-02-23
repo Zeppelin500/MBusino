@@ -1,10 +1,18 @@
+<<<<<<< Updated upstream
 # MBusino Tutorial english
+=======
+# MBusino Tutorial English
+>>>>>>> Stashed changes
 
 
 
 ## You can flash the MBusino with https://web.esphome.io
 
+<<<<<<< Updated upstream
 1. Download the Bin from https://github.com/Zeppelin500/MBusino/blob/main/SRC/MBusino/build/esp8266.esp8266.d1_mini/MBusino.ino.bin
+=======
+1. Download the Bin from https://github.com/Zeppelin500/MBusino/blob/main/src/MBusino/build/esp8266.esp8266.d1_mini/MBusino.ino.bin
+>>>>>>> Stashed changes
 
 2. open https://web.esphome.io with the Chrome-Browser
 
