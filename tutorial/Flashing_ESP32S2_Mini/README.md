@@ -10,10 +10,10 @@ For the ESP32 S2 are 3 different .bin files created.
 
 * connect the S2 Mini with USB
 * press and hold the boot button, press the reset button, release the boot botton. 
-* press **connect** and choose the USP Port
-* if connected click erase ans wait for finish
-* may you have connect again
-* if connected load all 3 .bin files as follows with the offset
+* press **Connect** and choose the USP Port
+* if connected click **Erase** ans wait for finish
+* may you have to connect again
+* if connected, load all 3 .bin files as follows with the offset
 
 * Offset 0x 1000    MBusino3S.ino.bootloader.bin
 * Offset 0x 1000    MBusino3S.ino.partitions.bin
