@@ -1,4 +1,4 @@
-#Flashing ESP32 S2 Mini
+# Flashing ESP32 S2 Mini
 
 For the ESP32 S2 are 3 different .bin files created.
 
@@ -6,7 +6,7 @@ For the ESP32 S2 are 3 different .bin files created.
 * MBusino3S.ino.partitions.bin
 * MBusino3S.ino.bin 
 
-###Use for Flashing https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
+### Use for Flashing https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
 
 * connect the S2 Mini with USB
 * press and hold the boot button, press the reset button, release the boot botton. 
