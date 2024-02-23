@@ -15,7 +15,7 @@ Do all steps of the MBusino tutorial (with the MBusino 3S files) and additional 
 * Note, that the M-Bus interval is the time between the M-Bus requests. So if you use 3 slaves and set the interval to 10 seconds. Every single master will answer in a 30 second interval. Minimum is 4 or 5 seconds before the bus were stumbling.
 * In delivery condition, the address is 0.
 
-![MBusino3Sconfig](https://github.com/Zeppelin500/MBusino/blob/main/pictures/MBusino3Sconfig.png)
+![MBusino3Sconfig](https://github.com/Zeppelin500/MBusino/blob/main/pictures/3Sconfig.png)
 
 ## Change the primary addresses of your slaves
 
