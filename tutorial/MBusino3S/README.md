@@ -7,7 +7,7 @@ https://github.com/Zeppelin500/MBusino/blob/main/src/MBusino3S/build
 The Pinout configuration of the ESP32 S2 mini is exactly the same like D1 mini. Equip only the two outside pin headers. 
 
 **Do all steps of the MBusino tutorial (with the MBusino 3S files) and additional the following steps.**
-**!Flashing of ESP32 S2 mini is different to the ESP8266 D1 mini, use this []tutorial](MBusino/tutorial/Flashing_ESP32S2_Mini/README.md)**
+**!Flashing of ESP32 S2 mini is different to the ESP8266 D1 mini, use this [tutorial](MBusino/tutorial/Flashing_ESP32S2_Mini/README.md)**
 
 ## configure MBusino3S
 
