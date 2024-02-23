@@ -4,7 +4,7 @@
 
 ## für das flashen des MBusino ist keine Software nötig. Wir nutzen https://web.esphome.io
 
-1. Downloaden des .bin Files von https://github.com/Zeppelin500/MBusino/blob/main/SRC/MBusino/build/esp8266.esp8266.d1_mini/MBusino.ino.bin
+1. Downloaden des .bin Files von https://github.com/Zeppelin500/MBusino/blob/main/src/MBusino/build/esp8266.esp8266.d1_mini/MBusino.ino.bin
 
 2. öffne https://web.esphome.io mit z.B. dem Chrome-Browser (geht nicht am Handy)
 
@@ -59,7 +59,7 @@ mqtt:
 
 ## MBusino updaten
 
-über das ESPHome Webtool werden alle eingegebenen Daten gelöscht. Wenn ihr den MBusino auf eine neuere oder ander Version updaten wollt gebt ihr im Browser die **[IP_des_MBusino]/update** ein und fläsht darüber das neue .bin File alle daten bleiben erhalten.
+Über das ESPHome Webtool werden alle eingegebenen Daten gelöscht. Wenn ihr den MBusino auf eine neuere oder ander Version updaten wollt, gebt ihr im Browser **[IP_des_MBusino]/update** ein und flasht darüber das neue .bin File. Alle Daten bleiben erhalten.
 
 ![Update](https://github.com/Zeppelin500/MBusino/blob/main/pictures/update.png)
 
