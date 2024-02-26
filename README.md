@@ -28,6 +28,7 @@ M-Bus is provided by a piggyback M-Bus master.
 https://de.aliexpress.com/item/33008746192.html --> the Master **NOT the Slave!** (the picture at ali shows a different board, but you will receive the right one)
 
 Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini
+
 Beside the USB power supply of D1 mini is no other adapter necessary.
 
 Use 2,54mm terminals or JST XH to connect the DS18B20

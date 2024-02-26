@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.8.0] - 2024-02-26
 
-### Add
+### Added
 
 - ESP32 S2 mini is now supported
 
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.7.2] - 2024-02-22
 
-### Add
+### Added
 
 - M-Bus Address
 
