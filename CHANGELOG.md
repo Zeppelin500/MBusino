@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.8.0] - 2024-02-26
+
+### Add
+
+- ESP32 S2 mini is now supported
+
+- ESP32 S2 mini flashing tutorial.
+
+### Changed
+
+- Some improfements at Readme and tutorials
+
 ## [0.7.2] - 2024-02-22
 
 ### Add
@@ -17,7 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - English tutorial
 
-- Some improfements at Readme an german tutorial
+- Some improfements at Readme and german tutorial
 
 ## [0.7.1] - 2024-01-31
 

@@ -17,11 +17,19 @@ You should have received a copy of the GNU General Public License along with thi
 #include <OneWire.h>            // Library for OneWire Bus
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
-#include <ESP8266WiFi.h>
 #include <ESPAsyncWebServer.h> 
-#include <ESPAsyncTCP.h>
+
 #include <DNSServer.h>
 #include <ArduinoOTA.h>
+
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+#elif defined(ESP32)
+#include <WiFi.h>
+#include <AsyncTCP.h>
+HardwareSerial MbusSerial(1);
+#endif
 
 #include <MBusinoLib.h>  // Library for decode M-Bus
 #include <ArduinoJson.h>
@@ -30,8 +38,10 @@ You should have received a copy of the GNU General Public License along with thi
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
-#define MBUSINO_VERSION "0.7.2"
 
+#define MBUSINO_VERSION "0.8.0"
+
+#if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
 #define ONE_WIRE_BUS2 13  //D7
 #define ONE_WIRE_BUS3 12  //D6
@@ -39,6 +49,15 @@ You should have received a copy of the GNU General Public License along with thi
 #define ONE_WIRE_BUS5 0   //D3
 #define ONE_WIRE_BUS6 5   //D1
 #define ONE_WIRE_BUS7 4   //D2
+#elif defined(ESP32)
+#define ONE_WIRE_BUS1 16 //2   //D4
+#define ONE_WIRE_BUS2 11  //13  //D7
+#define ONE_WIRE_BUS3 9   //12  //D6
+#define ONE_WIRE_BUS4 7   //14  //D5
+#define ONE_WIRE_BUS5 18  //0   //D3
+#define ONE_WIRE_BUS6 35  //5   //D1
+#define ONE_WIRE_BUS7 33  //4   //D2
+#endif
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 Adafruit_BME280 bme;  // I2C
@@ -109,7 +128,7 @@ unsigned long timerMbus = 0;
 unsigned long timerMbus2 = 0;
 unsigned long timerDebug = 0;
 unsigned long timerReconnect = 0;
-unsigned long timerRestart = 0;
+unsigned long timerReboot = 0;
 
 void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
@@ -140,8 +159,13 @@ uint8_t sensorToCalibrate = 0;
 #include "server.h"
 
 void setup() {
+  #if defined(ESP8266)
   Serial.setRxBufferSize(256);
   Serial.begin(MBUS_BAUD_RATE, SERIAL_8E1);
+  #elif defined(ESP32)
+  MbusSerial.setRxBufferSize(256);
+  MbusSerial.begin(MBUS_BAUD_RATE, SERIAL_8E1, 37, 39);
+  #endif
 
   EEPROM.begin(512);
   EEPROM.get(eeAddrCalibrated, calibrated);
@@ -205,15 +229,16 @@ void setup() {
   server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
     waitForRestart = !Update.hasError();
     if(Update.hasError()==true){
-      timerRestart = millis();
+      timerReboot = millis();
     }
     AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", waitForRestart?"success, restart now":"FAIL");
     response->addHeader("Connection", "close");
     request->send(response);
   },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
     if(!index){
-      //Serial.printf("Update Start: %s\n", filename.c_str());
+      #if defined(ESP8266)
       Update.runAsync(true);
+      #endif
       if(!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)){
         Update.printError(Serial);
       }
@@ -233,8 +258,11 @@ void setup() {
   });
   ArduinoOTA.setPassword((const char *)"mbusino");
   server.onNotFound(onRequest);
-
+  #if defined(ESP8266)
   ArduinoOTA.begin(&server);
+  #elif defined(ESP32)
+  ArduinoOTA.begin();
+  #endif
   server.begin();
 
   client.setBufferSize(6000);
@@ -296,11 +324,11 @@ void loop() {
     EEPROM.put(eeAddrCredentialsSaved, credentialsSaved);
     EEPROM.commit();
     EEPROM.end();
-    timerRestart = millis();
+    timerReboot = millis();
     waitForRestart = true;
   }
 
-  if(waitForRestart==true && (millis() - timerRestart) > 1000){
+  if(waitForRestart==true && (millis() - timerReboot) > 1000){
     ESP.restart();
   }
   

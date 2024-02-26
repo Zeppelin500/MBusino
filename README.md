@@ -1,6 +1,7 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.7.2-brightgreen.svg)](CHANGELOG.md)<br/>
-M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
+[![version](https://img.shields.io/badge/version-0.8.0-brightgreen.svg)](CHANGELOG.md)<br/>
+### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
+A **Plug and Play** solution.
 
 - M-Bus e.g. heatmeter (only one device at the moment)
 - OneWire 5x e.g. DS18B20, temperature
@@ -9,13 +10,24 @@ M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini
 ### Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Sensors
 The Board is usable for "only M-Bus" or "only sensor meassuring" as well.  
 
+## Access Point to configure,  MBusino Setup Portal
+
+* SSID **MBusino Setup Portal** IP(normally not needed): 192.168.4.1
+* If Mbusino do not find a known network, he start an AP for 5 minutes. After this period, he will restart and search again.
+* In known networks, you will find the IP of the portal under **MBusino** in your router.
+
+<img src="pictures/MBusino_Setup_Portal.jpg" width="300" height="600">
+
+## MQTT Output
+
+<img src="pictures/mqttOutput.png" width="300">
+
 ## Hardware
 The PCB is designed with fritzing.
 M-Bus is provided by a piggyback M-Bus master.
 https://de.aliexpress.com/item/33008746192.html --> the Master **NOT the Slave!** (the picture at ali shows a different board, but you will receive the right one)
 
-Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini only the [MBusino3S Code](https://github.com/Zeppelin500/MBusino/tree/main/tutorial/MBusino3S)
-
+Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini
 Beside the USB power supply of D1 mini is no other adapter necessary.
 
 Use 2,54mm terminals or JST XH to connect the DS18B20
@@ -67,14 +79,6 @@ Self explanatory.
 
 - M-Bus is tested with a "Engelmann Sensostar U" and some other slaves, it should work with most M-Bus devices. If you have M-Bus issues, let me know.
 
-## Access Point to configure
-
-* MBusino WiFi Setup Portal
-* SSID "MBusino Setup Portal" (no Password) IP: 192.168.4.1
-* If MbusinoAP do not find a known network, he start an AP for 5 minutes. After this period, he will restart and search again.
-* In known networks, you will find the IP of the portal in your router.
-
-<img src="pictures/MBusino_Setup_Portal.jpg" width="300" height="600">
 
 ## Credits
 * AllWize for the MbusPayload library -- the first code base of the MBusinoLib to decode M-Bus

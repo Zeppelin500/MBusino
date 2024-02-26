@@ -5,6 +5,14 @@
 #define MBUS_GOOD_FRAME true
 #define MBUS_BAD_FRAME false
 
+#define MBUS_FRAME_SHORT_START          0x10
+#define MBUS_FRAME_LONG_START           0x68
+#define MBUS_FRAME_STOP                 0x16
+
+#define MBUS_CONTROL_MASK_SND_NKE       0x40
+#define MBUS_CONTROL_MASK_DIR_M2S       0x40
+#define MBUS_ADDRESS_NETWORK_LAYER      0xFE
+
 
 
 void mbus_short_frame(byte address, byte C_field) {
@@ -16,8 +24,11 @@ void mbus_short_frame(byte address, byte C_field) {
   data[3] = data[1] + data[2];
   data[4] = 0x16;
   data[5] = '\0';
-
+  #if defined(ESP8266)
   Serial.write((char *)data,5);
+  #elif defined(ESP32)
+  MbusSerial.write((char *)data,5);
+  #endif
 }
 
 void mbus_request_data(byte address) {
@@ -40,9 +51,13 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
     if(j>255){
       frame_error = true;
     }
-    while (Serial.available()) {
+  #if defined(ESP8266)
+  while (Serial.available()) {
       byte received_byte = (byte)Serial.read();
-
+  #elif defined(ESP32)
+  while (MbusSerial.available()) {
+      byte received_byte = (byte)MbusSerial.read();
+  #endif
       // Try to skip noise
       if (bid == 0 && received_byte != 0xE5 && received_byte != 0x68) {
         continue;
@@ -97,4 +112,47 @@ bool mbus_get_response(byte *pdata, unsigned char len_pdata) {
   } else {
     return MBUS_BAD_FRAME;
   }
+}
+
+void mbus_normalize(byte address) {
+  mbus_short_frame(address,0x40);
+}
+
+void mbus_clearRXbuffer(){
+  #if defined(ESP8266)
+  while (Serial.available()) {
+      byte received_byte = (byte)Serial.read();
+  #elif defined(ESP32)
+  while (MbusSerial.available()) {
+      byte received_byte = (byte)MbusSerial.read();
+  #endif
+  }
+}
+
+void mbus_set_address(byte oldaddress, byte newaddress) {
+ 
+  byte data[13];
+ 
+  data[0] = MBUS_FRAME_LONG_START;
+  data[1] = 0x06;
+  data[2] = 0x06;
+  data[3] = MBUS_FRAME_LONG_START;
+  
+  data[4] = 0x53;
+  data[5] = oldaddress;
+  data[6] = 0x51;
+  
+  data[7] = 0x01;         // DIF [EXT0, LSB0, FN:00, DATA 1 8BIT INT]
+  data[8] = 0x7A;         // VIF 0111 1010 bus address
+  data[9] = newaddress;   // DATA new address
+  
+  data[10] = data[4]+data[5]+data[6]+data[7]+data[8]+data[9];
+  data[11] = 0x16;
+  data[12] = '\0';
+  
+  #if defined(ESP8266)
+  Serial.write((char*)data,12);
+  #elif defined(ESP32)
+  MbusSerial.write((char*)data,12);
+  #endif
 }
