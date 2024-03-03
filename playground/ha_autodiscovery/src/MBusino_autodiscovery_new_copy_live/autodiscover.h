@@ -3,7 +3,7 @@ struct autodiscover {
   char bufferTopic[100] = {0};
   char haUnits[20] = {0};
   char stateClass[30] = {0};
-  char deviceClass[20] = {0};
+  char deviceClass[40] = {0};
 
 } adVariables; // home assistand auto discover
 
