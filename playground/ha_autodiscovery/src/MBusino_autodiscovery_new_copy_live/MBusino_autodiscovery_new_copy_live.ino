@@ -453,7 +453,7 @@ void loop() {
          
 
         if(haAutodiscMbus == true && adMbusMessageCounter == 3){
-          haHandoverMbus(i+1, name, units);
+          haHandoverMbus(i+1, name, units, valueString);
           if(i==fields){
             haAutodiscMbus = false;
           }

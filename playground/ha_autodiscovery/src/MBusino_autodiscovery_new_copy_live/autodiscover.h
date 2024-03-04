@@ -4,6 +4,7 @@ struct autodiscover {
   char haUnits[20] = {0};
   char stateClass[30] = {0};
   char deviceClass[40] = {0};
+  char valueString[4] = {0};
 
 } adVariables; // home assistand auto discover
 
@@ -11,13 +12,16 @@ const char bmeValue[4][20] = {"Temperatur","Druck","Hoehe","Feuchte"};
 const char bmeDeviceClass[4][20] = {"temperature","pressure","distance","humidity"};
 const char bmeUnits[4][11] = {"°C","mbar","m","%"};
 
-const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%s","object_id":"%s_%u_%s","state_topic":"%s/MBus/%u_%s","name":"%u_%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"%s","device":{"ids": ["%s"],"name":"%s","mdl":"%s"},%s"availability_mode":"all"})rawliteral";
+//const char vs[4] = "_vs"; //placeholder for insert "_vs" for valuestring is used instead of value
+//const char[4] noVs = {0}; //empty, no Valuestring
+
+const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%s","object_id":"%s_%u_%s","state_topic":"%s/MBus/%u%s_%s","name":"%u_%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"%s","device":{"ids": ["%s"],"name":"%s","manufacturer": "Zeppelin500","mdl":"MBusino_%s"},%s"availability_mode":"all"})rawliteral";
 const char adTopicMbus[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%u_%s/config)rawliteral";
 
-const char adValueSensor[] PROGMEM = R"rawliteral({"unique_id":"%s_Sensor%u","object_id":"%s_Sensor%u","state_topic":"%s/OneWire/S%u","name":"Sensor%u","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"°C","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","mdl":"%s"},"device_class":"temperature","availability_mode":"all"})rawliteral";
+const char adValueSensor[] PROGMEM = R"rawliteral({"unique_id":"%s_Sensor%u","object_id":"%s_Sensor%u","state_topic":"%s/OneWire/S%u","name":"Sensor%u","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"°C","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "Zeppelin500","mdl":"MBusino_%s"},"device_class":"temperature","availability_mode":"all"})rawliteral";
 const char adTopicSensor[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/Sensor%u/config)rawliteral";
 
-const char adValueBME[] PROGMEM = R"rawliteral({"unique_id":"%s__BME_%s","object_id":"%s_BME_%s","state_topic":"%s/bme/%s","name":"%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","mdl":"%s"},"device_class":"%s","availability_mode":"all"})rawliteral";
+const char adValueBME[] PROGMEM = R"rawliteral({"unique_id":"%s__BME_%s","object_id":"%s_BME_%s","state_topic":"%s/bme/%s","name":"%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "Zeppelin500","mdl":"MBusino_%s"},"device_class":"%s","availability_mode":"all"})rawliteral";
 const char adTopicBME[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%s/config)rawliteral";
 
 const char* getUnitOfMeassuremetn(const char* getunit){
@@ -41,7 +45,7 @@ const char* getUnitOfMeassuremetn(const char* getunit){
 }
 
 const char* getStateClass(const char* getunit) {
-  if (!strcmp(getunit,"C")) {
+  if (!strcmp(getunit,"°C")) {
       return "measurement";
   }else if(!strcmp(getunit,"K")){
       return "measurement";
@@ -51,9 +55,9 @@ const char* getStateClass(const char* getunit) {
       return "total";
   }else if(!strcmp(getunit,"kWh")){
       return "total";
-  }else if(!strcmp(getunit,"m3")){
+  }else if(!strcmp(getunit,"m³")){
       return "total";
-  }else if(!strcmp(getunit,"m3/h")){
+  }else if(!strcmp(getunit,"m³/h")){
       return "measurement";
   } else {
       return "total";
@@ -61,7 +65,7 @@ const char* getStateClass(const char* getunit) {
 }
 
 const char* getDeviceClass(const char* getunit) {
-    if(!strcmp(getunit,"C")){
+    if(!strcmp(getunit,"°C")){
         return "\"device_class\": \"temperature\",";
     }else if(!strcmp(getunit,"K")){
         return "\"device_class\": \"temperature\",";
@@ -71,23 +75,31 @@ const char* getDeviceClass(const char* getunit) {
         return "\"device_class\": \"energy\",";
     }else if(!strcmp(getunit,"kWh")){
         return "\"device_class\": \"energy\",";
-    }else if(!strcmp(getunit,"m3")){
+    }else if(!strcmp(getunit,"m³")){
         return "\"device_class\": \"volume\",";
-    }else if(!strcmp(getunit,"m3/h")){
+    }else if(!strcmp(getunit,"m³/h")){
         return "\"device_class\": \"volume_flow_rate\",";
-    }else if(!strcmp(getunit,"Time_YYMMDDhhmm")){
-        return "\"device_class\": \"timestamp\",";        
+    //}else if(!strcmp(getunit,"YYYYMMDD")){
+    //    return "\"device_class\": \"timestamp\",";         
+    //}else if(!strcmp(getunit,"YYYYMMDDhhmm")){
+    //    return "\"device_class\": \"timestamp\",";  
+    }else if(!strcmp(getunit,"d")){
+        return "\"device_class\": \"duration\",";                  
     } else {
-        return "\"device_class\": \"None\",";
+        return "";
     }
 }
 
-void haHandoverMbus(uint8_t haCounter,const char* haName, const char* units){ // haCounter is the "i+1" at the for() in main
+void haHandoverMbus(uint8_t haCounter,const char* haName, const char* units, const char* valueString){ // haCounter is the "i+1" at the for() in main
 
   if(units != NULL){
-  strcpy(adVariables.haUnits,getUnitOfMeassuremetn(units));
+  strcpy(adVariables.haUnits,units);//getUnitOfMeassuremetn(units));
   strcpy(adVariables.stateClass,getStateClass(units));
   strcpy(adVariables.deviceClass,getDeviceClass(units));
+    if(units[1]==89){ //if the secon caracter "Y" no unit will be submitted.
+      //strcpy(adVariables.haUnits,"");
+      //strcpy(adVariables.valueString,"_vs"); //set "_vs" befor the value name     
+    }
   }
   else{
   strcpy(adVariables.haUnits,"");
@@ -95,7 +107,11 @@ void haHandoverMbus(uint8_t haCounter,const char* haName, const char* units){ //
   strcpy(adVariables.deviceClass,"");  
   }
 
-  sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,haCounter,haName,userData.mbusinoName,haCounter,haName,userData.mbusinoName,haCounter,haName,haCounter,haName,adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClass);
+  if(units[1]==89){
+
+  }
+
+  sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,haCounter,haName,userData.mbusinoName,haCounter,haName,userData.mbusinoName,haCounter,adVariables.valueString,haName,haCounter,haName,adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClass);
   sprintf(adVariables.bufferTopic,adTopicMbus,userData.mbusinoName,haCounter,haName);
   client.publish(adVariables.bufferTopic, adVariables.bufferValue); 
 
@@ -104,6 +120,7 @@ void haHandoverMbus(uint8_t haCounter,const char* haName, const char* units){ //
   adVariables.deviceClass[0] = 0;
   adVariables.stateClass[0] = 0;
   adVariables.haUnits[0] = 0;
+  adVariables.valueString[0] = 0;
 }
 
 void haHandoverOw(uint8_t haCounter){
