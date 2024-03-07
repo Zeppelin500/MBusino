@@ -1,0 +1,21 @@
+{
+    "name": "MBusino",
+    "keywords": "m-bus,mbus,mbusino,dif,vif",
+    "description": "Arduino M-Bus decoder library",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Zeppelin500/MBusinoLib.git"
+    },
+    "version": "0.7.1",
+    "license": "GPL-3.0",
+    "frameworks": "arduino",
+    "platforms": ["atmelavr", "atmelsam", "espressif8266"],
+    "authors": {
+        "name": "Zeppelin500",
+        "email": "mbusinolib@gmail.com",
+        "maintainer": true
+    },
+    "examples": [
+        "examples/*/*.ino"
+    ]
+}
