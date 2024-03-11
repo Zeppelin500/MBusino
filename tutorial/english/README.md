@@ -42,6 +42,13 @@ You will find the IP in your router.
 
 ## MQTT and HomeAssistant
 
+### Autodiscover
+
+from version 0.9.0, MBusino (not MBusino3s until now) supports Home Assistant autodiscover. You need only the MQTT integration and MBusino will be find as device with all records.
+The third record message is a autodiscover message and every 256th recurring.
+
+### per hand
+
 With the Software **MQTT Explorer** at PC or **MyMQTT** at your mobile you will see the mqtt messages.
 in attachement you will find a HA Config file as example. But you have to change something to your MQTT messages.
 

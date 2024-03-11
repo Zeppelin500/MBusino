@@ -42,6 +42,13 @@ Falls ihr den Mbusino nicht im eigenen Netzwerk findet, sind die WLAN Zugangsdat
 
 ## MQTT und HomeAssistant
 
+### Autodiscover
+
+Von Version 0.9.0 an unterstützt MBusino (MBusino3s noch nicht) Home Assistant Autodiscover. Ihr braucht nur die MQTT Integration. Dann wird MBusino automatisch mit allen Werten als Gerät gefunden.
+Die dritte MQTT-Nachricht ist eine Autodiscover Nachricht. Danach jede 256te.
+
+### per Hand
+
 Über die Software **MQTT Explorer** am PC oder **MyMQTT** auf Android könnt ihr jetzt sehen was gesendet wird. Ich empfehehle den MQTT Explorer.
 Je nach M-Bus Gerät sehen die Nachrichten unterschiedlich aus. Im Anhang findet ihr eine Beispielauszug der Config für HomeAssistant mit einem Sensostar U.
 Je nach dem was ihr empfangt, muss die Datei angepasst werden.

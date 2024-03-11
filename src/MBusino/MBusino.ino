@@ -1,5 +1,5 @@
 /*
-# MBusinoAP - MBusino with Access Point setup portal
+# MBusino: M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 
 https://github.com/Zeppelin500/MBusino/
 
@@ -12,7 +12,7 @@ You should have received a copy of the GNU General Public License along with thi
 ****************************************************
 */
 
-
+#include <Arduino.h>
 #include <PubSubClient.h>
 #include <OneWire.h>            // Library for OneWire Bus
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
@@ -39,7 +39,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.8.0"
+#define MBUSINO_VERSION "0.9.0"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -90,7 +90,6 @@ DallasTemperature sensor5(&oneWire5);
 DallasTemperature sensor6(&oneWire6);
 DallasTemperature sensor7(&oneWire7);
 
-
 struct settings {
   char ssid[30];
   char password[30];
@@ -129,6 +128,7 @@ unsigned long timerMbus2 = 0;
 unsigned long timerDebug = 0;
 unsigned long timerReconnect = 0;
 unsigned long timerReboot = 0;
+unsigned long timerAutodiscover = 0;
 
 void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
@@ -150,6 +150,12 @@ float OWwO[7] = {0};  // Variables for DS18B20 Onewire Sensores with Offset (One
 bool OWnotconnected[7] = {false};
 uint8_t sensorToCalibrate = 0;
 
+bool haAutodiscSensor = true;
+bool haAutodiscMbus = true;
+uint8_t adMbusMessageCounter = 0; // Counter for autodiscouver mbus message.
+uint8_t adSensorMessageCounter = 0; // Counter for autodiscouver mbus message.
+
+
 //outsourced program parts
 #include "mbus.h"
 #include "html.h"
@@ -157,6 +163,7 @@ uint8_t sensorToCalibrate = 0;
 #include "sensorRefresh.h"
 #include "mqtt.h"
 #include "server.h"
+#include "autodiscover.h"
 
 void setup() {
   #if defined(ESP8266)
@@ -366,10 +373,18 @@ void loop() {
     }
   }  
   if (millis() > (timerMQTT + userData.sensorInterval)) { //MQTT Nachrichten senden
+    adMbusMessageCounter++;
     for(uint8_t i = 0; i < userData.extension; i++){
-      if(OW[i] != -127){
+      //OW[i] = 33.7; //simulation
+      //OWwO[i] = 34.5;
+      //offset[i]= 0.8;
+      if(OW[i] != -127){        
         client.publish(String(String(userData.mbusinoName) + "/OneWire/S" + String(i+1)).c_str(), String(OWwO[i]).c_str());
         client.publish(String(String(userData.mbusinoName) + "/OneWire/offset" + String(i+1)).c_str(), String(offset[i]).c_str());
+        if(haAutodiscSensor == true && adSensorMessageCounter == 3){
+          haHandoverOw(i+1);
+        }
+       
       }      
     }
   
@@ -378,8 +393,15 @@ void loop() {
       client.publish(String(String(userData.mbusinoName) + "/bme/Druck").c_str(), String(druck).c_str());
       client.publish(String(String(userData.mbusinoName) + "/bme/Hoehe").c_str(), String(hoehe).c_str());
       client.publish(String(String(userData.mbusinoName) + "/bme/Feuchte").c_str(), String(feuchte).c_str());
+      if(haAutodiscSensor == true && adSensorMessageCounter == 3){
+        haHandoverBME();
+      }
     }
-     timerMQTT = millis();
+    if(haAutodiscSensor == true && adSensorMessageCounter == 3){
+      haAutodiscSensor = false;
+    }
+    adSensorMessageCounter++;
+    timerMQTT = millis();
   }
 
   if(millis() - timerMbus > userData.mbusInterval){
@@ -403,47 +425,66 @@ void loop() {
     }                                                                                                         //|
     //--------------------------------------------------------------------------------------------------------------------------    
     */
-    //mbus_good_frame = true;
-    //byte mbus_data2[] = {0x68,0xC1,0xC1,0x68,0x08,0x00,0x72,0x09,0x34,0x75,0x73,0xC5,0x14,0x00,0x0D,0x43,0x00,0x00,0x00,0x04,0x78,0x41,0x63,0x65,0x04,0x04,0x06,0xAA,0x29,0x00,0x00,0x04,0x13,0x40,0xA1,0x75,0x00,0x04,0x2B,0x00,0x00,0x00,0x00,0x14,0x2B,0x3C,0xF3,0x00,0x00,0x04,0x3B,0x48,0x06,0x00,0x00,0x14,0x3B,0x4E,0x0E,0x00,0x00,0x02,0x5B,0x19,0x00,0x02,0x5F,0x19,0x00,0x02,0x61,0xFA,0xFF,0x02,0x23,0xAC,0x08,0x04,0x6D,0x03,0x2A,0xF1,0x2A,0x44,0x06,0x92,0x0C,0x00,0x00,0x44,0x13,0x2D,0x9B,0x1C,0x00,0x42,0x6C,0xDF,0x2C,0x01,0xFD,0x17,0x00,0x03,0xFD,0x0C,0x05,0x00,0x00,0x84,0x10,0x06,0x1A,0x00,0x00,0x00,0xC4,0x10,0x06,0x05,0x00,0x00,0x00,0x84,0x20,0x06,0x00,0x00,0x00,0x00,0xC4,0x20,0x06,0x00,0x00,0x00,0x00,0x84,0x30,0x06,0x00,0x00,0x00,0x00,0xC4,0x30,0x06,0x00,0x00,0x00,0x00,0x84,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0x75,0x16};
+    //bool mbus_good_frame = true;
+    //byte mbus_data[] = {0x68,0xC1,0xC1,0x68,0x08,0x00,0x72,0x09,0x34,0x75,0x73,0xC5,0x14,0x00,0x0D,0x43,0x00,0x00,0x00,0x04,0x78,0x41,0x63,0x65,0x04,0x04,0x06,0xAA,0x29,0x00,0x00,0x04,0x13,0x40,0xA1,0x75,0x00,0x04,0x2B,0x00,0x00,0x00,0x00,0x14,0x2B,0x3C,0xF3,0x00,0x00,0x04,0x3B,0x48,0x06,0x00,0x00,0x14,0x3B,0x4E,0x0E,0x00,0x00,0x02,0x5B,0x19,0x00,0x02,0x5F,0x19,0x00,0x02,0x61,0xFA,0xFF,0x02,0x23,0xAC,0x08,0x04,0x6D,0x03,0x2A,0xF1,0x2A,0x44,0x06,0x92,0x0C,0x00,0x00,0x44,0x13,0x2D,0x9B,0x1C,0x00,0x42,0x6C,0xDF,0x2C,0x01,0xFD,0x17,0x00,0x03,0xFD,0x0C,0x05,0x00,0x00,0x84,0x10,0x06,0x1A,0x00,0x00,0x00,0xC4,0x10,0x06,0x05,0x00,0x00,0x00,0x84,0x20,0x06,0x00,0x00,0x00,0x00,0xC4,0x20,0x06,0x00,0x00,0x00,0x00,0x84,0x30,0x06,0x00,0x00,0x00,0x00,0xC4,0x30,0x06,0x00,0x00,0x00,0x00,0x84,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0x75,0x16};
 
 
     if (mbus_good_frame) {
+      adMbusMessageCounter++;
       int packet_size = mbus_data[1] + 6; 
       MBusinoLib payload(254);  
       JsonDocument jsonBuffer;
       JsonArray root = jsonBuffer.add<JsonArray>();  
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
       char jsonstring[2048] = { 0 };
-      yield();
       serializeJson(root, jsonstring);
       client.publish(String(String(userData.mbusinoName) + "/MBus/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
-      yield();
       client.publish(String(String(userData.mbusinoName) + "/MBus/jsonstring").c_str(), jsonstring);
       uint8_t address = mbus_data[5];
-      client.publish(String(String(userData.mbusinoName) + "/MBus/address").c_str(), String(address).c_str());        
+      client.publish(String(String(userData.mbusinoName) + "/MBus/address").c_str(), String(address).c_str());   
+      bool engelmann = false;
+      if(mbus_data[12]==0x14&&mbus_data[11]==0xC5){
+        engelmann = true;
+      }
 
       for (uint8_t i=0; i<fields; i++) {
         uint8_t code = root[i]["code"].as<int>();
         const char* name = root[i]["name"];
         const char* units = root[i]["units"];           
         double value = root[i]["value_scaled"].as<double>(); 
-        const char* valueString = root[i]["value_string"];                
+        const char* valueString = root[i]["value_string"];  
+         
 
-        //two messages per value, values comes as number or as ASCII string or both
-        client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
-        client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
-        client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
-        //or only one message
-        //client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
+        if(haAutodiscMbus == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message
+          strcpy(adVariables.haName,name);
+          if(units != NULL){
+            strcpy(adVariables.haUnits,units);
+          }else{
+            strcpy(adVariables.haUnits,""); 
+          }
+          strcpy(adVariables.stateClass,payload.getStateClass(code));
+          strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
+          haHandoverMbus(i+1, engelmann);
+          if(i==fields){
+            haAutodiscMbus = false;
+          }
+        }else{
+          //two messages per value, values comes as number or as ASCII string or both
+          client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
+          client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
+          client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
+          //or only one message
+          //client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
 
-        if (i == 3){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
-          float flow = root[5]["value_scaled"].as<float>();
-          float delta = root[9]["value_scaled"].as<float>();
-          float calc_power = delta * flow * 1163;          
-          client.publish(String(String(userData.mbusinoName) + "/MBus/4_power_calc").c_str(), String(calc_power).c_str());                    
-        }   
-        yield();      
+          if (i == 3 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
+            float flow = root[5]["value_scaled"].as<float>();
+            float delta = root[9]["value_scaled"].as<float>();
+            float calc_power = delta * flow * 1163;          
+            client.publish(String(String(userData.mbusinoName) + "/MBus/4_power_calc").c_str(), String(calc_power).c_str());                    
+          }   
+        } 
       }
+
     } 
     else {
   //Fehlermeldung

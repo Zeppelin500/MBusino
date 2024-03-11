@@ -3,6 +3,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.0] - 2024-03-11
+
+### Added
+
+- Home Assistant autodiscovery for MBusino. 
+
+
 ## [0.8.0] - 2024-02-26
 
 ### Added
