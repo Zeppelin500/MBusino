@@ -39,3 +39,8 @@ MBusino MBus topic:
 MBusino3S MBus topic::
 **MBusino/MBus/SlaveAddress3/6_volume_flow**
 
+### Autodiscover
+
+from version 0.9.1, MBusino3S supports Home Assistant autodiscover. You need only the MQTT integration and MBusino will be find as device with all records.
+The third record message is a autodiscover message and every 256th recurring.
+

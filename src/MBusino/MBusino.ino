@@ -39,7 +39,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.0"
+#define MBUSINO_VERSION "0.9.1"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -154,7 +154,6 @@ bool haAutodiscSensor = true;
 bool haAutodiscMbus = true;
 uint8_t adMbusMessageCounter = 0; // Counter for autodiscouver mbus message.
 uint8_t adSensorMessageCounter = 0; // Counter for autodiscouver mbus message.
-
 
 //outsourced program parts
 #include "mbus.h"
@@ -373,7 +372,7 @@ void loop() {
     }
   }  
   if (millis() > (timerMQTT + userData.sensorInterval)) { //MQTT Nachrichten senden
-    adMbusMessageCounter++;
+    adSensorMessageCounter++;
     for(uint8_t i = 0; i < userData.extension; i++){
       //OW[i] = 33.7; //simulation
       //OWwO[i] = 34.5;
@@ -397,10 +396,6 @@ void loop() {
         haHandoverBME();
       }
     }
-    if(haAutodiscSensor == true && adSensorMessageCounter == 3){
-      haAutodiscSensor = false;
-    }
-    adSensorMessageCounter++;
     timerMQTT = millis();
   }
 
@@ -465,9 +460,6 @@ void loop() {
           strcpy(adVariables.stateClass,payload.getStateClass(code));
           strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
           haHandoverMbus(i+1, engelmann);
-          if(i==fields){
-            haAutodiscMbus = false;
-          }
         }else{
           //two messages per value, values comes as number or as ASCII string or both
           client.publish(String(String(userData.mbusinoName) + "/MBus/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)

@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.0-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.1-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 A **Plug and Play** solution.
 
@@ -25,7 +25,7 @@ The Board is usable for "only M-Bus" or "only sensor meassuring" as well.
 ### Home-Assistant
 
 If you use Home Assistant, MBusino supports autodiscover. You need only the MQTT integration and MBusino will be find as device with all records.
-Every 256s record message is a autodiscover message. 
+Every 256th record message is a autodiscover message. 
 If you use not Home Assistant, no matter. All records will be send as MQTT message.
 
 

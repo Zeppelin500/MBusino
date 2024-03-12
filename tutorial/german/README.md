@@ -44,7 +44,7 @@ Falls ihr den Mbusino nicht im eigenen Netzwerk findet, sind die WLAN Zugangsdat
 
 ### Autodiscover
 
-Von Version 0.9.0 an unterstützt MBusino (MBusino3s noch nicht) Home Assistant Autodiscover. Ihr braucht nur die MQTT Integration. Dann wird MBusino automatisch mit allen Werten als Gerät gefunden.
+Von Version 0.9.0 an unterstützt MBusino Home Assistant Autodiscover. Ihr braucht nur die MQTT Integration. Dann wird MBusino automatisch mit allen Werten als Gerät gefunden.
 Die dritte MQTT-Nachricht ist eine Autodiscover Nachricht. Danach jede 256te.
 
 ### per Hand
