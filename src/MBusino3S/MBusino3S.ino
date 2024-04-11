@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.1"
+#define MBUSINO_VERSION "0.9.3"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -464,7 +464,7 @@ void loop() {
     for(uint8_t i = 0; i <= mbus_data[1]+1; i++){                                                             //|
       char buffer[3];                                                                                         //|
       sprintf(buffer,"%02X",mbus_data[i]);                                                                    //|
-      client.publish(String(String(userData.mbusinoName) + "/debug/telegram_byte_"+String(i)), String(buffer).c_str());          //|
+      client.publish(String(String(userData.mbusinoName) + "/debug/telegram_byte_"+String(i)).c_str(), String(buffer).c_str());          //|
     }                                                                                                         //|
     //--------------------------------------------------------------------------------------------------------------------------    
     */
@@ -481,7 +481,7 @@ void loop() {
       JsonDocument jsonBuffer;
       JsonArray root = jsonBuffer.add<JsonArray>();  
       uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
-      char jsonstring[2048] = { 0 };
+      char jsonstring[2100] = { 0 };
       uint8_t address = mbus_data[5]; 
       serializeJson(root, jsonstring);
       client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
@@ -495,7 +495,7 @@ void loop() {
         uint8_t code = root[i]["code"].as<int>();
         const char* name = root[i]["name"];
         const char* units = root[i]["units"];           
-        double value = root[i]["value_scaled"].as<double>(); 
+        float value = root[i]["value_scaled"].as<float>(); 
         const char* valueString = root[i]["value_string"];     
 
         if(haAutodiscMbus == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message

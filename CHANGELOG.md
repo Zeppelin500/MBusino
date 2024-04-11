@@ -3,6 +3,14 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.3] - 2024-04-11
+
+### Added
+
+- better real support
+
+- support for more as one VIFEs
+
 ## [0.9.1] - 2024-03-12
 
 ### Added
