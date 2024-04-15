@@ -1,9 +1,9 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.3-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.4-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 A **Plug and Play** solution.
 
-- M-Bus e.g. heatmeter (only one device at the moment)
+- M-Bus e.g. heatmeter (up to three slaves)
 - OneWire 5x e.g. DS18B20, temperature
 - I²C e.g.. BME280, temperatur, r. humidity, air pressure
 

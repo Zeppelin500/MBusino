@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.3"
+#define MBUSINO_VERSION "0.9.4"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -63,7 +63,7 @@ HardwareSerial MbusSerial(1);
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 Adafruit_BME280 bme;  // I2C
-
+MBusinoLib payload(254);
 WiFiClient espClient;
 DNSServer dnsServer;
 
@@ -121,7 +121,6 @@ bool waitToSetAddress = false;
 
 uint8_t currentAddress = 0;
 uint8_t addressCounter = 0;
-bool mbusCleared = false;
 
 int Startadd = 0x13;  // Start address for decoding
 
@@ -132,14 +131,17 @@ float hoehe = 0;
 float feuchte = 0;
 bool bmeStatus;
 
-bool mbusReq = false;
+uint8_t mbusLoopStatus = 0;
+uint8_t fields = 0;
+char jsonstring[3074] = { 0 };
+uint8_t address = 0; 
+bool engelmann = false;
 bool waitForRestart = false;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerSensorRefresh1 = 0;
 unsigned long timerSensorRefresh2 = 0;
-unsigned long timerMbus1 = 0;
-unsigned long timerMbus2 = 0;
+unsigned long timerMbus = 0;
 unsigned long timerDebug = 0;
 unsigned long timerReconnect = 0;
 unsigned long timerReboot = 0;
@@ -434,27 +436,35 @@ void loop() {
     }
      timerMQTT = millis();
   }
+////////// M- Bus ###############################################
+/*
+mbusLoopStatus
+0 = ready
+1 = mbus cleared
+2 = records requested
+3 = records received
 
-  if(millis() - timerMbus1 > userData.mbusInterval){
-    timerMbus1 = millis();
-    timerMbus2 = millis();    
+
+*/
+
+  if(millis() - timerMbus > userData.mbusInterval && mbusLoopStatus == 0){ // Normalize the M-Bus 
+    timerMbus = millis();  
+    mbusLoopStatus = 1;
     if(addressCounter >= userData.mbusSlaves){
       addressCounter = 0;
     }
     currentAddress = mbusAddress[addressCounter];
     addressCounter++;
     mbus_normalize(currentAddress);
-    mbusCleared = true;
   }
 
-  if(millis() - timerMbus1 > 500 && mbusCleared == true){
-    mbusReq = true;
-    mbusCleared = false;
+  if(millis() - timerMbus > 500 && mbusLoopStatus == 1){ // Request M-Bus Records
+    mbusLoopStatus = 2;
     mbus_clearRXbuffer();
     mbus_request_data(currentAddress);
   }
-  if(millis() - timerMbus1 > 1500 && mbusReq == true){
-    mbusReq = false;
+  if(millis() - timerMbus > 1500 && mbusLoopStatus == 2){ // Receive and decode M-Bus Records
+    mbusLoopStatus = 3;
     bool mbus_good_frame = false;
     byte mbus_data[MBUS_DATA_SIZE] = { 0 };
     mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
@@ -477,61 +487,69 @@ void loop() {
         adMbusMessageCounter++;
       }
       int packet_size = mbus_data[1] + 6; 
-      MBusinoLib payload(254);  
       JsonDocument jsonBuffer;
       JsonArray root = jsonBuffer.add<JsonArray>();  
-      uint8_t fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
-      char jsonstring[2100] = { 0 };
-      uint8_t address = mbus_data[5]; 
+      fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
+      address = mbus_data[5]; 
       serializeJson(root, jsonstring);
       client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
       client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/jsonstring").c_str(), jsonstring);      
-      bool engelmann = false;
       if(mbus_data[12]==0x14&&mbus_data[11]==0xC5){
         engelmann = true;
       }
-
-      for (uint8_t i=0; i<fields; i++) {
-        uint8_t code = root[i]["code"].as<int>();
-        const char* name = root[i]["name"];
-        const char* units = root[i]["units"];           
-        float value = root[i]["value_scaled"].as<float>(); 
-        const char* valueString = root[i]["value_string"];     
-
-        if(haAutodiscMbus == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message
-          strcpy(adVariables.haName,name);
-          if(units != NULL){
-            strcpy(adVariables.haUnits,units);
-          }else{
-            strcpy(adVariables.haUnits,""); 
-          }
-          strcpy(adVariables.stateClass,payload.getStateClass(code));
-          strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
-          haHandoverMbus(i+1, engelmann, address);
-        }else{               
-
-          //two messages per value, values comes as number or as ASCII string or both
-          client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
-          client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
-          client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
-          //or only one message
-          //client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
-
-          if (i == 3 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
-            float flow = root[5]["value_scaled"].as<float>();
-            float delta = root[9]["value_scaled"].as<float>();
-            float calc_power = delta * flow * 1163;          
-            client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/4_power_calc").c_str(), String(calc_power).c_str());                    
-          } 
-        }      
+      else{
+        engelmann = false;
       }
-    } 
-    else {
-  //Fehlermeldung
+    }
+    else {  //Fehlermeldung
+        mbusLoopStatus = 0;
+        jsonstring[0] = 0;
         client.publish(String(String(userData.mbusinoName)  +"/MBus/SlaveAddress"+String(currentAddress)+ "/MBUSerror").c_str(), "no_good_telegram");
     }
     mbus_normalize(currentAddress);
-  }
+  } 
+  if(millis() - timerMbus > 2000 && mbusLoopStatus == 3){  // Send decoded M-Bus secords via MQTT
+    mbusLoopStatus = 0;
+    JsonDocument root;
+    deserializeJson(root, jsonstring); // load the json from a global array
+    jsonstring[0] = 0;
+
+    for (uint8_t i=0; i<fields; i++) {
+      uint8_t code = root[i]["code"].as<int>();
+      const char* name = root[i]["name"];
+      const char* units = root[i]["units"];           
+      float value = root[i]["value_scaled"].as<float>(); 
+      const char* valueString = root[i]["value_string"];     
+
+      if(haAutodiscMbus == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message
+        strcpy(adVariables.haName,name);
+        if(units != NULL){
+          strcpy(adVariables.haUnits,units);
+        }else{
+          strcpy(adVariables.haUnits,""); 
+        }
+        strcpy(adVariables.stateClass,payload.getStateClass(code));
+        strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
+        haHandoverMbus(i+1, engelmann, address);
+      }else{               
+
+        //two messages per value, values comes as number or as ASCII string or both
+        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
+        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
+        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
+        //or only one message
+        //client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
+
+        if (i == 3 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
+          float flow = root[5]["value_scaled"].as<float>();
+          float delta = root[9]["value_scaled"].as<float>();
+          float calc_power = delta * flow * 1163;          
+          client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/4_power_calc").c_str(), String(calc_power).c_str());                    
+        } 
+      }      
+    }
+    address = 0; 
+  } 
 }
 
 

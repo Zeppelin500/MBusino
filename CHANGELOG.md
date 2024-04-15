@@ -3,6 +3,14 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.4] - 2024-04-15
+
+### Changed
+
+- separate decodeing and sending of records for a better stability
+
+- length of form text fields in html are now limited to the length of the variable
+
 ## [0.9.3] - 2024-04-11
 
 ### Added

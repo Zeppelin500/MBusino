@@ -58,9 +58,9 @@ const char index_html[] PROGMEM = R"rawliteral(
     <main class='form-signin'>
       <form action='/get'>
         <h1 class=''><i>MBusino</i> Setup</h1><br>
-        <div class='form-floating'><label>SSID</label><input type='text' value='%s' class='form-control' name='ssid'></div>
-        <div class='form-floating'><label>Password</label><input type='password' class='form-control' name='password'></div>
-        <div class='form-floating'><label>Device Name</label><input type='text' value='%s' class='form-control' name='name'>
+        <div class='form-floating'><label>SSID</label><input type='text' value='%s' class='form-control' maxlength = '29' name='ssid'></div>
+        <div class='form-floating'><label>Password</label><input type='password' class='form-control' maxlength = '29' name='password'></div>
+        <div class='form-floating'><label>Device Name</label><input type='text' value='%s' class='form-control' maxlength = '10' name='name'>
         </div><br><label for='extension'>Stage of Extension:</label><br><select name='extension' id='extension'>
           <option value='5'>(5) 5x DS18B20 + BME</option>
           <option value='7'>(7) 7x DS18B20 no BME</option>
@@ -69,10 +69,10 @@ const char index_html[] PROGMEM = R"rawliteral(
         </select>  stored: %u <br><br>
         <div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='%u' class='form-control' name='sensorInterval'></div>
         <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='%u' class='form-control' name='mbusInterval'></div>
-        <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' name='broker'></div>
+        <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' maxlength = '19' name='broker'></div>
         <div class='form-floating'><label>MQTT Port</label><input type='text' value='%u' class='form-control' name='mqttPort'></div>
-        <div class='form-floating'><label>MQTT User (optional)</label><input type='text' value='%s' class='form-control' name='mqttUser'></div>
-        <div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' name='mqttPswrd'></div>
+        <div class='form-floating'><label>MQTT User (optional)</label><input type='text' value='%s' class='form-control' maxlength = '29' name='mqttUser'></div>
+        <div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' maxlength = '29' name='mqttPswrd'></div>
         <div class='form-floating'><label>number of M-Bus Slaves</label><input type='text' value='%u' class='form-control' name='mbusSlaves'></div>
         <div class='form-floating'><label>M-Bus address 1</label><input type='text' value='%u' class='form-control' name='mbusAddress1'></div>
         <div class='form-floating'><label>M-Bus address 2</label><input type='text' value='%u' class='form-control' name='mbusAddress2'></div>
