@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.5] - 2024-04-16
+
+### Changed
+
+- roll back from float to double for a better precision
+
 ## [0.9.4] - 2024-04-15
 
 ### Changed

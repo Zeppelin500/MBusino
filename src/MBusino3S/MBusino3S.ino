@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.4"
+#define MBUSINO_VERSION "0.9.5"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -518,7 +518,7 @@ mbusLoopStatus
       uint8_t code = root[i]["code"].as<int>();
       const char* name = root[i]["name"];
       const char* units = root[i]["units"];           
-      float value = root[i]["value_scaled"].as<float>(); 
+      double value = root[i]["value_scaled"].as<double>();
       const char* valueString = root[i]["value_string"];     
 
       if(haAutodiscMbus == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message

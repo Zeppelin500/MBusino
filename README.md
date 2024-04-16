@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.4-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.5-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 A **Plug and Play** solution.
 
