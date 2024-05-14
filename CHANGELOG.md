@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- retained flag for Homeassitant autodicovery messages.
+- retained flag for Homeassitant autodiscovery messages.
 
 
 ## [0.9.5] - 2024-04-16
