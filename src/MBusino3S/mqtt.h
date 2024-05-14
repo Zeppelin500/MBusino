@@ -12,6 +12,8 @@ void reconnect() {
     }
     else{
       client.publish(String(String(userData.mbusinoName) + "/reconnect").c_str(), "Online again!");
+      adMbusMessageCounter = 2;
+      adSensorMessageCounter = 2;
     }
     // ... and resubscribe
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateAverage").c_str());

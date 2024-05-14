@@ -31,12 +31,12 @@ void haHandoverMbus(uint8_t haCounter, bool engelmann, uint8_t address){ // haCo
   }
   sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,address,haCounter,adVariables.haName,userData.mbusinoName,address,haCounter,adVariables.haName,userData.mbusinoName,address,haCounter,adVariables.haName,address,haCounter,adVariables.haName,adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString);
   sprintf(adVariables.bufferTopic,adTopicMbus,userData.mbusinoName,address,haCounter,adVariables.haName);
-  client.publish(adVariables.bufferTopic, adVariables.bufferValue); 
+  client.publish(adVariables.bufferTopic, adVariables.bufferValue, true); 
 
   if(haCounter == 4 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar   
     sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,address,haCounter,"power_calc",userData.mbusinoName,address,haCounter,"power_calc",userData.mbusinoName,address,haCounter,"power_calc",address,haCounter,"power_calc",adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString);
     sprintf(adVariables.bufferTopic,adTopicMbus,userData.mbusinoName,address,haCounter,"power_calc");
-    client.publish(adVariables.bufferTopic, adVariables.bufferValue);                   
+    client.publish(adVariables.bufferTopic, adVariables.bufferValue, true);                   
   } 
 
   adVariables.bufferTopic[0] = 0;
@@ -50,7 +50,7 @@ void haHandoverMbus(uint8_t haCounter, bool engelmann, uint8_t address){ // haCo
 void haHandoverOw(uint8_t haCounter){
   sprintf(adVariables.bufferValue,adValueSensor,userData.mbusinoName,haCounter,userData.mbusinoName,haCounter,userData.mbusinoName,haCounter,haCounter,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION);
   sprintf(adVariables.bufferTopic,adTopicSensor,userData.mbusinoName,haCounter);
-  client.publish(adVariables.bufferTopic, adVariables.bufferValue); 
+  client.publish(adVariables.bufferTopic, adVariables.bufferValue, true); 
   adVariables.bufferTopic[0] = 0;
   adVariables.bufferValue[0] = 0;
 }
@@ -59,7 +59,7 @@ void haHandoverBME(){
   for(uint8_t i=0; i<4;i++){  
     sprintf(adVariables.bufferValue,adValueBME,userData.mbusinoName,bmeValue[i],userData.mbusinoName,bmeValue[i],userData.mbusinoName,bmeValue[i],bmeValue[i],bmeUnits[i],userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,bmeDeviceClass[i]);
     sprintf(adVariables.bufferTopic,adTopicBME,userData.mbusinoName,bmeValue[i]);
-    client.publish(adVariables.bufferTopic, adVariables.bufferValue); 
+    client.publish(adVariables.bufferTopic, adVariables.bufferValue, true); 
     adVariables.bufferTopic[0] = 0;
     adVariables.bufferValue[0] = 0;
   }
