@@ -39,7 +39,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.6"
+#define MBUSINO_VERSION "0.9.7"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -101,7 +101,8 @@ struct settings {
   char mqttPswrd[30]; 
   uint32_t sensorInterval;
   uint32_t mbusInterval; 
-} userData = {"SSID","Password","MBusino","192.168.1.7",1883,5,"mqttUser","mqttPasword",5000,120000};
+  bool haAutodisc;
+} userData = {"SSID","Password","MBusino","192.168.1.7",1883,5,"mqttUser","mqttPasword",5000,120000,true};
 
 bool mqttcon = false;
 bool apMode = false;
@@ -152,8 +153,7 @@ float OWwO[7] = {0};  // Variables for DS18B20 Onewire Sensores with Offset (One
 bool OWnotconnected[7] = {false};
 uint8_t sensorToCalibrate = 0;
 
-bool haAutodiscSensor = true;
-bool haAutodiscMbus = true;
+
 uint8_t adMbusMessageCounter = 0; // Counter for autodiscouver mbus message.
 uint8_t adSensorMessageCounter = 0; // Counter for autodiscouver mbus message.
 
@@ -197,7 +197,7 @@ void setup() {
   EEPROM.commit();
   EEPROM.end();
 
-  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
+  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.haAutodisc,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
 
   WiFi.hostname(userData.mbusinoName);
   client.setServer(userData.broker, userData.mqttPort);
@@ -382,7 +382,7 @@ void loop() {
       if(OW[i] != -127){        
         client.publish(String(String(userData.mbusinoName) + "/OneWire/S" + String(i+1)).c_str(), String(OWwO[i]).c_str());
         client.publish(String(String(userData.mbusinoName) + "/OneWire/offset" + String(i+1)).c_str(), String(offset[i]).c_str());
-        if(haAutodiscSensor == true && adSensorMessageCounter == 3){
+        if(userData.haAutodisc == true && adSensorMessageCounter == 3){
           haHandoverOw(i+1);
         }
        
@@ -394,7 +394,7 @@ void loop() {
       client.publish(String(String(userData.mbusinoName) + "/bme/Druck").c_str(), String(druck).c_str());
       client.publish(String(String(userData.mbusinoName) + "/bme/Hoehe").c_str(), String(hoehe).c_str());
       client.publish(String(String(userData.mbusinoName) + "/bme/Feuchte").c_str(), String(feuchte).c_str());
-      if(haAutodiscSensor == true && adSensorMessageCounter == 3){
+      if(userData.haAutodisc == true && adSensorMessageCounter == 3){
         haHandoverBME();
       }
     }
@@ -472,7 +472,7 @@ void loop() {
       const char* valueString = root[i]["value_string"];  
         
 
-      if(haAutodiscMbus == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message
+      if(userData.haAutodisc == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message
         strcpy(adVariables.haName,name);
         if(units != NULL){
           strcpy(adVariables.haUnits,units);

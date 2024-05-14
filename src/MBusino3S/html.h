@@ -66,7 +66,12 @@ const char index_html[] PROGMEM = R"rawliteral(
           <option value='7'>(7) 7x DS18B20 no BME</option>
           <option value='0'>(0) only M-Bus</option>
           <option value='' selected>choose option</option>
-        </select>  stored: %u <br><br>
+        </select>  stored: %u <br>
+        </div><br><label for='haAd'>generate Home-Assitant autodiscovery messages:</label><br><select name='haAd' id='haAd'>
+          <option value='0'>(0) no</option>
+          <option value='1'>(1) yes</option>
+          <option value='' selected>choose option</option>
+        </select>  stored: %u <br><br> 
         <div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='%u' class='form-control' name='sensorInterval'></div>
         <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='%u' class='form-control' name='mbusInterval'></div>
         <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' maxlength = '19' name='broker'></div>

@@ -61,7 +61,14 @@ void setupServer(){
           credentialsReceived = true;
           }
       }
-
+      if (request->hasParam("haAd")) {
+        inputMessage = request->getParam("haAd")->value();
+        inputParam = "haAd";
+        if(inputMessage != NULL){
+          userData.haAutodisc = inputMessage.toInt();
+          credentialsReceived = true;
+          }
+      }
       if (request->hasParam("sensorInterval")) {
         inputMessage = request->getParam("sensorInterval")->value();
         inputParam = "sensorInterval";
