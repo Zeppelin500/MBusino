@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.8] - 2024-06-21
+
+### Changed
+
+- hide MQTT Password
+
 ## [0.9.7] - 2024-05-14
 
 ### Added

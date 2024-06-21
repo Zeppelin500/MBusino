@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.7"
+#define MBUSINO_VERSION "0.9.8"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -383,7 +383,7 @@ void loop() {
     client.publish(String(String(userData.mbusinoName) + "/settings/broker").c_str(), userData.broker); 
     client.publish(String(String(userData.mbusinoName) + "/settings/port").c_str(), String(userData.mqttPort).c_str()); 
     client.publish(String(String(userData.mbusinoName) + "/settings/user").c_str(), userData.mqttUser); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/pswd").c_str(), userData.mqttPswrd); 
+    //client.publish(String(String(userData.mbusinoName) + "/settings/pswd").c_str(), userData.mqttPswrd); 
     client.publish(String(String(userData.mbusinoName) + "/settings/name").c_str(), userData.mbusinoName); 
     client.publish(String(String(userData.mbusinoName) + "/settings/extension").c_str(), String(userData.extension).c_str()); 
     client.publish(String(String(userData.mbusinoName) + "/settings/mbusInterval").c_str(), String(userData.mbusInterval).c_str()); 
