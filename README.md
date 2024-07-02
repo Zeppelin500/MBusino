@@ -7,7 +7,9 @@ A **Plug and Play** solution.
 - OneWire 5x e.g. DS18B20, temperature
 - I²C e.g.. BME280, temperatur, r. humidity, air pressure
 
-### Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Sensors
+M-Bus decoding use the project's own library [**MBusinoLib**](https://github.com/Zeppelin500/MBusinoLib). Test the library [**via Wokwi.**](https://wokwi.com/projects/402235052803622913)
+
+Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Sensors.
 The Board is usable for "only M-Bus" or "only sensor meassuring" as well.  
 
 ## Access Point to configure,  MBusino Setup Portal
