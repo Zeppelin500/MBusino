@@ -35,6 +35,8 @@ If you use not Home Assistant, no matter. All records will be send as MQTT messa
 The PCB is designed with fritzing.
 M-Bus is provided by a piggyback M-Bus master.
 https://de.aliexpress.com/item/33008746192.html --> the Master **NOT the Slave!** (the picture at ali shows a different board, but you will receive the right one)
+**2024/08/06 unfortunately there are a production lot of not functionaly Masters in circulation.** refer here:
+https://github.com/Zeppelin500/MBusino/discussions/18
 
 Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini
 
