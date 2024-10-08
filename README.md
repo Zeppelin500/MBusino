@@ -32,20 +32,29 @@ If you use not Home Assistant, no matter. All records will be send as MQTT messa
 
 
 ## Hardware
-The PCB is designed with fritzing.
 M-Bus is provided by a piggyback M-Bus master.
-https://a.aliexpress.com/_EyQhgIZ --> the Master **NOT the Slave!** 
-
-
 Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini
+
+There are two versions aviable for two different M-Bus masters.
+
+The "old" version for a chinese M-Bus Master. 
+https://a.aliexpress.com/_EyQhgIZ --> the Master **NOT the Slave!** 
+All three esps are supported
+
+The new "**edition Z**" version for a german M-Bus master from Zihatec. Many thanks to HWHardsoft for making the board available especially for us.
+https://www.hwhardsoft.de/2024/10/08/m-bus-master-breakout
+Work only with the ESP S2 mini.
+
+![Edition_Z](pictures/edition_z.jpg)
 
 Beside the USB power supply of D1 mini is no other adapter necessary.
 
 Use 2,54mm terminals or JST XH to connect the DS18B20
 
-You will find a 3D-printable PCB case inside the case folder.  
+You will find a 3D-printable PCB case inside the case folder. The edition Z need a different case. ()Not released yet)  
+The PCB is designed with fritzing.
 
-To save mony, I place omnibus orders for all parts.
+To save mony, I place omnibus orders for all parts beside the M-Bus Master.
 
 ## calibration capabilities 
 
