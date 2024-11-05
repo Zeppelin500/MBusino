@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.9] - 2024-11-05
+
+### Changed
+
+- update to MBusinoLib 0.9.7 - HA Autodiscovery StateClass TOTAL for Energy
+
 ## [0.9.8] - 2024-06-21
 
 ### Changed
