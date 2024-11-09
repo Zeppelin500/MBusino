@@ -2,6 +2,14 @@
 
 For the ESP32 S2 are 3 different .bin files created.
 
+**MBusino**
+
+* MBusino.ino.bootloader.bin
+* MBusino.ino.partitions.bin
+* MBusino.ino.bin 
+
+**MBusino3S**
+
 * MBusino3S.ino.bootloader.bin
 * MBusino3S.ino.partitions.bin
 * MBusino3S.ino.bin 
@@ -14,6 +22,14 @@ For the ESP32 S2 are 3 different .bin files created.
 * if connected click **Erase** and wait for finish
 * may you have to connect again
 * if connected, load all 3 .bin files as follows with the offset
+
+**MBusino**
+
+* Offset 0x 1000    MBusino.ino.bootloader.bin
+* Offset 0x 8000    MBusino.ino.partitions.bin
+* Offset 0x 10000    MBusino.ino.bin 
+
+**MBusino3S**
 
 * Offset 0x 1000    MBusino3S.ino.bootloader.bin
 * Offset 0x 8000    MBusino3S.ino.partitions.bin
