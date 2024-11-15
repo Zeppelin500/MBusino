@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.8"
+#define MBUSINO_VERSION "0.9.9"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -134,7 +134,7 @@ bool bmeStatus;
 
 uint8_t mbusLoopStatus = 0;
 uint8_t fields = 0;
-char jsonstring[3074] = { 0 };
+char jsonstring[4092] = { 0 };
 uint8_t address = 0; 
 bool engelmann = false;
 bool waitForRestart = false;
