@@ -39,7 +39,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.9"
+#define MBUSINO_VERSION "0.9.10"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -102,7 +102,8 @@ struct settings {
   uint32_t sensorInterval;
   uint32_t mbusInterval; 
   bool haAutodisc;
-} userData = {"SSID","Password","MBusino","192.168.1.7",1883,5,"mqttUser","mqttPasword",5000,120000,true};
+  bool telegramDebug;
+} userData = {"SSID","Password","MBusino","192.168.1.7",1883,5,"mqttUser","mqttPasword",5000,120000,true,false};
 
 bool mqttcon = false;
 bool apMode = false;
@@ -197,7 +198,11 @@ void setup() {
   EEPROM.commit();
   EEPROM.end();
 
-  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.haAutodisc,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
+  if(userData.telegramDebug > 1){
+    userData.telegramDebug = 0;
+  }
+
+  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.haAutodisc,userData.telegramDebug,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
 
   WiFi.hostname(userData.mbusinoName);
   client.setServer(userData.broker, userData.mqttPort);
@@ -413,15 +418,21 @@ void loop() {
     byte mbus_data[MBUS_DATA_SIZE] = { 0 };
     mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
 
-    /*
+    if(userData.telegramDebug == true){
     //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
-    for(uint8_t i = 0; i <= mbus_data[1]+6; i++){                                                             //|
-      char buffer[3];                                                                                         //|
-      sprintf(buffer,"%02X",mbus_data[i]);                                                                    //|
-      client.publish(String(String(userData.mbusinoName) + "/debug/telegram_byte_"+String(i)).c_str(), String(buffer).c_str());          //|
-    }                                                                                                         //|
-    //--------------------------------------------------------------------------------------------------------------------------    
-    */
+      //char telegram[(mbus_data[1]+6)*2] = {0};
+      char telegram[520] = {0};
+      for(uint8_t i = 0; i <= mbus_data[1]+6; i++){                                                             //|
+        char buffer[3];                                                                                         //|
+        sprintf(buffer,"%02X",mbus_data[i]);                                                                    //|
+        client.publish(String(String(userData.mbusinoName) + "/debug/telegram_byte_"+String(i)).c_str(), String(buffer).c_str());  
+        telegram[i*2] = buffer[0];
+        telegram[(i*2)+1] = buffer[1];       //|
+      } 
+      //client.publish(String(String(userData.mbusinoName) + "/debug/telegram"), String(telegram).c_str());    
+      client.publish(String(String(userData.mbusinoName) +"/debug/telegram").c_str(), telegram);                                                                                                       //|
+      //--------------------------------------------------------------------------------------------------------------------------    
+    }
     //bool mbus_good_frame = true;
     //byte mbus_data[] = {0x68,0x9E,0x9E,0x68,0x08,0x65,0x72,0x09,0x76,0x06,0x00,0xA5,0x25,0x1D,0x02,0x02,0x00,0x00,0x00,0x85,0x40,0xAB,0xFF,0x01,0x00,0x36,0x0B,0x47,0x85,0x40,0xAB,0xFF,0x02,0x00,0x2C,0xFA,0x46,0x85,0x40,0xAB,0xFF,0x03,0x00,0x74,0xED,0x46,0x85,0x80,0x40,0xAB,0xFF,0x01,0x00,0xC0,0xE2,0x44,0x85,0x80,0x40,0xAB,0xFF,0x02,0x00,0x40,0x5A,0x45,0x85,0x80,0x40,0xAB,0xFF,0x03,0x00,0x60,0x36,0x45,0x05,0xFD,0xBA,0xFF,0x01,0x78,0xBE,0x7F,0x3F,0x05,0xFD,0xBA,0xFF,0x02,0x40,0x35,0x7E,0x3F,0x05,0xFD,0xBA,0xFF,0x03,0x53,0xB8,0x7E,0x3F,0x05,0xFD,0xC8,0xFF,0x04,0x00,0x90,0x7A,0x45,0x05,0xFD,0xC8,0xFF,0x05,0x00,0x70,0x7B,0x45,0x05,0xFD,0xC8,0xFF,0x06,0x00,0x80,0x7B,0x45,0x05,0xFD,0xD9,0xFF,0x04,0x00,0x50,0x2A,0x47,0x05,0xFF,0x5A,0x00,0x00,0xFA,0x43,0x02,0xFD,0x3A,0xC8,0x00,0x02,0xFD,0x3A,0x0A,0x00,0x0F,0x00,0x00,0x00,0x00,0x00,0x8B,0x16};
     
