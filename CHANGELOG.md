@@ -3,6 +3,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.10] - 2024-11-16
+
+### Changed
+
+- increased size of jsonstring to 4092 
+- add a GUI selection for raw telegram output to debug (only for MBusino)
+
 ## [0.9.9] - 2024-11-05
 
 ### Changed
