@@ -3,6 +3,15 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.11] - 2024-12-03
+
+### Changed
+
+- increased time between M-Bus request and get response for slow slaves 
+- placed sensor1.setWaitForConversion(false) etc. to the right place, to set the OneWire communication async
+- changed the BME280 topics to english language
+- toturial: ad links to the .bin files
+
 ## [0.9.10] - 2024-11-16
 
 ### Changed

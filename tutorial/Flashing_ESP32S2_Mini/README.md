@@ -8,11 +8,15 @@ For the ESP32 S2 are 3 different .bin files created.
 * MBusino.ino.partitions.bin
 * MBusino.ino.bin 
 
+https://github.com/Zeppelin500/MBusino/tree/main/src/MBusino/build/esp32.esp32.lolin_s2_mini
+
 **MBusino3S**
 
 * MBusino3S.ino.bootloader.bin
 * MBusino3S.ino.partitions.bin
 * MBusino3S.ino.bin 
+
+https://github.com/Zeppelin500/MBusino/tree/main/src/MBusino3S/build/esp32.esp32.lolin_s2_mini
 
 ### Use for Flashing https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
 

@@ -39,7 +39,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.10"
+#define MBUSINO_VERSION "0.9.11"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -280,19 +280,6 @@ void setup() {
 
   client.setBufferSize(6000);
 
-  // OneWire vorbereiten
-  if(userData.extension > 0){
-    sensor1.setWaitForConversion(false);  // makes it async
-    sensor2.setWaitForConversion(false);  // makes it async
-    sensor3.setWaitForConversion(false);  // makes it async
-    sensor4.setWaitForConversion(false);  // makes it async
-    sensor5.setWaitForConversion(false);  // makes it async
-  }
-  if(userData.extension == 7){
-    sensor6.setWaitForConversion(false);  // makes it async
-    sensor7.setWaitForConversion(false);  // makes it async
-  }
-
   // Start up the library
   if(userData.extension > 0){
     sensor1.begin();
@@ -300,10 +287,19 @@ void setup() {
     sensor3.begin();
     sensor4.begin();
     sensor5.begin();
+    
+    sensor1.setWaitForConversion(false);  // Request temperature conversion - non-blocking / async
+    sensor2.setWaitForConversion(false);
+    sensor3.setWaitForConversion(false);
+    sensor4.setWaitForConversion(false);
+    sensor5.setWaitForConversion(false);
   }
   if(userData.extension == 7){
     sensor6.begin();
     sensor7.begin();
+
+    sensor6.setWaitForConversion(false);
+    sensor7.setWaitForConversion(false);    
   }
 
   if(userData.extension == 5){
@@ -395,10 +391,10 @@ void loop() {
     }
   
     if(userData.extension == 5){
-      client.publish(String(String(userData.mbusinoName) + "/bme/Temperatur").c_str(), String(temperatur).c_str());
-      client.publish(String(String(userData.mbusinoName) + "/bme/Druck").c_str(), String(druck).c_str());
-      client.publish(String(String(userData.mbusinoName) + "/bme/Hoehe").c_str(), String(hoehe).c_str());
-      client.publish(String(String(userData.mbusinoName) + "/bme/Feuchte").c_str(), String(feuchte).c_str());
+      client.publish(String(String(userData.mbusinoName) + "/bme/temperature").c_str(), String(temperatur).c_str());
+      client.publish(String(String(userData.mbusinoName) + "/bme/pressure").c_str(), String(druck).c_str());
+      client.publish(String(String(userData.mbusinoName) + "/bme/altitude").c_str(), String(hoehe).c_str());
+      client.publish(String(String(userData.mbusinoName) + "/bme/humidity").c_str(), String(feuchte).c_str());
       if(userData.haAutodisc == true && adSensorMessageCounter == 3){
         haHandoverBME();
       }
@@ -412,7 +408,7 @@ void loop() {
     mbusLoopStatus = 1;
     mbus_request_data(MBUS_ADDRESS);
   }
-  if(millis() - timerMbus > 1000 && mbusLoopStatus == 1){ // Receive and decode M-Bus Records
+  if(millis() - timerMbus > 1500 && mbusLoopStatus == 1){ // Receive and decode M-Bus Records
     mbusLoopStatus = 2;
     bool mbus_good_frame = false;
     byte mbus_data[MBUS_DATA_SIZE] = { 0 };
@@ -469,7 +465,7 @@ void loop() {
         client.publish(String(String(userData.mbusinoName) + "/MBUSerror").c_str(), "no_good_telegram");
     }
   }
-  if(millis() - timerMbus > 2000 && mbusLoopStatus == 2){  // Send decoded M-Bus secords via MQTT
+  if(millis() - timerMbus > 2500 && mbusLoopStatus == 2){  // Send decoded M-Bus secords via MQTT
     mbusLoopStatus = 0;
     JsonDocument root;
     deserializeJson(root, jsonstring); // load the json from a global array
