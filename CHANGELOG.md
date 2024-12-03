@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - increased time between M-Bus request and get response for slow slaves 
 - placed sensor1.setWaitForConversion(false) etc. to the right place, to set the OneWire communication async
 - changed the BME280 topics to english language
-- toturial: ad links to the .bin files
+- tutorial: add links to the .bin files
 
 ## [0.9.10] - 2024-11-16
 
