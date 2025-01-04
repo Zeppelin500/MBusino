@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.11"
+#define MBUSINO_VERSION "0.9.12"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -106,7 +106,7 @@ struct settings {
   uint8_t mbusAddress2;
   uint8_t mbusAddress3;
   bool haAutodisc;
-} userData = {"SSID","Password","MBusino","192.168.1.7",1883,5,"mqttUser","mqttPasword",5000,120000,1,0xFE,0,0,true};
+} userData = {"SSID","Password","MBusino","192.168.1.8",1883,5,"mqttUser","mqttPasword",5000,120000,1,0xFE,0,0,true};
 
 uint8_t mbusAddress[3] = {0};
 
@@ -122,6 +122,7 @@ bool waitToSetAddress = false;
 
 uint8_t currentAddress = 0;
 uint8_t addressCounter = 0;
+uint8_t pollingAddress = 0;
 
 int Startadd = 0x13;  // Start address for decoding
 
@@ -138,6 +139,7 @@ char jsonstring[4092] = { 0 };
 uint8_t address = 0; 
 bool engelmann = false;
 bool waitForRestart = false;
+bool polling = false;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerSensorRefresh1 = 0;
@@ -443,14 +445,20 @@ mbusLoopStatus
 
 */
 
-  if(millis() - timerMbus > userData.mbusInterval && mbusLoopStatus == 0){ // Normalize the M-Bus 
+  if((millis() - timerMbus > userData.mbusInterval || polling == true) && mbusLoopStatus == 0){ // Normalize the M-Bus 
     timerMbus = millis();  
     mbusLoopStatus = 1;
-    if(addressCounter >= userData.mbusSlaves){
-      addressCounter = 0;
+    if(polling == true){
+      currentAddress = pollingAddress;
+      polling = false;
+    }    
+    else{
+      if(addressCounter >= userData.mbusSlaves){
+        addressCounter = 0;
+      }
+      currentAddress = mbusAddress[addressCounter];
+      addressCounter++;
     }
-    currentAddress = mbusAddress[addressCounter];
-    addressCounter++;
     mbus_normalize(currentAddress);
   }
 
@@ -517,7 +525,7 @@ mbusLoopStatus
       double value = root[i]["value_scaled"].as<double>();
       const char* valueString = root[i]["value_string"];     
 
-      if(userData.haAutodisc == true && adMbusMessageCounter == 3){  //every 264 message is a HA autoconfig message
+      if(userData.haAutodisc == true && adMbusMessageCounter == 3){  //every 254 message is a HA autoconfig message
         strcpy(adVariables.haName,name);
         if(units != NULL){
           strcpy(adVariables.haUnits,units);

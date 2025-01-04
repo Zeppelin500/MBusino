@@ -19,6 +19,7 @@ void reconnect() {
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateValue").c_str());
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateBME").c_str());
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateSet0").c_str());
+    client.subscribe(String(String(userData.mbusinoName) + "/mbusPolling").c_str());
   }
 }
 
@@ -42,4 +43,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       calibrationSet0();
     } 
   }
+  if (strcmp(topic,String(String(userData.mbusinoName) + "/mbusPolling").c_str())==0){  
+    polling = true;
+  } 
 }   

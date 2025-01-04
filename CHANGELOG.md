@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.12] - 2025-01-04
+
+### Added
+
+- M-Bus request polling per MQTT
+
 ## [0.9.11] - 2024-12-03
 
 ### Changed

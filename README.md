@@ -1,11 +1,11 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.11-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.12-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 A **Plug and Play** solution.
 
 - M-Bus e.g. heatmeter (up to three slaves)
-- OneWire 5x e.g. DS18B20, temperature
-- I²C e.g.. BME280, temperatur, r. humidity, air pressure
+- OneWire 5x DS18B20, temperature
+- I²C BME280, temperatur, r. humidity, air pressure
 
 M-Bus decoding use the project's own library [**MBusinoLib**](https://github.com/Zeppelin500/MBusinoLib). Test the library [**via Wokwi.**](https://wokwi.com/projects/402235052803622913)
 
@@ -54,7 +54,19 @@ Use 2,54mm terminals or JST XH to connect the DS18B20
 You will find a 3D-printable PCB case inside the case folder. The edition Z need a different case. ()Not released yet)  
 The PCB is designed with fritzing.
 
-To save mony, I place omnibus orders for all parts beside the M-Bus Master.
+To save money, I place omnibus orders for all parts beside the M-Bus Master.
+
+## M-Bus Polling (optional)
+
+Normaly M-Bus request is set with an interval at the GUI. But in special cases you can set the interval to a long period to save slave battery life and poll the M-Bus records by a MQTT request as often as you want between. E.g. M-Bus Interval 2.592.000 sec. (30 days) and poll high frequently between in interesting phases.
+
+### MBusino
+* MQTT Topic: MBusino/mbusPolling
+* MQTT Payload: no matter
+
+### MBusino3S
+* MQTT Topic: MBusino/mbusPolling
+* MQTT Payload: M-Bus Address in decimal (you can also request addresses witch are not stored in the GUI)
 
 ## calibration capabilities 
 
@@ -90,7 +102,6 @@ Manipulate the offset of a single sensor by sending sensor numbers and values. T
 * MQTT Payload: no matter
 
 Self explanatory.
-
 
 ## known issues
 - Flashing over USB is only possible, if the M-Bus master is not connected. OTA update work fine.

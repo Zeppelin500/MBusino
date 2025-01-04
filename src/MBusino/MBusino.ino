@@ -39,7 +39,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.11"
+#define MBUSINO_VERSION "0.9.12"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -103,7 +103,7 @@ struct settings {
   uint32_t mbusInterval; 
   bool haAutodisc;
   bool telegramDebug;
-} userData = {"SSID","Password","MBusino","192.168.1.7",1883,5,"mqttUser","mqttPasword",5000,120000,true,false};
+} userData = {"SSID","Password","MBusino","192.168.1.8",1883,5,"mqttUser","mqttPasword",5000,120000,true,false};
 
 bool mqttcon = false;
 bool apMode = false;
@@ -124,6 +124,7 @@ uint8_t fields = 0;
 char jsonstring[4096] = { 0 };
 bool engelmann = false;
 bool waitForRestart = false;
+bool polling = false;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerSensorRefresh1 = 0;
@@ -403,8 +404,9 @@ void loop() {
   }
 ////////// M- Bus ###############################################
 
-  if(millis() - timerMbus > userData.mbusInterval && mbusLoopStatus == 0){ // Request M-Bus Records
+  if((millis() - timerMbus > userData.mbusInterval || polling == true) && mbusLoopStatus == 0){ // Request M-Bus Records
     timerMbus = millis();
+    polling = false;
     mbusLoopStatus = 1;
     mbus_request_data(MBUS_ADDRESS);
   }
