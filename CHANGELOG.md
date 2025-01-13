@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.13] - 2025-01-13
+
+### Changed
+
+- MBusinoLib 0.9.8
+
 ## [0.9.12] - 2025-01-04
 
 ### Added
