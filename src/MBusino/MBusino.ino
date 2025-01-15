@@ -127,7 +127,7 @@ bool waitForRestart = false;
 bool polling = false;
 
 unsigned long timerMQTT = 15000;
-unsigned long timerSensorRefresh1 = 0;
+
 unsigned long timerSensorRefresh2 = 0;
 unsigned long timerMbus = 0;
 unsigned long timerDebug = 0;
@@ -363,16 +363,11 @@ void loop() {
   }
   ///////////////////////////////////////////////////////////
   
-
-  if(userData.extension > 0){
-    if ((millis() - timerSensorRefresh1) > 200) {  // springt in die Funktion zum anstoßen der aktuallisierung der Sensorwerte
-      sensorRefresh1();
-      timerSensorRefresh1 = (millis() - 1000);
-    }
+  
     if ((millis() - timerSensorRefresh2) > 1000) {  // springt in die Funktion zum holen der neuen Sensorwerte
       sensorRefresh2();
-      timerSensorRefresh1 = millis();
       timerSensorRefresh2 = millis();
+      sensorRefresh1();   // springt in die Funktion zum anstoßen der aktuallisierung der Sensorwerte
     }
   }  
   if (millis() > (timerMQTT + userData.sensorInterval)) { //MQTT Nachrichten senden
