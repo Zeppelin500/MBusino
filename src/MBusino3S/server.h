@@ -175,8 +175,7 @@ public:
   CaptiveRequestHandler() {}
   virtual ~CaptiveRequestHandler() {}
 
-  bool canHandle(AsyncWebServerRequest *request){
-    //request->addInterestingHeader("ANY");
+  bool canHandle(AsyncWebServerRequest *request) const override {
     return true;
   }
 

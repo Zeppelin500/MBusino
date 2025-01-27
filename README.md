@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.13-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.14-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 A **Plug and Play** solution.
 
@@ -103,12 +103,14 @@ Manipulate the offset of a single sensor by sending sensor numbers and values. T
 
 Self explanatory.
 
-## known issues
+## known issues / limitations
 - Flashing over USB is only possible, if the M-Bus master is not connected. OTA update work fine.
 
 - Do not use 2 Boards simultaneously without changing thr Name or it cause in network problems, both boards becomes unreachable. 
 
-- M-Bus is tested with a "Engelmann Sensostar U" and some other slaves, it should work with most M-Bus devices. If you have M-Bus issues, let me know.
+- M-Bus should work with most M-Bus devices. If you have M-Bus issues, let me know.
+
+- No support of multi telegram messages. Only the first telegram will be decodet
 
 
 ## Credits

@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.12"
+#define MBUSINO_VERSION "0.9.14"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -329,7 +329,6 @@ void setup() {
 
 
 void loop() {
-  client.loop();  //MQTT Funktion
   ArduinoOTA.handle();
   if(apMode == true){
     dnsServer.processNextRequest();
@@ -337,11 +336,6 @@ void loop() {
 
   if(apMode == true && millis() > 300000){
     ESP.restart();
-  }
-
-  if (!client.connected() && ((millis() - timerReconnect) > 5000)) { //espClient.connected() &&
-    reconnect();
-    timerReconnect = millis();
   }
 
   if(credentialsReceived == true && waitForRestart == false){
@@ -359,201 +353,213 @@ void loop() {
     ESP.restart();
   }
 
-  if(newAddressReceived == true){
-    newAddressReceived = false;
-    waitToSetAddress = true;
-    timerSetAddress = millis();
-    mbus_normalize(254);
-    client.publish(String(String(userData.mbusinoName) + "/setAddress/1").c_str(), "done");
-  }
-
-  if(waitToSetAddress == true && (millis() - 500) > timerSetAddress){
-    waitToSetAddress = false;
-    mbus_set_address(254,newAddress);
-    client.publish(String(String(userData.mbusinoName) + "/setAddress/2").c_str(), String(newAddress).c_str());
-  }
-
-  /////////////////for debug///////////////////////////////////
-  if((millis()-timerDebug) >10000){
-    timerDebug = millis();
-    client.publish(String(String(userData.mbusinoName) + "/settings/ssid").c_str(), userData.ssid); 
-    //client.publish(String(String(userData.mbusinoName) + "/settings/password").c_str(), String(userData.password)); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/broker").c_str(), userData.broker); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/port").c_str(), String(userData.mqttPort).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/user").c_str(), userData.mqttUser); 
-    //client.publish(String(String(userData.mbusinoName) + "/settings/pswd").c_str(), userData.mqttPswrd); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/name").c_str(), userData.mbusinoName); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/extension").c_str(), String(userData.extension).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/mbusInterval").c_str(), String(userData.mbusInterval).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/sensorInterval").c_str(), String(userData.sensorInterval).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/slaves").c_str(), String(userData.mbusSlaves).c_str());
-    client.publish(String(String(userData.mbusinoName) + "/settings/address1").c_str(), String(userData.mbusAddress1).c_str());
-    client.publish(String(String(userData.mbusinoName) + "/settings/address2").c_str(), String(userData.mbusAddress2).c_str());
-    client.publish(String(String(userData.mbusinoName) + "/settings/address3").c_str(), String(userData.mbusAddress3).c_str());    
-    client.publish(String(String(userData.mbusinoName) + "/settings/IP").c_str(), String(WiFi.localIP().toString()).c_str());
-    client.publish(String(String(userData.mbusinoName) + "/settings/MQTTreconnections").c_str(), String(conCounter-1).c_str());
-    long rssi = WiFi.RSSI();
-    client.publish(String(String(userData.mbusinoName) + "/settings/RSSI").c_str(), String(rssi).c_str()); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/version").c_str(), MBUSINO_VERSION); 
-    client.publish(String(String(userData.mbusinoName) + "/settings/adcounter").c_str(), String(adMbusMessageCounter).c_str());     
-  }
-  ///////////////////////////////////////////////////////////
-  
-
-  if(userData.extension > 0){
-    if ((millis() - timerSensorRefresh1) > 200) {  // springt in die Funktion zum anstoßen der aktuallisierung der Sensorwerte
-      sensorRefresh1();
-      timerSensorRefresh1 = (millis() - 1000);
-    }
-    if ((millis() - timerSensorRefresh2) > 1000) {  // springt in die Funktion zum holen der neuen Sensorwerte
-      sensorRefresh2();
-      timerSensorRefresh1 = millis();
-      timerSensorRefresh2 = millis();
-    }
-  }  
-  if (millis() > (timerMQTT + userData.sensorInterval)) { //MQTT Nachrichten senden
-    adSensorMessageCounter++;
-    for(uint8_t i = 0; i < userData.extension; i++){
-      if(OW[i] != -127){
-        client.publish(String(String(userData.mbusinoName) + "/OneWire/S" + String(i+1)).c_str(), String(OWwO[i]).c_str());
-        client.publish(String(String(userData.mbusinoName) + "/OneWire/offset" + String(i+1)).c_str(), String(offset[i]).c_str());
-        if(userData.haAutodisc == true && adSensorMessageCounter == 3){
-          haHandoverOw(i+1);
-        }
-      }      
-    }
-  
-    if(userData.extension == 5){
-      client.publish(String(String(userData.mbusinoName) + "/bme/temperature").c_str(), String(temperatur).c_str());
-      client.publish(String(String(userData.mbusinoName) + "/bme/pressure").c_str(), String(druck).c_str());
-      client.publish(String(String(userData.mbusinoName) + "/bme/altitude").c_str(), String(hoehe).c_str());
-      client.publish(String(String(userData.mbusinoName) + "/bme/humidity").c_str(), String(feuchte).c_str());
-      if(userData.haAutodisc == true && adSensorMessageCounter == 3){
-        haHandoverBME();
-      }      
-    }
-     timerMQTT = millis();
-  }
-////////// M- Bus ###############################################
-/*
-mbusLoopStatus
-0 = ready
-1 = mbus cleared
-2 = records requested
-3 = records received
-
-
-*/
-
-  if((millis() - timerMbus > userData.mbusInterval || polling == true) && mbusLoopStatus == 0){ // Normalize the M-Bus 
-    timerMbus = millis();  
-    mbusLoopStatus = 1;
-    if(polling == true){
-      currentAddress = pollingAddress;
-      polling = false;
-    }    
-    else{
-      if(addressCounter >= userData.mbusSlaves){
-        addressCounter = 0;
+  if(WiFi.status() == WL_CONNECTED && apMode == false){
+    if (!client.connected()) { 
+      if((millis() - timerReconnect) > 5000){
+        reconnect();
+        timerReconnect = millis();
       }
-      currentAddress = mbusAddress[addressCounter];
-      addressCounter++;
     }
-    mbus_normalize(currentAddress);
-  }
+    else{ // the whole main code run only if MQTT is connectet
+      client.loop();  //MQTT Funktion
 
-  if(millis() - timerMbus > 500 && mbusLoopStatus == 1){ // Request M-Bus Records
-    mbusLoopStatus = 2;
-    mbus_clearRXbuffer();
-    mbus_request_data(currentAddress);
-  }
-  if(millis() - timerMbus > 2000 && mbusLoopStatus == 2){ // Receive and decode M-Bus Records
-    mbusLoopStatus = 3;
-    bool mbus_good_frame = false;
-    byte mbus_data[MBUS_DATA_SIZE] = { 0 };
-    mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
+      if(newAddressReceived == true){
+        newAddressReceived = false;
+        waitToSetAddress = true;
+        timerSetAddress = millis();
+        mbus_normalize(254);
+        client.publish(String(String(userData.mbusinoName) + "/setAddress/1").c_str(), "done");
+      }
 
+      if(waitToSetAddress == true && (millis() - 500) > timerSetAddress){
+        waitToSetAddress = false;
+        mbus_set_address(254,newAddress);
+        client.publish(String(String(userData.mbusinoName) + "/setAddress/2").c_str(), String(newAddress).c_str());
+      }
+
+      ///////////////// publish settings ///////////////////////////////////
+      if((millis()-timerDebug) >10000){
+        timerDebug = millis();
+        client.publish(String(String(userData.mbusinoName) + "/settings/ssid").c_str(), userData.ssid); 
+        //client.publish(String(String(userData.mbusinoName) + "/settings/password").c_str(), String(userData.password)); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/broker").c_str(), userData.broker); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/port").c_str(), String(userData.mqttPort).c_str()); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/user").c_str(), userData.mqttUser); 
+        //client.publish(String(String(userData.mbusinoName) + "/settings/pswd").c_str(), userData.mqttPswrd); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/name").c_str(), userData.mbusinoName); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/extension").c_str(), String(userData.extension).c_str()); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/mbusInterval").c_str(), String(userData.mbusInterval).c_str()); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/sensorInterval").c_str(), String(userData.sensorInterval).c_str()); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/slaves").c_str(), String(userData.mbusSlaves).c_str());
+        client.publish(String(String(userData.mbusinoName) + "/settings/address1").c_str(), String(userData.mbusAddress1).c_str());
+        client.publish(String(String(userData.mbusinoName) + "/settings/address2").c_str(), String(userData.mbusAddress2).c_str());
+        client.publish(String(String(userData.mbusinoName) + "/settings/address3").c_str(), String(userData.mbusAddress3).c_str());    
+        client.publish(String(String(userData.mbusinoName) + "/settings/IP").c_str(), String(WiFi.localIP().toString()).c_str());
+        client.publish(String(String(userData.mbusinoName) + "/settings/MQTTreconnections").c_str(), String(conCounter-1).c_str());
+        long rssi = WiFi.RSSI();
+        client.publish(String(String(userData.mbusinoName) + "/settings/RSSI").c_str(), String(rssi).c_str()); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/version").c_str(), MBUSINO_VERSION); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/adcounter").c_str(), String(adMbusMessageCounter).c_str());     
+      }
+      ///////////////////////////////////////////////////////////
+      
+
+      if(userData.extension > 0){
+        if ((millis() - timerSensorRefresh1) > 200) {  // springt in die Funktion zum anstoßen der aktuallisierung der Sensorwerte
+          sensorRefresh1();
+          timerSensorRefresh1 = (millis() - 1000);
+        }
+        if ((millis() - timerSensorRefresh2) > 1000) {  // springt in die Funktion zum holen der neuen Sensorwerte
+          sensorRefresh2();
+          timerSensorRefresh1 = millis();
+          timerSensorRefresh2 = millis();
+        }
+      }  
+      if (millis() > (timerMQTT + userData.sensorInterval)) { //MQTT Nachrichten senden
+        adSensorMessageCounter++;
+        for(uint8_t i = 0; i < userData.extension; i++){
+          if(OW[i] != -127){
+            client.publish(String(String(userData.mbusinoName) + "/OneWire/S" + String(i+1)).c_str(), String(OWwO[i]).c_str());
+            client.publish(String(String(userData.mbusinoName) + "/OneWire/offset" + String(i+1)).c_str(), String(offset[i]).c_str());
+            if(userData.haAutodisc == true && adSensorMessageCounter == 3){
+              haHandoverOw(i+1);
+            }
+          }      
+        }
+      
+        if(userData.extension == 5){
+          client.publish(String(String(userData.mbusinoName) + "/bme/temperature").c_str(), String(temperatur).c_str());
+          client.publish(String(String(userData.mbusinoName) + "/bme/pressure").c_str(), String(druck).c_str());
+          client.publish(String(String(userData.mbusinoName) + "/bme/altitude").c_str(), String(hoehe).c_str());
+          client.publish(String(String(userData.mbusinoName) + "/bme/humidity").c_str(), String(feuchte).c_str());
+          if(userData.haAutodisc == true && adSensorMessageCounter == 3){
+            haHandoverBME();
+          }      
+        }
+        timerMQTT = millis();
+      }
+    ////////// M- Bus ###############################################
     /*
-    //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
-    for(uint8_t i = 0; i <= mbus_data[1]+1; i++){                                                             //|
-      char buffer[3];                                                                                         //|
-      sprintf(buffer,"%02X",mbus_data[i]);                                                                    //|
-      client.publish(String(String(userData.mbusinoName) + "/debug/telegram_byte_"+String(i)).c_str(), String(buffer).c_str());          //|
-    }                                                                                                         //|
-    //--------------------------------------------------------------------------------------------------------------------------    
+    mbusLoopStatus
+    0 = ready
+    1 = mbus cleared
+    2 = records requested
+    3 = records received
+
+
     */
-    //mbus_good_frame = true;
-    //byte mbus_data[] = {0x68,0xC1,0xC1,0x68,0x08,0x00,0x72,0x09,0x34,0x75,0x73,0xC5,0x14,0x00,0x0D,0x43,0x00,0x00,0x00,0x04,0x78,0x41,0x63,0x65,0x04,0x04,0x06,0xAA,0x29,0x00,0x00,0x04,0x13,0x40,0xA1,0x75,0x00,0x04,0x2B,0x00,0x00,0x00,0x00,0x14,0x2B,0x3C,0xF3,0x00,0x00,0x04,0x3B,0x48,0x06,0x00,0x00,0x14,0x3B,0x4E,0x0E,0x00,0x00,0x02,0x5B,0x19,0x00,0x02,0x5F,0x19,0x00,0x02,0x61,0xFA,0xFF,0x02,0x23,0xAC,0x08,0x04,0x6D,0x03,0x2A,0xF1,0x2A,0x44,0x06,0x92,0x0C,0x00,0x00,0x44,0x13,0x2D,0x9B,0x1C,0x00,0x42,0x6C,0xDF,0x2C,0x01,0xFD,0x17,0x00,0x03,0xFD,0x0C,0x05,0x00,0x00,0x84,0x10,0x06,0x1A,0x00,0x00,0x00,0xC4,0x10,0x06,0x05,0x00,0x00,0x00,0x84,0x20,0x06,0x00,0x00,0x00,0x00,0xC4,0x20,0x06,0x00,0x00,0x00,0x00,0x84,0x30,0x06,0x00,0x00,0x00,0x00,0xC4,0x30,0x06,0x00,0x00,0x00,0x00,0x84,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0x75,0x16};
 
-
-    if (mbus_good_frame) {
-      if(addressCounter == 1){
-        adMbusMessageCounter++;
-      }
-      int packet_size = mbus_data[1] + 6; 
-      JsonDocument jsonBuffer;
-      JsonArray root = jsonBuffer.add<JsonArray>();  
-      fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
-      address = mbus_data[5]; 
-      serializeJson(root, jsonstring);
-      client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
-      client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/jsonstring").c_str(), jsonstring);      
-      if(mbus_data[12]==0x14&&mbus_data[11]==0xC5){
-        engelmann = true;
-      }
-      else{
-        engelmann = false;
-      }
-    }
-    else {  //Fehlermeldung
-        mbusLoopStatus = 0;
-        jsonstring[0] = 0;
-        client.publish(String(String(userData.mbusinoName)  +"/MBus/SlaveAddress"+String(currentAddress)+ "/MBUSerror").c_str(), "no_good_telegram");
-    }
-    mbus_normalize(currentAddress);
-  } 
-  if(millis() - timerMbus > 2500 && mbusLoopStatus == 3){  // Send decoded M-Bus secords via MQTT
-    mbusLoopStatus = 0;
-    JsonDocument root;
-    deserializeJson(root, jsonstring); // load the json from a global array
-    jsonstring[0] = 0;
-
-    for (uint8_t i=0; i<fields; i++) {
-      uint8_t code = root[i]["code"].as<int>();
-      const char* name = root[i]["name"];
-      const char* units = root[i]["units"];           
-      double value = root[i]["value_scaled"].as<double>();
-      const char* valueString = root[i]["value_string"];     
-
-      if(userData.haAutodisc == true && adMbusMessageCounter == 3){  //every 254 message is a HA autoconfig message
-        strcpy(adVariables.haName,name);
-        if(units != NULL){
-          strcpy(adVariables.haUnits,units);
-        }else{
-          strcpy(adVariables.haUnits,""); 
+      if((millis() - timerMbus > userData.mbusInterval || polling == true) && mbusLoopStatus == 0){ // Normalize the M-Bus 
+        timerMbus = millis();  
+        mbusLoopStatus = 1;
+        if(polling == true){
+          currentAddress = pollingAddress;
+          polling = false;
+        }    
+        else{
+          if(addressCounter >= userData.mbusSlaves){
+            addressCounter = 0;
+          }
+          currentAddress = mbusAddress[addressCounter];
+          addressCounter++;
         }
-        strcpy(adVariables.stateClass,payload.getStateClass(code));
-        strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
-        haHandoverMbus(i+1, engelmann, address);
-      }else{               
+        mbus_normalize(currentAddress);
+      }
 
-        //two messages per value, values comes as number or as ASCII string or both
-        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
-        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
-        client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
-        //or only one message
-        //client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
+      if(millis() - timerMbus > 500 && mbusLoopStatus == 1){ // Request M-Bus Records
+        mbusLoopStatus = 2;
+        mbus_clearRXbuffer();
+        mbus_request_data(currentAddress);
+      }
+      if(millis() - timerMbus > 2000 && mbusLoopStatus == 2){ // Receive and decode M-Bus Records
+        mbusLoopStatus = 3;
+        bool mbus_good_frame = false;
+        byte mbus_data[MBUS_DATA_SIZE] = { 0 };
+        mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
 
-        if (i == 3 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
-          float flow = root[5]["value_scaled"].as<float>();
-          float delta = root[9]["value_scaled"].as<float>();
-          float calc_power = delta * flow * 1163;          
-          client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/4_power_calc").c_str(), String(calc_power).c_str());                    
-        } 
-      }      
-    }
-    address = 0; 
-  } 
+        /*
+        //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
+        for(uint8_t i = 0; i <= mbus_data[1]+1; i++){                                                             //|
+          char buffer[3];                                                                                         //|
+          sprintf(buffer,"%02X",mbus_data[i]);                                                                    //|
+          client.publish(String(String(userData.mbusinoName) + "/debug/telegram_byte_"+String(i)).c_str(), String(buffer).c_str());          //|
+        }                                                                                                         //|
+        //--------------------------------------------------------------------------------------------------------------------------    
+        */
+        //mbus_good_frame = true;
+        //byte mbus_data[] = {0x68,0xC1,0xC1,0x68,0x08,0x00,0x72,0x09,0x34,0x75,0x73,0xC5,0x14,0x00,0x0D,0x43,0x00,0x00,0x00,0x04,0x78,0x41,0x63,0x65,0x04,0x04,0x06,0xAA,0x29,0x00,0x00,0x04,0x13,0x40,0xA1,0x75,0x00,0x04,0x2B,0x00,0x00,0x00,0x00,0x14,0x2B,0x3C,0xF3,0x00,0x00,0x04,0x3B,0x48,0x06,0x00,0x00,0x14,0x3B,0x4E,0x0E,0x00,0x00,0x02,0x5B,0x19,0x00,0x02,0x5F,0x19,0x00,0x02,0x61,0xFA,0xFF,0x02,0x23,0xAC,0x08,0x04,0x6D,0x03,0x2A,0xF1,0x2A,0x44,0x06,0x92,0x0C,0x00,0x00,0x44,0x13,0x2D,0x9B,0x1C,0x00,0x42,0x6C,0xDF,0x2C,0x01,0xFD,0x17,0x00,0x03,0xFD,0x0C,0x05,0x00,0x00,0x84,0x10,0x06,0x1A,0x00,0x00,0x00,0xC4,0x10,0x06,0x05,0x00,0x00,0x00,0x84,0x20,0x06,0x00,0x00,0x00,0x00,0xC4,0x20,0x06,0x00,0x00,0x00,0x00,0x84,0x30,0x06,0x00,0x00,0x00,0x00,0xC4,0x30,0x06,0x00,0x00,0x00,0x00,0x84,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0x80,0x40,0x13,0x00,0x00,0x00,0x00,0x84,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0xC4,0xC0,0x40,0x13,0x00,0x00,0x00,0x00,0x75,0x16};
+
+
+        if (mbus_good_frame) {
+          if(addressCounter == 1){
+            adMbusMessageCounter++;
+          }
+          int packet_size = mbus_data[1] + 6; 
+          JsonDocument jsonBuffer;
+          JsonArray root = jsonBuffer.add<JsonArray>();  
+          fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
+          address = mbus_data[5]; 
+          serializeJson(root, jsonstring);
+          client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
+          client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/jsonstring").c_str(), jsonstring);      
+          if(mbus_data[12]==0x14&&mbus_data[11]==0xC5){
+            engelmann = true;
+          }
+          else{
+            engelmann = false;
+          }
+        }
+        else {  //Fehlermeldung
+            mbusLoopStatus = 0;
+            jsonstring[0] = 0;
+            client.publish(String(String(userData.mbusinoName)  +"/MBus/SlaveAddress"+String(currentAddress)+ "/MBUSerror").c_str(), "no_good_telegram");
+        }
+        mbus_normalize(currentAddress);
+      } 
+      if(millis() - timerMbus > 2500 && mbusLoopStatus == 3){  // Send decoded M-Bus secords via MQTT
+        mbusLoopStatus = 0;
+        JsonDocument root;
+        deserializeJson(root, jsonstring); // load the json from a global array
+        jsonstring[0] = 0;
+
+        for (uint8_t i=0; i<fields; i++) {
+          uint8_t code = root[i]["code"].as<int>();
+          const char* name = root[i]["name"];
+          const char* units = root[i]["units"];           
+          double value = root[i]["value_scaled"].as<double>();
+          const char* valueString = root[i]["value_string"];     
+
+          if(userData.haAutodisc == true && adMbusMessageCounter == 3){  //every 254 message is a HA autoconfig message
+            strcpy(adVariables.haName,name);
+            if(units != NULL){
+              strcpy(adVariables.haUnits,units);
+            }else{
+              strcpy(adVariables.haUnits,""); 
+            }
+            strcpy(adVariables.stateClass,payload.getStateClass(code));
+            strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
+            haHandoverMbus(i+1, engelmann, address);
+          }else{               
+
+            //two messages per value, values comes as number or as ASCII string or both
+            client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_vs_"+String(name)).c_str(), valueString); // send the value if a ascii value is aviable (variable length)
+            client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)).c_str(), String(value,3).c_str()); // send the value if a real value is aviable (standard)
+            client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/"+String(i+1)+"_"+String(name)+"_unit").c_str(), units);
+            //or only one message
+            //client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
+
+            if (i == 3 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
+              float flow = root[5]["value_scaled"].as<float>();
+              float delta = root[9]["value_scaled"].as<float>();
+              float calc_power = delta * flow * 1163;          
+              client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/4_power_calc").c_str(), String(calc_power).c_str());                    
+            } 
+          }      
+        }
+        address = 0; 
+      }
+    } 
+  }
 }
 
 
