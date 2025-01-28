@@ -128,7 +128,7 @@ public:
   virtual ~CaptiveRequestHandler() {}
 
   bool canHandle(AsyncWebServerRequest* request) const override { 
-    return false; 
+    return true; 
     }  
 
   void handleRequest(AsyncWebServerRequest *request) {
