@@ -134,3 +134,5 @@ const char update_html[] PROGMEM = R"rawliteral(
     </main>
   </body>
 </html>)rawliteral";
+
+const size_t update_htmlLength = strlen_P(update_html);

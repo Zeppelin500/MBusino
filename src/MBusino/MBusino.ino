@@ -39,7 +39,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.15"
+#define MBUSINO_VERSION "0.9.16"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -237,8 +237,7 @@ void setup() {
 
   // Simple Firmware Update Form
   server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
-    //request->send(200, "text/html", "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>");
-    request->send(200, "text/html", update_html);    
+    request->send(200, "text/html",  (uint8_t *)update_html, update_htmlLength);  
   });
   server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
     waitForRestart = !Update.hasError();
@@ -264,7 +263,7 @@ void setup() {
     }
     if(final){
       if(Update.end(true)){
-        //Serial.printf("Update Success: %uB\n", index+len);
+        Serial.printf("Update Success: %uB\n", index+len);
       } else {
         Update.printError(Serial);
       }
