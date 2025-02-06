@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.16"
+#define MBUSINO_VERSION "0.9.17"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -177,6 +177,8 @@ uint8_t sensorToCalibrate = 0;
 uint8_t adMbusMessageCounter = 0; // Counter for autodiscouver mbus message.
 uint8_t adSensorMessageCounter = 0; // Counter for autodiscouver mbus message.
 
+uint32_t minFreeHeap = 0;
+
 //outsourced program parts
 #include "html.h"
 #include "server.h"
@@ -196,6 +198,8 @@ void setup() {
   MbusSerial.setRxBufferSize(256);
   MbusSerial.begin(MBUS_BAUD_RATE, SERIAL_8E1, 37, 39);
   #endif
+
+  minFreeHeap = ESP.getFreeHeap();
 
   EEPROM.begin(512);
   EEPROM.get(eeAddrCalibrated, calibrated);
@@ -329,6 +333,8 @@ void setup() {
 
 
 void loop() {
+  heapCalc();
+
   ArduinoOTA.handle();
   if(apMode == true){
     dnsServer.processNextRequest();
@@ -400,6 +406,8 @@ void loop() {
         client.publish(String(String(userData.mbusinoName) + "/settings/RSSI").c_str(), String(rssi).c_str()); 
         client.publish(String(String(userData.mbusinoName) + "/settings/version").c_str(), MBUSINO_VERSION); 
         client.publish(String(String(userData.mbusinoName) + "/settings/adcounter").c_str(), String(adMbusMessageCounter).c_str());     
+        client.publish(String(String(userData.mbusinoName) + "/settings/freeHeap").c_str(), String(ESP.getFreeHeap()).c_str()); 
+        client.publish(String(String(userData.mbusinoName) + "/settings/minFreeHeap").c_str(), String(minFreeHeap).c_str());       
       }
       ///////////////////////////////////////////////////////////
       
@@ -502,6 +510,7 @@ void loop() {
           serializeJson(root, jsonstring);
           client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
           client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/jsonstring").c_str(), jsonstring);      
+          heapCalc();        
           if(mbus_data[12]==0x14&&mbus_data[11]==0xC5){
             engelmann = true;
           }
@@ -558,10 +567,16 @@ void loop() {
         }
         address = 0; 
       }
+      heapCalc();  
     } 
   }
 }
 
+void heapCalc(){
+  if(minFreeHeap > ESP.getFreeHeap()){
+    minFreeHeap = ESP.getFreeHeap();
+  }
+}
 
 
 
