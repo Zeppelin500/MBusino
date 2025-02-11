@@ -167,7 +167,7 @@ uint32_t minFreeHeap = 0;
 #include "calibration.h"
 #include "sensorRefresh.h"
 #include "mqtt.h"
-#include "server.h"
+#include "guiServer.h"
 #include "autodiscover.h"
 
 void setup() {

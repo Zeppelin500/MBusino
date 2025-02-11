@@ -181,7 +181,7 @@ uint32_t minFreeHeap = 0;
 
 //outsourced program parts
 #include "html.h"
-#include "server.h"
+#include "guiServer.h"
 #include "mqtt.h"
 #include "mbus.h"
 #include "calibration.h"
