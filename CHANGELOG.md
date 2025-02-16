@@ -3,6 +3,17 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## [0.9.18] - 2025-02-16
+
+### Changed
+
+- rename outsourced code for the GUI-Server from server.h to guiServer.h because of Windows Compiling issues. (.bin files are not changed and sill 0.9.17)
+
+### Added
+
+- case file for Z-Version
+
 ## [0.9.17] - 2025-02-06
 
 ### Added

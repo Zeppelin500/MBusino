@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.17-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.18-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 A **Plug and Play** solution.
 
@@ -51,7 +51,7 @@ Beside the USB power supply of D1 mini is no other adapter necessary.
 
 Use 2,54mm terminals or JST XH to connect the DS18B20
 
-You will find a 3D-printable PCB case inside the case folder. The edition Z need a different case. ()Not released yet)  
+You will find a 3D-printable PCB case inside the case folder. The edition Z need a different case, usable for both versions. 
 The PCB is designed with fritzing.
 
 To save money, I place omnibus orders for all parts beside the M-Bus Master.

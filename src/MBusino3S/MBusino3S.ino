@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 #include <Adafruit_BME280.h>
 
 
-#define MBUSINO_VERSION "0.9.17"
+#define MBUSINO_VERSION "0.9.18"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
