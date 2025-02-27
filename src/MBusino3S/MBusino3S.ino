@@ -23,24 +23,26 @@ You should have received a copy of the GNU General Public License along with thi
 #include <DNSServer.h>
 #include <ArduinoOTA.h>
 
-#if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#elif defined(ESP32)
-#include <WiFi.h>
-#include <AsyncTCP.h>
-HardwareSerial MbusSerial(1);
-#endif
-
 #include <MBusinoLib.h>  // Library for decode M-Bus
+#include <MBusCom.h>  // Library M-Bus communication
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+MBusCom MBusCom(&Serial);
+#elif defined(ESP32)
+#include <WiFi.h>
+#include <AsyncTCP.h>
+HardwareSerial MbusSerial(1);
+MBusCom MBusCom(&MbusSerial,37,39);
+#endif
 
-#define MBUSINO_VERSION "0.9.18"
+#define MBUSINO_VERSION "0.9.19"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -183,22 +185,13 @@ uint32_t minFreeHeap = 0;
 #include "html.h"
 #include "guiServer.h"
 #include "mqtt.h"
-#include "mbus.h"
 #include "calibration.h"
 #include "sensorRefresh.h"
 #include "autodiscover.h"
 
 
 void setup() {
-
-  #if defined(ESP8266)
-  Serial.setRxBufferSize(256);
-  Serial.begin(MBUS_BAUD_RATE, SERIAL_8E1);
-  #elif defined(ESP32)
-  MbusSerial.setRxBufferSize(256);
-  MbusSerial.begin(MBUS_BAUD_RATE, SERIAL_8E1, 37, 39);
-  #endif
-
+  MBusCom.begin();
   minFreeHeap = ESP.getFreeHeap();
 
   EEPROM.begin(512);
@@ -373,13 +366,13 @@ void loop() {
         newAddressReceived = false;
         waitToSetAddress = true;
         timerSetAddress = millis();
-        mbus_normalize(254);
+        MBusCom.normalize(254);
         client.publish(String(String(userData.mbusinoName) + "/setAddress/1").c_str(), "done");
       }
 
       if(waitToSetAddress == true && (millis() - 500) > timerSetAddress){
         waitToSetAddress = false;
-        mbus_set_address(254,newAddress);
+        MBusCom.set_address(254,newAddress);
         client.publish(String(String(userData.mbusinoName) + "/setAddress/2").c_str(), String(newAddress).c_str());
       }
 
@@ -471,19 +464,19 @@ void loop() {
           currentAddress = mbusAddress[addressCounter];
           addressCounter++;
         }
-        mbus_normalize(currentAddress);
+        MBusCom.normalize(currentAddress);
       }
 
       if(millis() - timerMbus > 500 && mbusLoopStatus == 1){ // Request M-Bus Records
         mbusLoopStatus = 2;
-        mbus_clearRXbuffer();
-        mbus_request_data(currentAddress);
+        MBusCom.clearRXbuffer();
+        MBusCom.request_data(currentAddress);
       }
       if(millis() - timerMbus > 2000 && mbusLoopStatus == 2){ // Receive and decode M-Bus Records
         mbusLoopStatus = 3;
         bool mbus_good_frame = false;
         byte mbus_data[MBUS_DATA_SIZE] = { 0 };
-        mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
+        mbus_good_frame = MBusCom.get_response(mbus_data, sizeof(mbus_data));
 
         /*
         //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
@@ -523,7 +516,7 @@ void loop() {
             jsonstring[0] = 0;
             client.publish(String(String(userData.mbusinoName)  +"/MBus/SlaveAddress"+String(currentAddress)+ "/MBUSerror").c_str(), "no_good_telegram");
         }
-        mbus_normalize(currentAddress);
+        MBusCom.normalize(currentAddress);
       } 
       if(millis() - timerMbus > 2500 && mbusLoopStatus == 3){  // Send decoded M-Bus secords via MQTT
         mbusLoopStatus = 0;

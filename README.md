@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.18-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.19-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
 A **Plug and Play** solution.
 
@@ -8,6 +8,7 @@ A **Plug and Play** solution.
 - I²C BME280, temperatur, r. humidity, air pressure
 
 M-Bus decoding use the project's own library [**MBusinoLib**](https://github.com/Zeppelin500/MBusinoLib). Test the library [**via Wokwi.**](https://wokwi.com/projects/402235052803622913)
+The serial data link layer communication is handled by [**MBusCom**](https://github.com/Zeppelin500/MBusCom).
 
 Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Sensors.
 The Board is usable for "only M-Bus" or "only sensor meassuring" as well.  

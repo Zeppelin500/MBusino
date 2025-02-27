@@ -4,6 +4,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [0.9.19] - 2025-02-27
+
+### Changed
+
+- Sourced the M-Bus communication out to a Arduino IDE accessable Library --> MBusCom
+
 ## [0.9.18] - 2025-02-16
 
 ### Changed

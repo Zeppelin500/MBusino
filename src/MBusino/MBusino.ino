@@ -21,25 +21,28 @@ You should have received a copy of the GNU General Public License along with thi
 
 #include <DNSServer.h>
 #include <ArduinoOTA.h>
-
-#if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#elif defined(ESP32)
-#include <WiFi.h>
-#include <AsyncTCP.h>
-HardwareSerial MbusSerial(1);
-#endif
-
 #include <MBusinoLib.h>  // Library for decode M-Bus
+#include <MBusCom.h>  // Library M-Bus communication
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
+#if defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+MBusCom MBusCom(&Serial);
+#elif defined(ESP32)
+#include <WiFi.h>
+#include <AsyncTCP.h>
+HardwareSerial MbusSerial(1);
+MBusCom MBusCom(&MbusSerial,37,39);
+#endif
 
-#define MBUSINO_VERSION "0.9.18"
+#define MBUSINO_VERSION "0.9.19"
+
+#define SLAVE_MBUS_ADDRESS 254
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -162,7 +165,6 @@ uint8_t adSensorMessageCounter = 0; // Counter for autodiscouver mbus message.
 uint32_t minFreeHeap = 0;
 
 //outsourced program parts
-#include "mbus.h"
 #include "html.h"
 #include "calibration.h"
 #include "sensorRefresh.h"
@@ -171,13 +173,7 @@ uint32_t minFreeHeap = 0;
 #include "autodiscover.h"
 
 void setup() {
-  #if defined(ESP8266)
-  Serial.setRxBufferSize(256);
-  Serial.begin(MBUS_BAUD_RATE, SERIAL_8E1);
-  #elif defined(ESP32)
-  MbusSerial.setRxBufferSize(256);
-  MbusSerial.begin(MBUS_BAUD_RATE, SERIAL_8E1, 37, 39);
-  #endif
+  MBusCom.begin();
 
   minFreeHeap = ESP.getFreeHeap();
 
@@ -419,13 +415,13 @@ void loop() {
         timerMbus = millis();
         polling = false;
         mbusLoopStatus = 1;
-        mbus_request_data(MBUS_ADDRESS);
+        MBusCom.request_data(SLAVE_MBUS_ADDRESS);
       }
       if(millis() - timerMbus > 1500 && mbusLoopStatus == 1){ // Receive and decode M-Bus Records
         mbusLoopStatus = 2;
         bool mbus_good_frame = false;
         byte mbus_data[MBUS_DATA_SIZE] = { 0 };
-        mbus_good_frame = mbus_get_response(mbus_data, sizeof(mbus_data));
+        mbus_good_frame = MBusCom.get_response(mbus_data, sizeof(mbus_data));
 
         if(userData.telegramDebug == true){
         //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
