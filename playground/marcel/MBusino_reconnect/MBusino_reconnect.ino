@@ -128,6 +128,8 @@ char jsonstring[4096] = { 0 };
 bool engelmann = false;
 bool waitForRestart = false;
 bool polling = false;
+bool wifiReconnect = false;
+bool ledStatus = false;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerSensorRefresh1 = 0;
@@ -135,8 +137,10 @@ unsigned long timerSensorRefresh2 = 0;
 unsigned long timerMbus = 0;
 unsigned long timerDebug = 0;
 unsigned long timerReconnect = 0;
+unsigned long timerWifiReconnect = 0;
 unsigned long timerReboot = 0;
 unsigned long timerAutodiscover = 0;
+unsigned long timerPulse = 0;
 
 void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
@@ -163,6 +167,7 @@ uint8_t adMbusMessageCounter = 0; // Counter for autodiscouver mbus message.
 uint8_t adSensorMessageCounter = 0; // Counter for autodiscouver mbus message.
 
 uint32_t minFreeHeap = 0;
+uint16_t pulseInterval = 1000;
 
 //outsourced program parts
 #include "html.h"
@@ -171,15 +176,16 @@ uint32_t minFreeHeap = 0;
 #include "mqtt.h"
 #include "guiServer.h"
 #include "autodiscover.h"
-//#if defined(ESP32)
+#if defined(ESP32)
 #include "networkEvents.h"
-//#endif
+#endif
 
 void setup() {
-  //#if defined(ESP32)
+  #if defined(ESP32)
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
-  delay(2000);
-  //#endif
+  delay(1500);
+  #endif
   MBusCom.begin();
 
   minFreeHeap = ESP.getFreeHeap();
@@ -320,11 +326,30 @@ void setup() {
 
 void loop() {
   heapCalc();
-
   ArduinoOTA.handle();
   if(apMode == true){
     dnsServer.processNextRequest();
   }
+
+  #if defined(ESP32)
+  if(millis() - timerPulse >= pulseInterval){ // Blink of the internal LED to see MBusino is still alive and the network status
+    timerPulse = millis();
+    //Serial.println("pulse"); 
+    if(ledStatus == false){
+      ledStatus = true;
+      digitalWrite(LED_BUILTIN, HIGH);
+    }else{
+      ledStatus = false;
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+  }
+
+  if(wifiReconnect == true && (millis() - timerWifiReconnect > 1000)){
+    Serial.println("try to reconnect"); 
+    wifiReconnect = false;
+    WiFi.reconnect();
+  }
+  #endif
 
   if(apMode == true && millis() > 300000){
     ESP.restart();

@@ -7,10 +7,15 @@ void WiFiEvent(WiFiEvent_t event) {
     case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
     case ARDUINO_EVENT_WIFI_STA_START:           Serial.println("WiFi client started"); break;
     case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:       Serial.println("Connected to access point"); break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      Serial.println("Connected to access point"); 
+      pulseInterval = 500;
+      break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:    
       Serial.println("Disconnected from WiFi access point"); 
-      WiFi.reconnect();
+      wifiReconnect = true;
+      timerWifiReconnect = millis();
+      pulseInterval = 1000;
     break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
@@ -20,6 +25,7 @@ void WiFiEvent(WiFiEvent_t event) {
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:        
       Serial.println("Lost IP address and IP address is reset to 0"); 
       Serial.println("MBusino will restart soon"); 
+      pulseInterval = 10;
     timerReboot = millis();
     waitForRestart = true;
     break;
