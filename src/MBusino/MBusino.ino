@@ -32,15 +32,15 @@ You should have received a copy of the GNU General Public License along with thi
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
-MBusCom MBusCom(&Serial);
+MBusCom mbus(&Serial);
 #elif defined(ESP32)
 #include <WiFi.h>
 #include <AsyncTCP.h>
 HardwareSerial MbusSerial(1);
-MBusCom MBusCom(&MbusSerial,37,39);
+MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "0.9.19"
+#define MBUSINO_VERSION "0.9.20"
 
 #define SLAVE_MBUS_ADDRESS 254
 
@@ -128,6 +128,8 @@ char jsonstring[4096] = { 0 };
 bool engelmann = false;
 bool waitForRestart = false;
 bool polling = false;
+bool wifiReconnect = false;
+bool ledStatus = false;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerSensorRefresh1 = 0;
@@ -135,8 +137,10 @@ unsigned long timerSensorRefresh2 = 0;
 unsigned long timerMbus = 0;
 unsigned long timerDebug = 0;
 unsigned long timerReconnect = 0;
+unsigned long timerWifiReconnect = 0;
 unsigned long timerReboot = 0;
 unsigned long timerAutodiscover = 0;
+unsigned long timerPulse = 0;
 
 void mbus_request_data(byte address);
 void mbus_short_frame(byte address, byte C_field);
@@ -163,6 +167,7 @@ uint8_t adMbusMessageCounter = 0; // Counter for autodiscouver mbus message.
 uint8_t adSensorMessageCounter = 0; // Counter for autodiscouver mbus message.
 
 uint32_t minFreeHeap = 0;
+uint16_t pulseInterval = 1000;
 
 //outsourced program parts
 #include "html.h"
@@ -171,9 +176,17 @@ uint32_t minFreeHeap = 0;
 #include "mqtt.h"
 #include "guiServer.h"
 #include "autodiscover.h"
+#if defined(ESP32)
+#include "networkEvents.h"
+#endif
 
 void setup() {
-  MBusCom.begin();
+  #if defined(ESP32)
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(115200);
+  delay(1500);
+  #endif
+  mbus.begin();
 
   minFreeHeap = ESP.getFreeHeap();
 
@@ -204,7 +217,10 @@ void setup() {
   }
 
   sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.haAutodisc,userData.telegramDebug,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
-
+  
+  #if defined(ESP32)
+  WiFi.onEvent(WiFiEvent);
+  #endif
   WiFi.hostname(userData.mbusinoName);
   client.setServer(userData.broker, userData.mqttPort);
   client.setCallback(callback);
@@ -312,11 +328,30 @@ void setup() {
 
 void loop() {
   heapCalc();
-
   ArduinoOTA.handle();
   if(apMode == true){
     dnsServer.processNextRequest();
   }
+
+  #if defined(ESP32)
+  if(millis() - timerPulse >= pulseInterval){ // Blink of the internal LED to see MBusino is still alive and the network status
+    timerPulse = millis();
+    //Serial.println("pulse"); 
+    if(ledStatus == false){
+      ledStatus = true;
+      digitalWrite(LED_BUILTIN, HIGH);
+    }else{
+      ledStatus = false;
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+  }
+
+  if(wifiReconnect == true && (millis() - timerWifiReconnect > 2000)){
+    Serial.println("try to reconnect"); 
+    wifiReconnect = false;
+    WiFi.reconnect();
+  }
+  #endif
 
   if(apMode == true && millis() > 300000){
     ESP.restart();
@@ -415,13 +450,13 @@ void loop() {
         timerMbus = millis();
         polling = false;
         mbusLoopStatus = 1;
-        MBusCom.request_data(SLAVE_MBUS_ADDRESS);
+        mbus.request_data(SLAVE_MBUS_ADDRESS);
       }
       if(millis() - timerMbus > 1500 && mbusLoopStatus == 1){ // Receive and decode M-Bus Records
         mbusLoopStatus = 2;
         bool mbus_good_frame = false;
         byte mbus_data[MBUS_DATA_SIZE] = { 0 };
-        mbus_good_frame = MBusCom.get_response(mbus_data, sizeof(mbus_data));
+        mbus_good_frame = mbus.get_response(mbus_data, sizeof(mbus_data));
 
         if(userData.telegramDebug == true){
         //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------

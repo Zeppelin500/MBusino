@@ -4,6 +4,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [0.9.20] - 2025-03-28
+
+### Changed
+
+- Improved WiFi stability for S2 mini (prevents crashes)
+
 ## [0.9.19] - 2025-02-27
 
 ### Changed

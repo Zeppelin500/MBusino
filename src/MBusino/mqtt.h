@@ -4,7 +4,11 @@ void reconnect() {
   sprintf(lwBuffer, userData.mbusinoName, "/lastwill");
   if (client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,0,false,"I am going offline")) {
     // Once connected, publish an announcement...
+    #if defined(ESP32)
+    Serial.println("MQTT connected to server");
+    #endif
     conCounter++;
+    pulseInterval = 50;
     if(conCounter == 1){
       client.publish(String(String(userData.mbusinoName) + "/start").c_str(), "Bin hochgefahren, WLAN und MQTT steht");
     }
@@ -20,6 +24,12 @@ void reconnect() {
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateBME").c_str());
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateSet0").c_str());
     client.subscribe(String(String(userData.mbusinoName) + "/mbusPolling").c_str());
+  }
+  else{
+    #if defined(ESP32)
+    Serial.println("MQTT unable to connect server");
+    #endif
+    pulseInterval = 400;
   }
 }
 
