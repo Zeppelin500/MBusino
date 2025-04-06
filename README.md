@@ -1,17 +1,61 @@
 # MBusino
 [![version](https://img.shields.io/badge/version-0.9.20-brightgreen.svg)](CHANGELOG.md)<br/>
-### M-Bus/OneWire/I²C --> MQTT-Gateway with a shield for ESP8266 D1 mini or ESP32 S2 mini
+### M-Bus --> MQTT-Gateway with shields for ESPs
+
 A **Plug and Play** solution.
 
-- M-Bus e.g. heatmeter (up to three slaves)
-- OneWire 5x DS18B20, temperature
-- I²C BME280, temperatur, r. humidity, air pressure
-
-M-Bus decoding use the project's own library [**MBusinoLib**](https://github.com/Zeppelin500/MBusinoLib). Test the library [**via Wokwi.**](https://wokwi.com/projects/402235052803622913)
+M-Bus decoding uses the project's own library [**MBusinoLib**](https://github.com/Zeppelin500/MBusinoLib). Test the library [**via Wokwi.**](https://wokwi.com/projects/402235052803622913)
 The serial data link layer communication is handled by [**MBusCom**](https://github.com/Zeppelin500/MBusCom).
 
 Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Sensors.
-The Board is usable for "only M-Bus" or "only sensor meassuring" as well.  
+
+## Code
+
+the project is developed with **Arduino IDE 2**, source code and .bin files will be find at the **src** folder.  
+**MBusino** code is for a single M-Bus Slave
+**MBusino3S** code is for up to 3 Slaves
+
+## Hardware
+
+### MBusino
+
+The original MBusino decodes M-Bus and can also optional read out different sensors, see below. Network connection only via the build in ESP32 WiFi.
+- M-Bus e.g. heatmeter (up to three slaves, use the 3S code)
+- OneWire 5x DS18B20, temperature
+- I²C BME280, temperatur, r. humidity, air pressure
+
+The MBusino is usable for "only M-Bus" or "only sensor measuring" as well. Beside the USB power supply of The ESP is no other adapter necessary.
+
+Use 2,54mm terminals or JST XH to connect the DS18B20
+
+You will find a 3D-printable PCB case inside the case folder. The edition Z need a different case, usable for both versions. 
+The PCB is designed with fritzing.
+
+M-Bus is provided by a piggyback M-Bus master.
+There are two MBusino versions available for two different M-Bus masters.
+
+The "old" version for a chinese M-Bus Master. 
+https://a.aliexpress.com/_EyQhgIZ --> the Master **NOT the Slave!** 
+Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini
+
+![Bild](pictures/MBusino.jpg)
+
+The new "**edition Z**" version for a german M-Bus master from Zihatec. Many thanks to HWHardsoft for making the board available especially for us.
+https://www.hwhardsoft.de/2024/10/08/m-bus-master-breakout
+Work only with the ESP S2 mini.
+
+![Edition_Z](pictures/edition_z.jpg)
+
+
+### MBusino Nano
+
+A pure M-Bus --> MQTT gateway without extra sensor meassuring bu with Wifi **and** Ethernet connectivity.
+ESP32 C3 Supermini with W5500 Lite Ethernet Modul and Zihatec M-Bus Modul.
+
+![MBusinoNano1](pictures/MBusinoNano1.jpg)
+![MBusinoNano2](pictures/MBusinoNano2.jpg)
+
+To save money, I place omnibus orders for all parts beside the M-Bus Master.
 
 ## Access Point to configure,  MBusino Setup Portal
 
@@ -25,37 +69,12 @@ The Board is usable for "only M-Bus" or "only sensor meassuring" as well.
 
 <img src="pictures/mqttOutput.png" width="300">
 
-### Home-Assistant
+## Home-Assistant
 
 If you use Home Assistant, MBusino supports autodiscover. You need only the MQTT integration and MBusino will be find as device with all records.
 Every 256th record message is a autodiscover message. 
 If you use not Home Assistant, no matter. All records will be send as MQTT message.
 
-
-## Hardware
-M-Bus is provided by a piggyback M-Bus master.
-Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini
-
-There are two versions aviable for two different M-Bus masters.
-
-The "old" version for a chinese M-Bus Master. 
-https://a.aliexpress.com/_EyQhgIZ --> the Master **NOT the Slave!** 
-All three esps are supported
-
-The new "**edition Z**" version for a german M-Bus master from Zihatec. Many thanks to HWHardsoft for making the board available especially for us.
-https://www.hwhardsoft.de/2024/10/08/m-bus-master-breakout
-Work only with the ESP S2 mini.
-
-![Edition_Z](pictures/edition_z.jpg)
-
-Beside the USB power supply of D1 mini is no other adapter necessary.
-
-Use 2,54mm terminals or JST XH to connect the DS18B20
-
-You will find a 3D-printable PCB case inside the case folder. The edition Z need a different case, usable for both versions. 
-The PCB is designed with fritzing.
-
-To save money, I place omnibus orders for all parts beside the M-Bus Master.
 
 ## M-Bus Polling (optional)
 
@@ -111,7 +130,7 @@ Self explanatory.
 
 - M-Bus should work with most M-Bus devices. If you have M-Bus issues, let me know.
 
-- No support of multi telegram messages. Only the first telegram will be decodet
+- No support of multi telegram messages. Only the first telegram will be decoded
 
 
 ## Credits
@@ -134,6 +153,5 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY o
 You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************
 ![PCB](/pictures/MBusino_V05_Leiterplatte.png)
-![Bild](pictures/MBusino.jpg)
 ![Bild](pictures/case.jpg)
 
