@@ -12,7 +12,9 @@ Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Senso
 ## Code
 
 the project is developed with **Arduino IDE 2**, source code and .bin files will be find at the **src** folder.  
+
 **MBusino** code is for a single M-Bus Slave
+
 **MBusino3S** code is for up to 3 Slaves
 
 ## Hardware
@@ -38,22 +40,21 @@ The "old" version for a chinese M-Bus Master.
 https://a.aliexpress.com/_EyQhgIZ --> the Master **NOT the Slave!** 
 Supported ESP-Boards: ESP8266 D1 mini, or D1 mini Pro(4M) with extern antenna for better Wifi range and the ESP32 S2 mini
 
-![Bild](pictures/MBusino.jpg)
+<img src="pictures/MBusino.jpg" width="300">
 
 The new "**edition Z**" version for a german M-Bus master from Zihatec. Many thanks to HWHardsoft for making the board available especially for us.
 https://www.hwhardsoft.de/2024/10/08/m-bus-master-breakout
 Work only with the ESP S2 mini.
 
-![Edition_Z](pictures/edition_z.jpg)
-
+<img src="pictures/edition_z.jpg" width="300">
 
 ### MBusino Nano
 
-A pure M-Bus --> MQTT gateway without extra sensor meassuring bu with Wifi **and** Ethernet connectivity.
+A pure M-Bus --> MQTT gateway without extra sensor measuring but with Wifi **and** Ethernet connectivity.
 ESP32 C3 Supermini with W5500 Lite Ethernet Modul and Zihatec M-Bus Modul.
 
-![MBusinoNano1](pictures/MBusinoNano1.jpg)
-![MBusinoNano2](pictures/MBusinoNano2.jpg)
+<img src="pictures/MBusinoNano1.jpg" width="300">
+<img src="pictures/MBusinoNano2.jpg" width="300">
 
 To save money, I place omnibus orders for all parts beside the M-Bus Master.
 
