@@ -50,7 +50,7 @@ Work only with the ESP S2 mini.
 
 ### MBusino Nano
 
-A pure M-Bus --> MQTT gateway without extra sensor meassuring bu with Wifi **and** Ethernet connectivity.
+A pure M-Bus --> MQTT gateway without extra sensor measuring but with Wifi **and** Ethernet connectivity.
 ESP32 C3 Supermini with W5500 Lite Ethernet Modul and Zihatec M-Bus Modul.
 
 <img src="pictures/MBusinoNano1.jpg" width="300">
