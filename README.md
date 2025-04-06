@@ -12,7 +12,9 @@ Mbusino has a captive and setup portal to configure WiFi, MQTT, M-Bus, and Senso
 ## Code
 
 the project is developed with **Arduino IDE 2**, source code and .bin files will be find at the **src** folder.  
+
 **MBusino** code is for a single M-Bus Slave
+
 **MBusino3S** code is for up to 3 Slaves
 
 ## Hardware
