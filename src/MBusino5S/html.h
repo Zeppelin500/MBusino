@@ -82,6 +82,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class='form-floating'><label>M-Bus address 1</label><input type='text' value='%u' class='form-control' name='mbusAddress1'></div>
         <div class='form-floating'><label>M-Bus address 2</label><input type='text' value='%u' class='form-control' name='mbusAddress2'></div>
         <div class='form-floating'><label>M-Bus address 3</label><input type='text' value='%u' class='form-control' name='mbusAddress3'></div>
+        <div class='form-floating'><label>M-Bus address 4</label><input type='text' value='%u' class='form-control' name='mbusAddress4'></div>
+        <div class='form-floating'><label>M-Bus address 5</label><input type='text' value='%u' class='form-control' name='mbusAddress5'></div>
         <br>
         <button type='submit'>Save</button>
         <p style='text-align:right'><a href='/setaddress' style='color:#3F4CFB'>set M-Bus Address</a></p>
@@ -160,6 +162,8 @@ const char setAddress_html[] PROGMEM = R"rawliteral(
           <option value='1'>1</option>
           <option value='2'>2</option>
           <option value='3'>3</option>
+          <option value='4'>4</option>
+          <option value='5'>5</option>           
           <option value='0' selected>0</option>
         </select><br><br>
         <br>

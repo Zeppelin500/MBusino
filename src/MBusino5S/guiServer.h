@@ -146,6 +146,24 @@ void setupServer(){
         }
       }
 
+      if (request->hasParam("mbusAddress4")) {
+        inputMessage = request->getParam("mbusAddress4")->value();
+        inputParam = "mbusAddress4";
+        if(inputMessage != NULL){
+          userData.mbusAddress4 = inputMessage.toInt();
+          credentialsReceived = true;
+        }
+      } 
+
+      if (request->hasParam("mbusAddress5")) {
+        inputMessage = request->getParam("mbusAddress5")->value();
+        inputParam = "mbusAddress5";
+        if(inputMessage != NULL){
+          userData.mbusAddress5 = inputMessage.toInt();
+          credentialsReceived = true;
+        }
+      }
+
       if (request->hasParam("newAddress")) {
         inputMessage = request->getParam("newAddress")->value();       
         inputParam = "newAddress";

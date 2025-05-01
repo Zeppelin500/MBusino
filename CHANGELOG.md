@@ -3,6 +3,16 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.21] - 2025-05-01
+
+### Changed
+
+- MBusinoLib 0.9.12
+- Support for 5 Slaves (5S)
+
+### Added
+
+- MBusino Nano with Ethernet
 
 ## [0.9.20] - 2025-03-28
 

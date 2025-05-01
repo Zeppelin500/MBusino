@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "0.9.20"
+#define MBUSINO_VERSION "0.9.21"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -107,10 +107,12 @@ struct settings {
   uint8_t mbusAddress1;
   uint8_t mbusAddress2;
   uint8_t mbusAddress3;
+  uint8_t mbusAddress4;
+  uint8_t mbusAddress5;
   bool haAutodisc;
-} userData = {"SSID","Password","MBusino","192.168.1.8",1883,5,"mqttUser","mqttPasword",5000,120000,1,0xFE,0,0,true};
+} userData = {"SSID","Password","MBusino","192.168.1.8",1883,5,"mqttUser","mqttPasword",5000,120000,1,0xFE,0,0,0,0,true};
 
-uint8_t mbusAddress[3] = {0};
+uint8_t mbusAddress[5] = {0};
 
 bool mqttcon = false;
 bool apMode = false;
@@ -161,7 +163,6 @@ void mbus_short_frame(byte address, byte C_field);
 bool mbus_get_response(byte *pdata, unsigned char len_pdata);
 void mbus_normalize(byte address);
 void mbus_clearRXbuffer();
-void mbus_set_address(byte oldaddress, byte newaddress);
 void calibrationAverage();
 void calibrationSensor(uint8_t sensor);
 void calibrationValue(float value);
@@ -228,7 +229,7 @@ void setup() {
   EEPROM.commit();
   EEPROM.end();
 
-  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.haAutodisc,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser,userData.mbusSlaves,userData.mbusAddress1,userData.mbusAddress2,userData.mbusAddress3);
+  sprintf(html_buffer, index_html,userData.ssid,userData.mbusinoName,userData.extension,userData.haAutodisc,userData.sensorInterval/1000,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser,userData.mbusSlaves,userData.mbusAddress1,userData.mbusAddress2,userData.mbusAddress3,userData.mbusAddress4,userData.mbusAddress5);
 
   #if defined(ESP32)
   WiFi.onEvent(WiFiEvent);
@@ -337,6 +338,8 @@ void setup() {
   mbusAddress[0] = userData.mbusAddress1;
   mbusAddress[1] = userData.mbusAddress2;
   mbusAddress[2] = userData.mbusAddress3;
+  mbusAddress[3] = userData.mbusAddress4;
+  mbusAddress[4] = userData.mbusAddress5;
 }
 
 
@@ -427,6 +430,8 @@ void loop() {
         client.publish(String(String(userData.mbusinoName) + "/settings/address1").c_str(), String(userData.mbusAddress1).c_str());
         client.publish(String(String(userData.mbusinoName) + "/settings/address2").c_str(), String(userData.mbusAddress2).c_str());
         client.publish(String(String(userData.mbusinoName) + "/settings/address3").c_str(), String(userData.mbusAddress3).c_str());    
+        client.publish(String(String(userData.mbusinoName) + "/settings/address4").c_str(), String(userData.mbusAddress4).c_str());
+        client.publish(String(String(userData.mbusinoName) + "/settings/address5").c_str(), String(userData.mbusAddress5).c_str());  
         client.publish(String(String(userData.mbusinoName) + "/settings/IP").c_str(), String(WiFi.localIP().toString()).c_str());
         client.publish(String(String(userData.mbusinoName) + "/settings/MQTTreconnections").c_str(), String(conCounter-1).c_str());
         long rssi = WiFi.RSSI();

@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.20-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.21-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus --> MQTT-Gateway with shields for ESPs
 
 A **Plug and Play** solution.
@@ -15,7 +15,7 @@ the project is developed with **Arduino IDE 2**, source code and .bin files will
 
 **MBusino** code is for a single M-Bus Slave
 
-**MBusino3S** code is for up to 3 Slaves
+**MBusino5S** code is for up to 5 Slaves
 
 ## Hardware
 
