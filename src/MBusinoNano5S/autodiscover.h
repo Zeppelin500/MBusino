@@ -12,8 +12,8 @@ const char bmeValue[4][12] = {"temperature","pressure","altitude","humidity"};
 const char bmeDeviceClass[4][12] = {"temperature","pressure","distance","humidity"};
 const char bmeUnits[4][5] = {"°C","mbar","m","%"};
 
-const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%s","object_id":"%s_%u_%s","state_topic":"%s/MBus/%u_%s","name":"%u_%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"%s","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},%s"availability_mode":"all"})rawliteral";
-const char adTopicMbus[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%u_%s/config)rawliteral";
+const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%u_%s","object_id":"%s_%u_%u_%s","state_topic":"%s/MBus/SlaveAddress%u/%u_%s","name":"Addr%u_%u_%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"%s","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},%s"availability_mode":"all"})rawliteral";
+const char adTopicMbus[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%u_%u_%s/config)rawliteral";
 
 const char adValueSensor[] PROGMEM = R"rawliteral({"unique_id":"%s_Sensor%u","object_id":"%s_Sensor%u","state_topic":"%s/OneWire/S%u","name":"Sensor%u","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"°C","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"temperature","availability_mode":"all"})rawliteral";
 const char adTopicSensor[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/Sensor%u/config)rawliteral";
@@ -43,8 +43,3 @@ void haHandoverMbus(uint8_t haCounter, bool engelmann, uint8_t address){ // haCo
   adVariables.stateClass[0] = 0;
   adVariables.haUnits[0] = 0;
 }
-
-
-
-
-
