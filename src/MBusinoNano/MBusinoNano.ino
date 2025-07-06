@@ -100,6 +100,7 @@ int Startadd = 0x13;  // Start address for decoding
 
 uint8_t mbusLoopStatus = 0;
 uint8_t fields = 0;
+bool fcb = 0; // M-Bus Frame Count Bit
 char jsonstring[4096] = { 0 };
 bool engelmann = false;
 bool waitForRestart = false;
@@ -377,7 +378,7 @@ void loop() {
       timerMbus = millis();
       polling = false;
       mbusLoopStatus = 1;
-      mbus.request_data(MBUS_ADDRESS);
+      mbus.request_data(MBUS_ADDRESS, fcb);
     }
     if(millis() - timerMbus > 1500 && mbusLoopStatus == 1){ // Receive and decode M-Bus Records
       mbusLoopStatus = 2;
@@ -405,6 +406,12 @@ void loop() {
         //--------------------------------------------------------------------------------------------------------------------------    
       }
       if (mbus_good_frame) {
+        if(fcb == true){ // toggle the FCB (Frame Count Bit) to signalize good response in the next request
+          fcb = false;
+        }
+        else{
+          fcb = true;
+        }
         adMbusMessageCounter++;
         int packet_size = mbus_data[1] + 6;   
         JsonDocument jsonBuffer;
