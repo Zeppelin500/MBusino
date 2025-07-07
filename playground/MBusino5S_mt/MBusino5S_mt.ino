@@ -544,7 +544,7 @@ void loop() {
             }else if(mtPolling == true){ // mtPolling is to notice, the is another telegram with more records aviable
               //currentAddress dont change
               mtPolling = false;
-              addressCounter++;
+              //addressCounter++;
             }else{ // preperation of address anc counter for the next mbus loop
               if(addressCounter >= userData.mbusSlaves){
                 addressCounter = 0;
@@ -681,9 +681,6 @@ void loop() {
                 fcb[currentAddressCounter] = true;
               }
 
-              if(addressCounter == 1){
-                adMbusMessageCounter++;
-              }
               int packet_size = mbus_data[1] + 6; 
               JsonDocument jsonBuffer;
               JsonArray root = jsonBuffer.add<JsonArray>();  
@@ -766,13 +763,13 @@ void loop() {
                   client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/"+String(recordCounter[currentAddressCounter]+i+1)).c_str(),"--> More records follow in next telegram");              
                   recordCounter[currentAddressCounter] = recordCounter[currentAddressCounter] + fields; // add the current number of recieved records to the previusly sended numbers of records 
                   mtPolling = true;
-                  adMbusMessageCounter = adMbusMessageCounter -1;
-                  addressCounter = addressCounter -1;
                   client.publish(String(String(userData.mbusinoName) + "/MBus/debug/TF/true").c_str(),String(currentAddress).c_str());                                                                                                                      
                 }else{
                   recordCounter[currentAddressCounter] = 0;
-                  mtPolling = false;
-                  //adMbusMessageCounter++;
+                  mtPolling = false; 
+                  if(addressCounter == 1){
+                    adMbusMessageCounter++;
+                  }                  
                   client.publish(String(String(userData.mbusinoName) + "/MBus/debug/TF/false").c_str(),String(currentAddress).c_str());                                                                                                       
                 }
               }        
