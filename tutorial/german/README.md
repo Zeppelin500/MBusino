@@ -34,6 +34,7 @@
 * Bei mehreren MBusino im Netz ist der Name zu ändern, sonst kommt es zu Netzwerkproblemen.
 * Das Minimum bei den Intervallen dürte bei den Sensoren bei 2 Sec. liegen, bei M-Bus 4 sec. 
 * Bei MQTT Broker kann eine IP oder eine Adresse eingegeben weren. z.B. **192.168.1.7** oder **test.mosquitto.org** kein https:// oder mqtt:// nur die Adresse
+* Das MQTT Password (optional) darf maximal 29 Zeichen lang sein.
 
 Wenn der MbusinoAP beim hochfahren kein bekanntes Netzwerk findet, stellt er für 5 Minuten den AP bereit, danach resettet er selbstständig und sucht erneut ein bekanntes Netzwerk.
 Im Wlan findet ihr das Portal dauerhaft. IP müsst ihr in der Fritzbox o.ä. suchen.
