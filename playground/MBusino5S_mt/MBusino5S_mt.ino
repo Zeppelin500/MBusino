@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "0.9.22mt"
+#define MBUSINO_VERSION "0.9.22"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -460,39 +460,49 @@ void loop() {
       ///////////////////////////////////////////////////////////
       
 
-      if(userData.extension > 0){
-        if ((millis() - timerSensorRefresh1) > 200) {  // springt in die Funktion zum anstoßen der aktuallisierung der Sensorwerte
-          sensorRefresh1();
-          timerSensorRefresh1 = (millis() - 1000);
-        }
-        if ((millis() - timerSensorRefresh2) > 1000) {  // springt in die Funktion zum holen der neuen Sensorwerte
-          sensorRefresh2();
-          timerSensorRefresh1 = millis();
-          timerSensorRefresh2 = millis();
-        }
-      }  
-      if (millis() > (timerMQTT + userData.sensorInterval)) { //MQTT Nachrichten senden
-        adSensorMessageCounter++;
-        for(uint8_t i = 0; i < userData.extension; i++){
-          if(OW[i] != -127){
-            client.publish(String(String(userData.mbusinoName) + "/OneWire/S" + String(i+1)).c_str(), String(OWwO[i]).c_str());
-            client.publish(String(String(userData.mbusinoName) + "/OneWire/offset" + String(i+1)).c_str(), String(offset[i]).c_str());
-            if(userData.haAutodisc == true && adSensorMessageCounter == 3){
-              haHandoverOw(i+1);
+      if(userData.extension > 0){      
+        switch(sensorStatus){
+          case 0:
+            if((millis() - timerMQTT) > userData.sensorInterval) { // springt in die Funktion zum anstoßen der aktuallisierung der Sensorwerte
+              sensorRefresh1();
+              timerMQTT = millis();
+              sensorStatus = 1;
+              timerSensorRefresh1 = millis();
             }
-          }      
+            break;
+          case 1:
+            if ((millis() - timerSensorRefresh1) > 800) {  // springt in die Funktion zum holen der neuen Sensorwerte
+              sensorRefresh2();
+              timerSensorRefresh1 = millis();
+              sensorStatus = 2;
+            }
+            break;
+          case 2:
+            if((millis() - timerSensorRefresh1) > 200){
+              adSensorMessageCounter++;
+              for(uint8_t i = 0; i < userData.extension; i++){
+                if(OW[i] != -127){        
+                  client.publish(String(String(userData.mbusinoName) + "/OneWire/S" + String(i+1)).c_str(), String(OWwO[i]).c_str());
+                  client.publish(String(String(userData.mbusinoName) + "/OneWire/offset" + String(i+1)).c_str(), String(offset[i]).c_str());
+                  if(userData.haAutodisc == true && adSensorMessageCounter == 3){
+                    haHandoverOw(i+1);
+                  }          
+                }      
+              }
+            
+              if(userData.extension == 5){
+                client.publish(String(String(userData.mbusinoName) + "/bme/temperature").c_str(), String(temperatur).c_str());
+                client.publish(String(String(userData.mbusinoName) + "/bme/pressure").c_str(), String(druck).c_str());
+                client.publish(String(String(userData.mbusinoName) + "/bme/altitude").c_str(), String(hoehe).c_str());
+                client.publish(String(String(userData.mbusinoName) + "/bme/humidity").c_str(), String(feuchte).c_str());
+                if(userData.haAutodisc == true && adSensorMessageCounter == 3){
+                  haHandoverBME();
+                }
+              }
+            sensorStatus = 0;
+            }
+            break;
         }
-      
-        if(userData.extension == 5){
-          client.publish(String(String(userData.mbusinoName) + "/bme/temperature").c_str(), String(temperatur).c_str());
-          client.publish(String(String(userData.mbusinoName) + "/bme/pressure").c_str(), String(druck).c_str());
-          client.publish(String(String(userData.mbusinoName) + "/bme/altitude").c_str(), String(hoehe).c_str());
-          client.publish(String(String(userData.mbusinoName) + "/bme/humidity").c_str(), String(feuchte).c_str());
-          if(userData.haAutodisc == true && adSensorMessageCounter == 3){
-            haHandoverBME();
-          }      
-        }
-        timerMQTT = millis();
       }
         ////////// M- Bus ###############################################
       if(firstrun == true){

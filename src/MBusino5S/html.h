@@ -72,6 +72,11 @@ const char index_html[] PROGMEM = R"rawliteral(
           <option value='1'>(1) yes</option>
           <option value='' selected>choose option</option>
         </select>  stored: %u <br><br> 
+        </div><br><label for='telegramDebug'>publish M-Bus telegram bytwise:</label><br><select name='telegramDebug' id='telegramDebug'>
+          <option value='0'>(0) no</option>
+          <option value='1'>(1) yes</option>
+          <option value='' selected>choose option</option>
+        </select>  stored: %u <br><br>         
         <div class='form-floating'><label>Sensor publish interval sec.</label><input type='text' value='%u' class='form-control' name='sensorInterval'></div>
         <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='%u' class='form-control' name='mbusInterval'></div>
         <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' maxlength = '19' name='broker'></div>

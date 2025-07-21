@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.21-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.22-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus --> MQTT-Gateway with shields for ESPs
 
 A **Plug and Play** solution.
@@ -125,13 +125,15 @@ Manipulate the offset of a single sensor by sending sensor numbers and values. T
 Self explanatory.
 
 ## known issues / limitations
-- Flashing over USB is only possible, if the M-Bus master is not connected. OTA update work fine.
+- Flashing over USB is only possible, if the M-Bus master is not connected (only D1 mini). OTA update work fine.
 
 - Do not use 2 Boards simultaneously without changing thr Name or it cause in network problems, both boards becomes unreachable. 
 
 - M-Bus should work with most M-Bus devices. If you have M-Bus issues, let me know.
 
-- No support of multi telegram messages. Only the first telegram will be decoded
+- ~~No support of multi telegram messages. Only the first telegram will be decoded~~ done!
+
+- passwords are limited to 29 characters
 
 
 ## Credits

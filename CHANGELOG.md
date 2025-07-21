@@ -3,6 +3,17 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.22] - 2025-07-21
+
+### Changed
+
+- MBusinoLib 0.9.14
+- DS18B20 S6 with ESP32 S2 issue fixed
+
+### Added
+
+- Support of Slaves with multible response telegrams
+
 ## [0.9.21] - 2025-05-01
 
 ### Changed

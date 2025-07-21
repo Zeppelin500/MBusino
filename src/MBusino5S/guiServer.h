@@ -74,6 +74,16 @@ void setupServer(){
           credentialsReceived = true;
           }
       }
+      
+      if (request->hasParam("telegramDebug")) {
+        inputMessage = request->getParam("telegramDebug")->value();
+        inputParam = "telegramDebug";
+        if(inputMessage != NULL){
+          userData.telegramDebug = inputMessage.toInt();
+          credentialsReceived = true;
+          }
+      } 
+
       if (request->hasParam("sensorInterval")) {
         inputMessage = request->getParam("sensorInterval")->value();
         inputParam = "sensorInterval";
