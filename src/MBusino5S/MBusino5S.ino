@@ -133,7 +133,7 @@ uint8_t pollingAddress = 0;
 int Startadd = 0x13;  // Start address for decoding
 
 float OW[7] = {0};         // variables for DS18B20 Onewire sensors 
-bool sensorStatus = 0;
+uint8_t sensorStatus = 0;
 float temperatur = 0;      // Variablen für den BLE280 am I2C
 float druck = 0;
 float hoehe = 0;
