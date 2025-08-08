@@ -1,6 +1,6 @@
 # MBusino Tutorial English
 
-**Edition Z for the Zihatec M-Bus Master is using a ESP32 S2 mini! Skip flashing of ESP 8266 D1 mini and use this [tutorial](https://github.com/Zeppelin500/MBusino/blob/main/tutorial/Flashing_ESP32S2_Mini/README.md) for flashing. Start then with Point 9**
+**Edition Z for the Zihatec M-Bus Master is using a ESP32 S2 mini! Skip flashing of ESP 8266 D1 mini and use this [tutorial](https://github.com/Zeppelin500/MBusino/blob/main/tutorial/Flashing_ESP32S2_Mini/README.md) for flashing. **For MBusino Nano use this [flash tutorial](https://github.com/Zeppelin500/MBusino/blob/main/tutorial/Flashing_ESP3_C3_Supermini/README.md).** Start then with Point 9**
 
 ## You can flash the MBusino with https://web.esphome.io
 
