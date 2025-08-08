@@ -1,6 +1,7 @@
 # MBusino Tutorial deutsch
 
 **Bei der Edition Z für den Zihatec M-Bus Master ist ein ESP32 S2 mini verbaut! Daher die unten stehenden Anweisungen zum flashen des ESP8266 D1 mini überspringen und diese [Anweisung](https://github.com/Zeppelin500/MBusino/blob/main/tutorial/Flashing_ESP32S2_Mini/README.md) anstatt dessen nutzen. Dann bei Punkt 9 weiter machen**
+**Für den MBusino Nano diese [flash Anleitung](https://github.com/Zeppelin500/MBusino/blob/main/tutorial/Flashing_ESP3_C3_Supermini/README.md) nutzen.**
 
 ## für das flashen des MBusino ist keine Software nötig. Wir nutzen https://web.esphome.io
 
