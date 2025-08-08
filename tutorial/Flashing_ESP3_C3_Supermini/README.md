@@ -42,6 +42,8 @@ https://github.com/Zeppelin500/MBusino/tree/main/src/MBusinoNano5S/build/esp32.e
 
 --> done
 
+**The offset of the bootloader in the screenshots are wrong. Use The values above.** 
+
 <img src="https://github.com/Zeppelin500/MBusino/blob/main/pictures/AdafruitESPtool.png" width="400">
 
 
