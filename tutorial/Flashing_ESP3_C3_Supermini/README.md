@@ -1,4 +1,4 @@
-# Flashing ESP32 S2 Mini
+# Flashing ESP32 C3 supermini for MBusino Nano
 
 For the ESP32 C3 are 3 different .bin files created.
 
