@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.22-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-0.9.23-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus --> MQTT-Gateway with shields for ESPs
 
 A **Plug and Play** solution.
@@ -22,7 +22,7 @@ the project is developed with **Arduino IDE 2**, source code and .bin files will
 ### MBusino
 
 The original MBusino decodes M-Bus and can also optional read out different sensors, see below. Network connection only via the build in ESP32 WiFi.
-- M-Bus e.g. heatmeter (up to three slaves, use the 3S code)
+- M-Bus e.g. heatmeter (up to five slaves, use the 5S code)
 - OneWire 5x DS18B20, temperature
 - I²C BME280, temperatur, r. humidity, air pressure
 
@@ -85,7 +85,7 @@ Normaly M-Bus request is set with an interval at the GUI. But in special cases y
 * MQTT Topic: MBusino/mbusPolling
 * MQTT Payload: no matter
 
-### MBusino3S
+### MBusino5S
 * MQTT Topic: MBusino/mbusPolling
 * MQTT Payload: M-Bus Address in decimal (you can also request addresses witch are not stored in the GUI)
 

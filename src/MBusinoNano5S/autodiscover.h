@@ -1,8 +1,8 @@
 struct autodiscover {
   char bufferValue[500] = {0};
   char bufferTopic[100] = {0};
-  char haName[20] = {0};
-  char haUnits[20] = {0};
+  char haName[30] = {0};
+  char haUnits[30] = {0};
   char stateClass[30] = {0};
   char deviceClass[30] = {0};
   char deviceClassString[50] = {0};

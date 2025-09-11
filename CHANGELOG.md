@@ -3,11 +3,18 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.23] - 2025-09-11
+
+### Changed
+
+- increase name variable at ha audodicovery
+- MBusinoLib 0.9.15
+
 ## [0.9.22b] - 2025-07-23
 
 ### Changed
 
-- little bugfix MBusino5S Sensors
+- little bugfix MBusino5S Sensor8
 - all Files still 0.9.22
 
 ## [0.9.22] - 2025-07-21

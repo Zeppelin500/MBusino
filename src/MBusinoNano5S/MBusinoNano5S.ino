@@ -33,7 +33,7 @@ You should have received a copy of the GNU General Public License along with thi
 #include <EEPROM.h>
 #include <MBusCom.h>
 
-#define MBUSINO_VERSION "0.9.22"
+#define MBUSINO_VERSION "0.9.23"
 
 #define MBUS_ADDRESS 254
 
