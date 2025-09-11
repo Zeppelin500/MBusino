@@ -1,4 +1,4 @@
-# Flashing ESP32 S2 Mini
+# Flashing ESP32 C3 supermini for MBusino Nano
 
 For the ESP32 C3 are 3 different .bin files created.
 
@@ -41,6 +41,8 @@ https://github.com/Zeppelin500/MBusino/tree/main/src/MBusinoNano5S/build/esp32.e
 * Offset 0x 10000    MBusinoNano5S.ino.bin 
 
 --> done
+
+**The offset of the bootloader in the screenshots are wrong. Use The values above.** 
 
 <img src="https://github.com/Zeppelin500/MBusino/blob/main/pictures/AdafruitESPtool.png" width="400">
 
