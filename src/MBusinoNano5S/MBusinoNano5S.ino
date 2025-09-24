@@ -373,7 +373,7 @@ void loop() {
 
     if(waitToSetAddress == true && (millis() - 500) > timerSetAddress){
       waitToSetAddress = false;
-      mbus.set_address(5,newAddress);
+      mbus.set_address(254,newAddress);
       client.publish(String(String(userData.mbusinoName) + "/setAddress/2").c_str(), String(newAddress).c_str());
     }
 
