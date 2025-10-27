@@ -135,6 +135,8 @@ Self explanatory.
 
 - passwords are limited to 29 characters
 
+- If no broker is connected. M-Bus communication is disabled. So, you can't also not change M-Bus addresses from the access point connection.
+
 
 ## Credits
 * AllWize for the MbusPayload library -- the first code base of the MBusinoLib to decode M-Bus
