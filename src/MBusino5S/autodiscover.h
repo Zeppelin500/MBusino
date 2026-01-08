@@ -15,13 +15,13 @@ const char bmeUnits[4][5] = {"°C","mbar","m","%"};
 //const char vs[4] = "_vs"; //placeholder for insert "_vs" for valuestring is used instead of value
 //const char[4] noVs = {0}; //empty, no Valuestring
 
-const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%u_%s","object_id":"%s_%u_%u_%s","state_topic":"%s/MBus/SlaveAddress%u/%u_%s","name":"Addr%u_%u_%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"%s","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},%s"availability_mode":"all"})rawliteral";
+const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%u_%s","default_entity_id":"sensor.%s_%u_%u_%s","state_topic":"%s/MBus/SlaveAddress%u/%u_%s","name":"Addr%u_%u_%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"%s","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},%s"availability_mode":"all"})rawliteral";
 const char adTopicMbus[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%u_%u_%s/config)rawliteral";
 
-const char adValueSensor[] PROGMEM = R"rawliteral({"unique_id":"%s_Sensor%u","object_id":"%s_Sensor%u","state_topic":"%s/OneWire/S%u","name":"Sensor%u","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"°C","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"temperature","availability_mode":"all"})rawliteral";
+const char adValueSensor[] PROGMEM = R"rawliteral({"unique_id":"%s_Sensor%u","default_entity_id":"sensor.%s_Sensor%u","state_topic":"%s/OneWire/S%u","name":"Sensor%u","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"°C","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"temperature","availability_mode":"all"})rawliteral";
 const char adTopicSensor[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/Sensor%u/config)rawliteral";
 
-const char adValueBME[] PROGMEM = R"rawliteral({"unique_id":"%s__BME_%s","object_id":"%s_BME_%s","state_topic":"%s/bme/%s","name":"%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"%s","availability_mode":"all"})rawliteral";
+const char adValueBME[] PROGMEM = R"rawliteral({"unique_id":"%s__BME_%s","default_entity_id":"sensor.%s_BME_%s","state_topic":"%s/bme/%s","name":"%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"%s","availability_mode":"all"})rawliteral";
 const char adTopicBME[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%s/config)rawliteral";
 
 void haHandoverMbus(uint8_t haCounter, bool engelmann, uint8_t address){ // haCounter is the "i+1" at the for() in main

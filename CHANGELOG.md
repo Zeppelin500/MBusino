@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.24] - 2026-01-08
+
+### Changed
+
+- HA audodicovery, change "object_id":"xxx" "default_entity_id":"sensor.xxx"
+
 ## [0.9.23] - 2025-09-11
 
 ### Changed
