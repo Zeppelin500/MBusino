@@ -58,9 +58,9 @@ const char index_html[] PROGMEM = R"rawliteral(
     <main class='form-signin'>
       <form action='/get'>
         <h1 class=''><i>MBusino</i> Setup</h1><br>
-        <div class='form-floating'><label>SSID</label><input type='text' value='%s' class='form-control' maxlength = '29' name='ssid'></div>
-        <div class='form-floating'><label>Password</label><input type='password' class='form-control' maxlength = '29' name='password'></div>
-        <div class='form-floating'><label>Device Name</label><input type='text' value='%s' class='form-control' maxlength = '10' name='name'>
+        <div class='form-floating'><label>SSID</label><input type='text' value='%s' class='form-control' maxlength = '64' name='ssid'></div>
+        <div class='form-floating'><label>Password</label><input type='password' class='form-control' maxlength = '64' name='password'></div>
+        <div class='form-floating'><label>Device Name</label><input type='text' value='%s' class='form-control' maxlength = '30' name='name'>
         </div><br><label for='haAd'>generate Home-Assitant autodiscovery messages:</label><br><select name='haAd' id='haAd'>
           <option value='0'>(0) no</option>
           <option value='1'>(1) yes</option>
@@ -72,10 +72,10 @@ const char index_html[] PROGMEM = R"rawliteral(
           <option value='' selected>choose option</option>
         </select>  stored: %u <br><br>             
         <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='%u' class='form-control' name='mbusInterval'></div>
-        <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' maxlength = '19' name='broker'></div>
+        <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' maxlength = '64' name='broker'></div>
         <div class='form-floating'><label>MQTT Port</label><input type='text' value='%u' class='form-control' name='mqttPort'></div>
-        <div class='form-floating'><label>MQTT User (optional)</label><input type='text' value='%s' class='form-control' maxlength = '29' name='mqttUser'></div>
-        <div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' maxlength = '29' name='mqttPswrd'></div>
+        <div class='form-floating'><label>MQTT User (optional)</label><input type='text' value='%s' class='form-control' maxlength = '64' name='mqttUser'></div>
+        <div class='form-floating'><label>MQTT Password (optional)</label><input type='password' class='form-control' maxlength = '64' name='mqttPswrd'></div>
         <div class='form-floating'><label>number of M-Bus Slaves</label><input type='text' value='%u' class='form-control' name='mbusSlaves'></div>
         <div class='form-floating'><label>M-Bus address 1</label><input type='text' value='%u' class='form-control' name='mbusAddress1'></div>
         <div class='form-floating'><label>M-Bus address 2</label><input type='text' value='%u' class='form-control' name='mbusAddress2'></div>
@@ -156,15 +156,10 @@ const char setAddress_html[] PROGMEM = R"rawliteral(
       <form action='/get'>
         <h1 class=''><i>MBusino</i> set M-Bus address</h1><br>
         <p style='text-align:center'> ! only one M-Bus Slave should be connected ! </p><br>
-        </div><br><label for='newAddress'>New M-Bus Address:</label><br><select name='newAddress' id='newAddress'>
-          <option value='1'>1</option>
-          <option value='2'>2</option>
-          <option value='3'>3</option>
-          <option value='4'>4</option>
-          <option value='5'>5</option>          
-          <option value='0' selected>0</option>
-        </select><br><br>
-        <br>
+        </div><br>
+        <label for='newAddress'>New M-Bus Address (0-250):</label><br>
+        <input id='newAddress' min='0' max='250' name='newAddress' type='number' value='0'> 
+        <br><br><br>
         <button type='submit'>Save</button>
         <p style='text-align:right'><a href='/' style='color:#3F4CFB'>home</a></p>
       </form>

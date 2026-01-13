@@ -34,7 +34,6 @@
 * With multible MBusino in network, you have to change the name or it caouse in network problems .
 * Minimum for intervalls is Sensors 2 sec., M-Bus 4 sec. 
 * At MQTT Broker you can set an IP or a address. E.g. **192.168.1.7** oder **test.mosquitto.org** no https:// oder mqtt:// only addresse
-* The MQTT password (optional) may be a maximum of 29 characters long.
 
 
 If MBusino do not find a known network, Accesspoint will accessable for 5 minutes. after this periode he restart and search again.

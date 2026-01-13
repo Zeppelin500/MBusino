@@ -3,6 +3,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.0] - 2026-01-13
+
+### Changed
+
+- Assigning all allowed M-Bus addresses (0-250) is now possible in the 5S firmware.
+- credentials storrages (SSID,Password, Broker, MQTT-Pasword and User) are now 64 characters long.
+
 ## [0.9.24] - 2026-01-08
 
 ### Changed

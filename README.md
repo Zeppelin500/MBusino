@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-0.9.24-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus --> MQTT-Gateway with shields for ESPs
 
 A **Plug and Play** solution.
@@ -133,7 +133,7 @@ Self explanatory.
 
 - ~~No support of multi telegram messages. Only the first telegram will be decoded~~ done!
 
-- passwords are limited to 29 characters
+- ~~passwords are limited to 29 characters~~ done! now 64 characters 
 
 - If no broker is connected. M-Bus communication is disabled. So, you can't also not change M-Bus addresses from the access point connection.
   

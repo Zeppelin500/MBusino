@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "0.9.24"
+#define MBUSINO_VERSION "1.0.0"
 
 #if defined(ESP8266)
 #define ONE_WIRE_BUS1 2   //D4
@@ -91,8 +91,28 @@ DallasTemperature sensor5(&oneWire5);
 DallasTemperature sensor6(&oneWire6);
 DallasTemperature sensor7(&oneWire7);
 
-
 struct settings {
+  char ssid[65];
+  char password[65];
+  char mbusinoName[31];
+  char broker[65];
+  uint16_t mqttPort;
+  uint16_t extension;
+  char mqttUser[65];
+  char mqttPswrd[65]; 
+  uint32_t sensorInterval;
+  uint32_t mbusInterval; 
+  uint8_t mbusSlaves;
+  uint8_t mbusAddress1;
+  uint8_t mbusAddress2;
+  uint8_t mbusAddress3;
+  uint8_t mbusAddress4;
+  uint8_t mbusAddress5;
+  bool haAutodisc;
+  bool telegramDebug;
+} userData = {"SSID","Password","MBusino","192.168.1.8",1883,5,"mqttUser","mqttPasword",5000,120000,1,0xFE,0,0,0,0,true,false};
+
+struct oldSettings {
   char ssid[30];
   char password[30];
   char mbusinoName[11];
@@ -111,7 +131,7 @@ struct settings {
   uint8_t mbusAddress5;
   bool haAutodisc;
   bool telegramDebug;
-} userData = {"SSID","Password","MBusino","192.168.1.8",1883,5,"mqttUser","mqttPasword",5000,120000,1,0xFE,0,0,0,0,true,false};
+} oldUserData = {"SSID","Password","MBusino","192.168.1.8",1883,5,"mqttUser","mqttPasword",5000,120000,1,0xFE,0,0,0,0,true,false};
 
 uint8_t mbusAddress[5] = {0};
 
@@ -235,7 +255,32 @@ void setup() {
       EEPROM.put(eeAddrCalibrated, calibrated);  // copy the key to EEPROM that the EEPROM is writen and not full of junk.
   }
   EEPROM.get(eeAddrCredentialsSaved, credentialsSaved);
-  if(credentialsSaved == 500){
+  if(credentialsSaved == 500){  // 500 is the code that credentials are safed in an old version befor 1.0 (size of some variables has been changed)
+    EEPROM.get(100, oldUserData );
+    strcpy(userData.ssid,oldUserData.ssid);
+    strcpy(userData.password,oldUserData.password);
+    strcpy(userData.mbusinoName,oldUserData.mbusinoName);
+    strcpy(userData.broker,oldUserData.broker);
+    userData.mqttPort = oldUserData.mqttPort;
+    userData.extension = oldUserData.extension ;
+    strcpy(userData.mqttUser,oldUserData.mqttUser);
+    strcpy(userData.mqttPswrd,oldUserData.mqttPswrd); 
+    userData.sensorInterval= oldUserData.sensorInterval;
+    userData.mbusInterval = oldUserData.mbusInterval; 
+    userData.mbusSlaves = oldUserData.mbusSlaves;
+    userData.mbusAddress1 = oldUserData.mbusAddress1;
+    userData.mbusAddress2 = oldUserData.mbusAddress2;
+    userData.mbusAddress3 = oldUserData.mbusAddress3;
+    userData.mbusAddress4 = oldUserData.mbusAddress4;
+    userData.mbusAddress5 = oldUserData.mbusAddress5;
+    userData.haAutodisc = oldUserData.haAutodisc;
+    userData.telegramDebug = oldUserData.telegramDebug;
+
+    EEPROM.put(100, userData);
+    credentialsSaved = 501;
+    EEPROM.put(eeAddrCredentialsSaved, credentialsSaved);
+  }
+  else if(credentialsSaved == 501){  // 501 is the code that credentials are safed in a version after 1.0 (size of some variables has been changed)
     EEPROM.get(100, userData );
   }
 
@@ -394,7 +439,7 @@ void loop() {
   if(credentialsReceived == true && waitForRestart == false){
     EEPROM.begin(512);
     EEPROM.put(100, userData);
-    credentialsSaved = 500;
+    credentialsSaved = 501;
     EEPROM.put(eeAddrCredentialsSaved, credentialsSaved);
     EEPROM.commit();
     EEPROM.end();
