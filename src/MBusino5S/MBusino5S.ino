@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.0.2"
+#define MBUSINO_VERSION "1.0.3"
 
 // EEPROM flag constants
 #define EEPROM_CALIBRATED_FLAG 500
@@ -743,12 +743,14 @@ void loop() {
               }
 
               int packet_size = mbus_data[1] + 6; 
-              JsonDocument jsonBuffer;
-              JsonArray root = jsonBuffer.add<JsonArray>();  
-              fields = payload.decode(&mbus_data[Startadd], packet_size - Startadd - 2, root); 
+              JsonDocument doc;
+              JsonObject headerObj = doc["header"].to<JsonObject>();
+              bool headerOk = payload.decodeHeader(mbus_data, packet_size, headerObj);
+              JsonArray recordsArr = doc["records"].to<JsonArray>();  
+              fields = payload.decodeRecords(&mbus_data[Startadd], packet_size - Startadd - 2, recordsArr); 
               address = mbus_data[5]; 
               
-              serializeJson(root, jsonstring);
+              serializeJson(doc, jsonstring);
               client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
               client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/jsonstring").c_str(), jsonstring);  
               client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/fcb").c_str(), String(fcb[currentAddressCounter]).c_str());      
@@ -780,17 +782,44 @@ void loop() {
           if(millis() - timerMbusDecoded > 100){  
             mbusLoopStatus = 0;
             shc = true;
-            JsonDocument root;
-            deserializeJson(root, jsonstring); // load the json from a global array
+            JsonDocument doc;
+            deserializeJson(doc, jsonstring);
+            JsonObject headerObj = doc["header"];
+            JsonArray recordsArr = doc["records"];
             jsonstring[0] = 0;
 
+            // Publish M-Bus header via MQTT
+            if (!headerObj.isNull()) {
+              for(uint8_t i = 0; i < HEADER_PUBLISH_COUNT; i++){
+                char valBuf[20] = {0};
+                const char* val = nullptr;
+                switch(headerPublishFields[i].type){
+                  case HT_STR: val = headerObj[headerPublishFields[i].jsonKey].as<const char*>(); break;
+                  case HT_INT: snprintf(valBuf, sizeof(valBuf), "%d", headerObj[headerPublishFields[i].jsonKey].as<int>()); val = valBuf; break;
+                  case HT_HEX: snprintf(valBuf, sizeof(valBuf), "%x", headerObj[headerPublishFields[i].jsonKey].as<int>()); val = valBuf; break;
+                  default: break;
+                }
+                if(val) client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress" + String(address) + "/header/" + headerPublishFields[i].jsonKey).c_str(), val);
+              }
+              JsonObject sd = headerObj["status_details"];
+              for(uint8_t i = 0; i < HEADER_STATUS_COUNT; i++){
+                client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress" + String(address) + "/header/" + headerStatusKeys[i]).c_str(),
+                               sd[headerStatusKeys[i]].as<bool>() ? "on" : "off");
+              }
+            }
+
+            // Header autodiscovery
+            if(userData.haAutodisc == true && adMbusMessageCounter == 3){
+              haHandoverHeader(address);
+            }
+
             for (uint8_t i=0; i<fields; i++) {
-              uint8_t code = root[i]["code"].as<int>();
-              const char* name = root[i]["name"];
-              const char* units = root[i]["units"];           
-              double value = root[i]["value_scaled"].as<double>();
-              const char* valueString = root[i]["value_string"];   
-              bool telegramFollow = root[i]["telegramFollow"].as<int>();    
+              uint8_t code = recordsArr[i]["code"].as<int>();
+              const char* name = recordsArr[i]["name"];
+              const char* units = recordsArr[i]["units"];           
+              double value = recordsArr[i]["value_scaled"].as<double>();
+              const char* valueString = recordsArr[i]["value_string"];   
+              bool telegramFollow = recordsArr[i]["telegramFollow"].as<int>();    
 
               if(userData.haAutodisc == true && adMbusMessageCounter == 3){  //every 254 message is a HA autoconfig message
                 strcpy(adVariables.haName,name);
@@ -812,8 +841,8 @@ void loop() {
                 //client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/MBus/"+String(i+1)+"_"+String(name)+"_in_"+String(units)), String(value,3).c_str());
 
                 if (i == 3 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar
-                  float flow = root[5]["value_scaled"].as<float>();
-                  float delta = root[9]["value_scaled"].as<float>();
+                  float flow = recordsArr[5]["value_scaled"].as<float>();
+                  float delta = recordsArr[9]["value_scaled"].as<float>();
                   float calc_power = delta * flow * 1163;          
                   client.publish(String(String(userData.mbusinoName) +"/MBus/SlaveAddress"+String(address)+ "/4_power_calc").c_str(), String(calc_power).c_str());                    
                 }           

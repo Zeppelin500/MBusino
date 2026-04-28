@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-1.0.2-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-1.0.3-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus --> MQTT-Gateway with shields for ESPs
 
 A **Plug and Play** solution.

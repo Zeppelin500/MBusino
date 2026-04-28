@@ -44,6 +44,67 @@ void haHandoverMbus(uint8_t haCounter, bool engelmann){ // haCounter is the "i+1
   adVariables.haUnits[0] = 0;
 }
 
+// --- Header autodiscovery ---
+struct headerAdField {
+  const char* jsonKey;
+};
+
+static const headerAdField headerAdFields[] = {
+  {"address"},
+  {"id"},
+  {"manufacturer"},
+  {"medium"},
+  {"version"},
+  {"status"},
+  {"access_counter"},
+  {"battery_low"},
+  {"temporary_error"},
+  {"permanent_error"},
+};
+
+#define HEADER_AD_FIELDS_COUNT (sizeof(headerAdFields) / sizeof(headerAdFields[0]))
+
+const char adValueHeader[] PROGMEM = R"rawliteral({"unique_id":"%s_header_%s","default_entity_id":"sensor.%s_header_%s","state_topic":"%s/MBus/header/%s","name":"%s","value_template":"{{value}}","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"availability_mode":"all"})rawliteral";
+const char adTopicHeader[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/header_%s/config)rawliteral";
+
+void haHandoverHeader(){
+  for(uint8_t i = 0; i < HEADER_AD_FIELDS_COUNT; i++){
+    sprintf(adVariables.bufferValue, adValueHeader,
+      userData.mbusinoName, headerAdFields[i].jsonKey,
+      userData.mbusinoName, headerAdFields[i].jsonKey,
+      userData.mbusinoName, headerAdFields[i].jsonKey,
+      headerAdFields[i].jsonKey,
+      userData.mbusinoName, userData.mbusinoName, MBUSINO_VERSION);
+    sprintf(adVariables.bufferTopic, adTopicHeader, userData.mbusinoName, headerAdFields[i].jsonKey);
+    client.publish(adVariables.bufferTopic, adVariables.bufferValue, true);
+    adVariables.bufferTopic[0] = 0;
+    adVariables.bufferValue[0] = 0;
+  }
+}
+
+// --- Header MQTT publish ---
+enum HeaderFieldType { HT_STR, HT_INT, HT_HEX, HT_BOOL_NESTED };
+
+struct headerPublishField {
+  const char* jsonKey;
+  HeaderFieldType type;
+};
+
+static const headerPublishField headerPublishFields[] = {
+  {"address",        HT_INT},
+  {"id",             HT_STR},
+  {"manufacturer",   HT_STR},
+  {"medium",         HT_STR},
+  {"version",        HT_INT},
+  {"status",         HT_HEX},
+  {"access_counter", HT_INT},
+};
+
+#define HEADER_PUBLISH_COUNT (sizeof(headerPublishFields) / sizeof(headerPublishFields[0]))
+
+static const char* headerStatusKeys[] = {"battery_low", "temporary_error", "permanent_error"};
+#define HEADER_STATUS_COUNT (sizeof(headerStatusKeys) / sizeof(headerStatusKeys[0]))
+
 
 
 

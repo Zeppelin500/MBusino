@@ -3,6 +3,14 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.3] - 2026-04-28
+
+### Added
+
+- M-Bus Header autodiscovery for Home Assistant (all 4 variants)
+- Header fields published via MQTT with type-aware loops
+- Depends on MBusinoLib 0.9.20 (a_field → address)
+
 ## [1.0.2] - 2026-04-01
 
 ### Fixed
