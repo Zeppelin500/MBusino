@@ -714,7 +714,7 @@ void loop() {
             mbusLoopStatus = 6;
             shc = true;
             bool mbus_good_frame = false;
-            byte mbus_data[MBUS_MAX_TELEGRAM_LEN] = { 0 };
+            byte mbus_data[MBUS_DATA_SIZE] = { 0 };
             mbus_good_frame = mbus.get_response(mbus_data, sizeof(mbus_data));
 
             if(userData.telegramDebug == true){
