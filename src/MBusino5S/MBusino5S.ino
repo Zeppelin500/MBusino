@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.0.3"
+#define MBUSINO_VERSION "1.0.4"
 
 // EEPROM flag constants
 #define EEPROM_CALIBRATED_FLAG 500
@@ -714,7 +714,7 @@ void loop() {
             mbusLoopStatus = 6;
             shc = true;
             bool mbus_good_frame = false;
-            byte mbus_data[MBUS_MAX_TELEGRAM_LEN] = { 0 };
+            byte mbus_data[MBUS_DATA_SIZE] = { 0 };
             mbus_good_frame = mbus.get_response(mbus_data, sizeof(mbus_data));
 
             if(userData.telegramDebug == true){
