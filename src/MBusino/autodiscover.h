@@ -1,5 +1,5 @@
 struct autodiscover {
-  char bufferValue[600] = {0};
+  char bufferValue[1024] = {0};
   char bufferTopic[100] = {0};
   char haName[30] = {0};
   char haUnits[30] = {0};
@@ -17,13 +17,13 @@ const char bmeUnits[4][5] = {"°C","mbar","m","%"};
 //const char vs[4] = "_vs"; //placeholder for insert "_vs" for valuestring is used instead of value
 //const char[4] noVs = {0}; //empty, no Valuestring
 
-const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%s","default_entity_id":"sensor.%s_%u_%s","state_topic":"%s/MBus/%u_%s","name":"%u_%s","value_template":"{{value_json if value_json is defined else 0}}",%s%s"device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},%s"availability_topic":"%s/status","payload_available":"online","payload_not_available":"offline","availability_mode":"all"})rawliteral";
+const char adValueMbus[] PROGMEM = R"rawliteral({"unique_id":"%s_%u_%s","default_entity_id":"sensor.%s_%u_%s","state_topic":"%s/MBus/%u_%s","name":"%u_%s","value_template":"{{value_json}}",%s%s"device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},%s"expire_after":%u,"availability_topic":"%s/status","payload_available":"online","payload_not_available":"offline","availability_mode":"all"})rawliteral";
 const char adTopicMbus[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%u_%s/config)rawliteral";
 
-const char adValueSensor[] PROGMEM = R"rawliteral({"unique_id":"%s_Sensor%u","default_entity_id":"sensor.%s_Sensor%u","state_topic":"%s/OneWire/S%u","name":"Sensor%u","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"°C","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"temperature","availability_topic":"%s/status","payload_available":"online","payload_not_available":"offline","availability_mode":"all"})rawliteral";
+const char adValueSensor[] PROGMEM = R"rawliteral({"unique_id":"%s_Sensor%u","default_entity_id":"sensor.%s_Sensor%u","state_topic":"%s/OneWire/S%u","name":"Sensor%u","value_template":"{{value_json}}","unit_of_meas":"°C","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"temperature","expire_after":%u,"availability_topic":"%s/status","payload_available":"online","payload_not_available":"offline","availability_mode":"all"})rawliteral";
 const char adTopicSensor[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/Sensor%u/config)rawliteral";
 
-const char adValueBME[] PROGMEM = R"rawliteral({"unique_id":"%s__BME_%s","default_entity_id":"sensor.%s_BME_%s","state_topic":"%s/bme/%s","name":"%s","value_template":"{{value_json if value_json is defined else 0}}","unit_of_meas":"%s","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"%s","availability_topic":"%s/status","payload_available":"online","payload_not_available":"offline","availability_mode":"all"})rawliteral";
+const char adValueBME[] PROGMEM = R"rawliteral({"unique_id":"%s__BME_%s","default_entity_id":"sensor.%s_BME_%s","state_topic":"%s/bme/%s","name":"%s","value_template":"{{value_json}}","unit_of_meas":"%s","state_class":"measurement","device":{"ids": ["%s"],"name":"%s","manufacturer": "MBusino","mdl":"V%s"},"device_class":"%s","expire_after":%u,"availability_topic":"%s/status","payload_available":"online","payload_not_available":"offline","availability_mode":"all"})rawliteral";
 const char adTopicBME[] PROGMEM = R"rawliteral(homeassistant/sensor/%s/%s/config)rawliteral";
 
 // --- Header autodiscovery ---
@@ -99,12 +99,12 @@ void haHandoverMbus(uint8_t haCounter, bool engelmann){ // haCounter is the "i+1
   if(adVariables.haUnits[0] != 0){
     strcpy(adVariables.unitString,String("\"unit_of_meas\": \"" + String(adVariables.haUnits) + "\"," ).c_str());
   }
-  sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,haCounter,adVariables.haName,userData.mbusinoName,haCounter,adVariables.haName,userData.mbusinoName,haCounter,adVariables.haName,haCounter,adVariables.haName,adVariables.unitString,adVariables.stateClassString,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusinoName);
+  sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,haCounter,adVariables.haName,userData.mbusinoName,haCounter,adVariables.haName,userData.mbusinoName,haCounter,adVariables.haName,haCounter,adVariables.haName,adVariables.unitString,adVariables.stateClassString,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusInterval / 1000 * 3,userData.mbusinoName);
   sprintf(adVariables.bufferTopic,adTopicMbus,userData.mbusinoName,haCounter,adVariables.haName);
   client.publish(adVariables.bufferTopic, adVariables.bufferValue, true); 
 
   if (haCounter == 4 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar   
-    sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,haCounter,"power_calc",userData.mbusinoName,haCounter,"power_calc",userData.mbusinoName,haCounter,"power_calc",haCounter,"power_calc",adVariables.unitString,adVariables.stateClassString,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusinoName);
+    sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,haCounter,"power_calc",userData.mbusinoName,haCounter,"power_calc",userData.mbusinoName,haCounter,"power_calc",haCounter,"power_calc",adVariables.unitString,adVariables.stateClassString,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusInterval / 1000 * 3,userData.mbusinoName);
     sprintf(adVariables.bufferTopic,adTopicMbus,userData.mbusinoName,haCounter,"power_calc");
     client.publish(adVariables.bufferTopic, adVariables.bufferValue, true);                   
   } 
@@ -120,7 +120,7 @@ void haHandoverMbus(uint8_t haCounter, bool engelmann){ // haCounter is the "i+1
 }
 
 void haHandoverOw(uint8_t haCounter){
-  sprintf(adVariables.bufferValue,adValueSensor,userData.mbusinoName,haCounter,userData.mbusinoName,haCounter,userData.mbusinoName,haCounter,haCounter,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,userData.mbusinoName);
+  sprintf(adVariables.bufferValue,adValueSensor,userData.mbusinoName,haCounter,userData.mbusinoName,haCounter,userData.mbusinoName,haCounter,haCounter,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,userData.sensorInterval / 1000 * 3,userData.mbusinoName);
   sprintf(adVariables.bufferTopic,adTopicSensor,userData.mbusinoName,haCounter);
   client.publish(adVariables.bufferTopic, adVariables.bufferValue, true); 
   adVariables.bufferTopic[0] = 0;
@@ -129,7 +129,7 @@ void haHandoverOw(uint8_t haCounter){
 
 void haHandoverBME(){
   for(uint8_t i=0; i<4;i++){  
-    sprintf(adVariables.bufferValue,adValueBME,userData.mbusinoName,bmeValue[i],userData.mbusinoName,bmeValue[i],userData.mbusinoName,bmeValue[i],bmeValue[i],bmeUnits[i],userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,bmeDeviceClass[i],userData.mbusinoName);
+    sprintf(adVariables.bufferValue,adValueBME,userData.mbusinoName,bmeValue[i],userData.mbusinoName,bmeValue[i],userData.mbusinoName,bmeValue[i],bmeValue[i],bmeUnits[i],userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,bmeDeviceClass[i],userData.sensorInterval / 1000 * 3,userData.mbusinoName);
     sprintf(adVariables.bufferTopic,adTopicBME,userData.mbusinoName,bmeValue[i]);
     client.publish(adVariables.bufferTopic, adVariables.bufferValue, true); 
     adVariables.bufferTopic[0] = 0;
