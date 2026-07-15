@@ -2,9 +2,9 @@ PubSubClient client(espClient);
 
 void reconnect() {
   // Loop until we're reconnected
-  char lwBuffer[30] = {0};
-  sprintf(lwBuffer, userData.mbusinoName, "/lastwill");
-  if (client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,0,false,"I am going offline")) {
+  char lwBuffer[40] = {0};
+  snprintf(lwBuffer, sizeof(lwBuffer), "%s/status", userData.mbusinoName);
+  if (client.connect(userData.mbusinoName,userData.mqttUser,userData.mqttPswrd,lwBuffer,1,true,"offline")) {
     // Once connected, publish an announcement...
     #if defined(ESP32)
     Serial.println("MQTT connected to server");
@@ -18,6 +18,8 @@ void reconnect() {
       adMbusMessageCounter = 2;
       adSensorMessageCounter = 2;
     }
+    // publish online status for HA availability (retained)
+    client.publish(lwBuffer, "online", true);
     // ... and resubscribe
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateAverage").c_str());
     client.subscribe(String(String(userData.mbusinoName) + "/calibrateSensor").c_str());

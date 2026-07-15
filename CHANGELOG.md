@@ -3,6 +3,33 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.0] - 2026-07-15
+
+### ⚠️ Breaking Change
+
+- **LWT topic changed:** The MQTT Last Will and Testament now uses `{name}/status` with payload `"offline"`, QoS 1, retained. Previously the LWT was published to the bare device name topic with payload `"I am going offline"`, QoS 0, not retained. If you subscribed to the old LWT topic, update your subscription to `{name}/status`.
+
+### Added
+
+- HA availability for all entities: every discovery payload now includes `availability_topic`, `payload_available`, `payload_not_available`. MBusino going offline → all HA entities immediately show unavailable.
+- `expire_after` for M-Bus sensors (3× polling interval). If a single M-Bus slave stops responding while MBusino stays connected, only that slave's sensors become unavailable.
+- `expire_after` for OneWire/BME280 sensors (3× sensor interval).
+- Retained `"online"` status published on `{name}/status` after each MQTT connect.
+
+### Fixed
+
+- **LWT sprintf bug:** `mbusinoName` was used as format string, `/lastwill` suffix silently dropped. Fixed with `snprintf`.
+- **value_template fallback removed:** Replaced `{{value_json if value_json is defined else 0}}` with `{{value_json}}`. Broken payloads now keep previous HA state instead of reporting 0.
+- Autodiscover buffer increased from 500 to 1024 bytes.
+
+### Dependencies
+
+- MBusinoLib 0.9.20
+- MBusCom 0.1.9
+- ArduinoJson 7.4.3
+- ESP Async WebServer 3.10.3 (ESP32Async)
+- Async TCP 3.4.10 (ESP32Async)
+
 ## [1.0.4] - 2026-07-10
 
 ### Fixed
