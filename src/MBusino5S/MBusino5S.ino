@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.0.4"
+#define MBUSINO_VERSION "1.1.0"
 
 // EEPROM flag constants
 #define EEPROM_CALIBRATED_FLAG 500

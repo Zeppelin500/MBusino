@@ -33,7 +33,7 @@ You should have received a copy of the GNU General Public License along with thi
 #include <EEPROM.h>
 #include <MBusCom.h>
 
-#define MBUSINO_VERSION "1.0.4"
+#define MBUSINO_VERSION "1.1.0"
 
 // EEPROM flag constants
 #define EEPROM_CREDENTIALS_OLD 500
