@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [1.1.1] - 2026-08-02
 
 ### Fixed
-- Guard `_vs_` and `_unit` MQTT publishes against NULL/empty values. PubSubClient 2.8 publishes NULL as 0-length payload; older versions filtered these. Now only publishes when value actually exists.
+- Guard `_vs_` and `_unit` MQTT publishes against NULL/empty values. Empty topics were published for records without ASCII values or units. Now only publishes when value actually exists.
 
 ## [1.1.0] - 2026-07-15
 
