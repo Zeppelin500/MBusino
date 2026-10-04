@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.2] - 2026-10-04
+
+### Fixed
+
+- **HA `expire_after` for M-Bus sensors now accounts for the slave rotation (MBusino5S, MBusinoNano5S):** it was previously `3 × mbusInterval` regardless of `mbusSlaves`, but each slave is only polled once per full rotation (`mbusSlaves × mbusInterval`). With 3 or more configured slaves the sensors could expire in Home Assistant between two of their updates and show "unavailable" depending on the polling phase (issue #65). Now `expire_after = 3 × mbusSlaves × mbusInterval`, preserving the "3 missed updates" rule per slave. Single-slave variants (MBusino, MBusinoNano) were already correct.
+
 ## [1.1.1] - 2026-08-02
 
 ### Fixed
