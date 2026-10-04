@@ -26,12 +26,12 @@ void haHandoverMbus(uint8_t haCounter, bool engelmann, uint8_t address){ // haCo
   if(adVariables.deviceClass[0] != 0){
     strcpy(adVariables.deviceClassString,String("\"device_class\": \"" + String(adVariables.deviceClass) + "\",").c_str());
   }
-  sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,address,haCounter,adVariables.haName,userData.mbusinoName,address,haCounter,adVariables.haName,userData.mbusinoName,address,haCounter,adVariables.haName,address,haCounter,adVariables.haName,adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusInterval / 1000 * 3,userData.mbusinoName);
+  sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,address,haCounter,adVariables.haName,userData.mbusinoName,address,haCounter,adVariables.haName,userData.mbusinoName,address,haCounter,adVariables.haName,address,haCounter,adVariables.haName,adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusInterval / 1000 * 3 * (userData.mbusSlaves > 0 ? userData.mbusSlaves : 1),userData.mbusinoName);
   sprintf(adVariables.bufferTopic,adTopicMbus,userData.mbusinoName,address,haCounter,adVariables.haName);
   client.publish(adVariables.bufferTopic, adVariables.bufferValue, true); 
 
   if(haCounter == 4 && engelmann == true){  // Sensostar Bugfix --> comment it out if you use not a Sensostar   
-    sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,address,haCounter,"power_calc",userData.mbusinoName,address,haCounter,"power_calc",userData.mbusinoName,address,haCounter,"power_calc",address,haCounter,"power_calc",adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusInterval / 1000 * 3,userData.mbusinoName);
+    sprintf(adVariables.bufferValue,adValueMbus,userData.mbusinoName,address,haCounter,"power_calc",userData.mbusinoName,address,haCounter,"power_calc",userData.mbusinoName,address,haCounter,"power_calc",address,haCounter,"power_calc",adVariables.haUnits,adVariables.stateClass,userData.mbusinoName,userData.mbusinoName,MBUSINO_VERSION,adVariables.deviceClassString,userData.mbusInterval / 1000 * 3 * (userData.mbusSlaves > 0 ? userData.mbusSlaves : 1),userData.mbusinoName);
     sprintf(adVariables.bufferTopic,adTopicMbus,userData.mbusinoName,address,haCounter,"power_calc");
     client.publish(adVariables.bufferTopic, adVariables.bufferValue, true);                   
   } 
