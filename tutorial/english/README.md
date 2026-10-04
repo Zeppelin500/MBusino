@@ -49,7 +49,7 @@ The third record message is a autodiscover message and every 256th recurring.
 
 ### per hand
 
-With the Software **MQTT Explorer** at PC or **MyMQTT** at your mobile you will see the mqtt messages.
+With the Software **MQTT Explorer** at PC or [**MQTT Browser**](https://github.com/ZeppelinsBot/MQTTBrowser) at your mobile you will see the mqtt messages.
 in attachement you will find a HA Config file as example. But you have to change something to your MQTT messages.
 
 Every value has its own sensor. **state_topic** is the MQTT topic, depends on the topics at MQTT Explorer.

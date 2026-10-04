@@ -67,6 +67,7 @@ To save money, I place omnibus orders for all parts beside the M-Bus Master.
 <img src="pictures/MBusino_Setup_Portal.jpg" width="300" height="600">
 
 ## MQTT Output
+Use MQTT Explorer (PC) or [**MQTT Browser**](https://github.com/ZeppelinsBot/MQTTBrowser) (Android) to see the MQTT Output.
 
 <img src="pictures/mqttOutput.png" width="300">
 

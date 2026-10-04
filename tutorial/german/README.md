@@ -52,7 +52,7 @@ Die dritte MQTT-Nachricht ist eine Autodiscover Nachricht. Danach jede 256te.
 
 ### per Hand
 
-Über die Software **MQTT Explorer** am PC oder **MyMQTT** auf Android könnt ihr jetzt sehen was gesendet wird. Ich empfehehle den MQTT Explorer.
+Über die Software **MQTT Explorer** am PC oder [**MQTT Browser**](https://github.com/ZeppelinsBot/MQTTBrowser) auf Android könnt ihr jetzt sehen was gesendet wird. Ich empfehehle den MQTT Explorer.
 Je nach M-Bus Gerät sehen die Nachrichten unterschiedlich aus. Im Anhang findet ihr eine Beispielauszug der Config für HomeAssistant mit einem Sensostar U.
 Je nach dem was ihr empfangt, muss die Datei angepasst werden.
 
