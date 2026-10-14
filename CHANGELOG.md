@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2026-10-14
+
+### Added
+
+- **Home Assistant `device_class` for M-Bus volume now follows the meter medium (issue #67):** cumulative volume records are reported as `water` on water meters and `gas` on gas meters (anything else stays the generic `volume`). The medium is read from the already decoded M-Bus header and passed to `MBusinoLib::getDeviceClass()`. Previously every m³ value was published as `volume`, so water meters did not show up as water consumption in HA.
+- Broader HA `device_class` coverage via MBusinoLib 0.10.0 (illuminance, irradiance, CO₂/CO, particulate matter PM1/2.5/10, wind speed, pH, battery, moisture, distance, sound pressure, apparent/reactive power, precipitation).
+
+### Changed
+
+- M-Bus consumption sensors now use `state_class: total_increasing` (Home Assistant detects counter resets/roll-overs automatically); instantaneous values use `measurement`.
+- Depends on MBusinoLib 0.10.0.
+
 ## [1.1.2] - 2026-10-04
 
 ### Fixed

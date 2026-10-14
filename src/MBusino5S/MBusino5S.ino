@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.1.2"
+#define MBUSINO_VERSION "1.2.0"
 
 // EEPROM flag constants
 #define EEPROM_CALIBRATED_FLAG 500
@@ -829,7 +829,7 @@ void loop() {
                   strcpy(adVariables.haUnits,""); 
                 }
                 strcpy(adVariables.stateClass,payload.getStateClass(code));
-                strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
+                strcpy(adVariables.deviceClass,payload.getDeviceClass(code, (uint8_t)headerObj["medium_code"].as<int>()));     
                 haHandoverMbus(recordCounter[currentAddressCounter]+i+1, engelmann, address);
               }else{               
 
