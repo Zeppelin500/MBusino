@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.1.2"
+#define MBUSINO_VERSION "1.2.0"
 
 #define MBUS_ADDRESS 254
 
@@ -677,7 +677,7 @@ void loop() {
                   strcpy(adVariables.haUnits,""); 
                 }
                 strcpy(adVariables.stateClass,payload.getStateClass(code));
-                strcpy(adVariables.deviceClass,payload.getDeviceClass(code));     
+                strcpy(adVariables.deviceClass,payload.getDeviceClass(code, (uint8_t)headerObj["medium_code"].as<int>()));     
                 haHandoverMbus(recordCounter+i+1, engelmann);
               }else{
                 //two messages per value, values comes as number or as ASCII string or both
