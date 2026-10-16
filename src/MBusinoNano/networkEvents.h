@@ -34,6 +34,9 @@ void onEvent(arduino_event_id_t event) {
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       Serial.println("ETH Disconnected");
       eth_connected = false;
+      if(gotIP == true){ // cable was unplugged, start the DHCP timeout again at the next link up
+        ethLinkSeen = false;
+      }
       gotIP = false;
       break;
     case ARDUINO_EVENT_ETH_STOP:

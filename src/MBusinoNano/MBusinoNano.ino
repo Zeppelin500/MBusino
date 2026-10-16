@@ -42,7 +42,13 @@ You should have received a copy of the GNU General Public License along with thi
 #define MBUS_ADDRESS 254
 
 #define EEPROM_ETH_LINK_MODE 40 // last working Ethernet link mode, 1 = forced 10M full duplex, otherwise auto negotiation
+#define EEPROM_ETH_MODE_SETTING 41 // Ethernet link mode chosen in the web interface, see ETH_MODE_...
 #define ETH_DHCP_TIMEOUT 15000 // ms after link up without IP before the other link mode is tried
+#define ETH_LINK_TIMEOUT 20000 // ms after ETH.begin() without link up before the other link mode is tried
+
+#define ETH_MODE_AUTO 0      // try auto negotiation and forced 10M full duplex, remember the working one
+#define ETH_MODE_AUTONEG 1   // always auto negotiation
+#define ETH_MODE_FORCED10M 2 // always forced 10M full duplex
 
 
 // Pins for an ESP32 C3 Supermini standard SPI
@@ -137,6 +143,9 @@ bool gotIP = false;
 bool ethForced10M = false; // false = auto negotiation, true = forced 10M full duplex (needed by some strict equipment, e.g. Fritzbox 7590)
 bool ethForced10MStored = false; // link mode saved in EEPROM
 bool ethLinkSeen = false; // link was up at least once since the last ETH.begin()
+bool ethModeConfirmed = false; // got an IP with the current link mode since start
+uint8_t ethModeSetting = ETH_MODE_AUTO;
+unsigned long timerETHbegin = 0;
 
 unsigned long timerMQTT = 15000;
 unsigned long timerMbus = 0;
@@ -182,6 +191,7 @@ void setEthLinkMode(){
     ETH.setLinkSpeed(10);
   }
   ethLinkSeen = false;
+  timerETHbegin = millis();
 }
 
 void setup() {
@@ -223,6 +233,15 @@ void setup() {
   EEPROM.get(EEPROM_ETH_LINK_MODE, ethLinkMode);
   ethForced10M = (ethLinkMode == 1);
   ethForced10MStored = ethForced10M;
+  EEPROM.get(EEPROM_ETH_MODE_SETTING, ethModeSetting);
+  if(ethModeSetting > ETH_MODE_FORCED10M){ // EEPROM never written
+    ethModeSetting = ETH_MODE_AUTO;
+  }
+  if(ethModeSetting == ETH_MODE_AUTONEG){
+    ethForced10M = false;
+  }else if(ethModeSetting == ETH_MODE_FORCED10M){
+    ethForced10M = true;
+  }
   EEPROM.commit();
   EEPROM.end();
 
@@ -230,7 +249,7 @@ void setup() {
     userData.telegramDebug = 0;
   }
 
-  snprintf(html_buffer, sizeof(html_buffer), index_html,userData.ssid,userData.mbusinoName,userData.haAutodisc,userData.telegramDebug,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
+  snprintf(html_buffer, sizeof(html_buffer), index_html,userData.ssid,userData.mbusinoName,userData.haAutodisc,userData.telegramDebug,ethModeSetting,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser);
   
   WiFi.onEvent(WiFiEvent);
   WiFi.hostname(userData.mbusinoName);
@@ -333,9 +352,13 @@ void loop() {
   ArduinoOTA.handle();
 
 
-  if(gotIP == false && eth_connected == true && (millis() - timerETHmessage > ETH_DHCP_TIMEOUT) && waitForRestart == false){
-    ethForced10M = !ethForced10M; // try the other link mode
-    Serial.printf("no IP received, restart ETH with %s\n", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+  bool ethNoIP = gotIP == false && eth_connected == true && (millis() - timerETHmessage > ETH_DHCP_TIMEOUT);
+  bool ethNoLink = ethLinkSeen == false && ethModeConfirmed == false && ethModeSetting == ETH_MODE_AUTO && (millis() - timerETHbegin > ETH_LINK_TIMEOUT); // with the wrong mode some W5500 get no link at all
+  if((ethNoIP == true || ethNoLink == true) && waitForRestart == false){
+    if(ethModeSetting == ETH_MODE_AUTO && ethModeConfirmed == false){
+      ethForced10M = !ethForced10M; // try the other link mode
+    }
+    Serial.printf("%s, restart ETH with %s\n", ethNoLink ? "no link" : "no IP received", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
     timerETHmessage = millis();
     ETH.end();
     delay(200);
@@ -345,13 +368,16 @@ void loop() {
     ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI,16);
   }
 
-  if(gotIP == true && ethForced10M != ethForced10MStored){ // remember the working link mode for the next boot
-    uint8_t ethLinkMode = ethForced10M;
-    EEPROM.begin(512);
-    EEPROM.put(EEPROM_ETH_LINK_MODE, ethLinkMode);
-    EEPROM.commit();
-    EEPROM.end();
-    ethForced10MStored = ethForced10M;
+  if(gotIP == true && ethModeConfirmed == false){
+    ethModeConfirmed = true;
+    if(ethModeSetting == ETH_MODE_AUTO && ethForced10M != ethForced10MStored){ // remember the working link mode for the next boot
+      uint8_t ethLinkMode = ethForced10M;
+      EEPROM.begin(512);
+      EEPROM.put(EEPROM_ETH_LINK_MODE, ethLinkMode);
+      EEPROM.commit();
+      EEPROM.end();
+      ethForced10MStored = ethForced10M;
+    }
   }
 /*
   if(gotIP == false && eth_connected == true && (millis() - timerETHmessage > 1000) && waitForRestart == false){
@@ -375,6 +401,7 @@ void loop() {
     EEPROM.put(100, userData);
     credentialsSaved = EEPROM_CREDENTIALS_NEW;
     EEPROM.put(eeAddrCredentialsSaved, credentialsSaved);
+    EEPROM.put(EEPROM_ETH_MODE_SETTING, ethModeSetting);
     EEPROM.commit();
     EEPROM.end();
     timerReboot = millis();
@@ -440,6 +467,7 @@ void loop() {
       client.publish(String(String(userData.mbusinoName) + "/settings/wl_Connected").c_str(), String(WL_CONNECTED).c_str());    
       client.publish(String(String(userData.mbusinoName) + "/settings/apMode").c_str(), String(apMode).c_str());    
       client.publish(String(String(userData.mbusinoName) + "/settings/eth_connected").c_str(), String(eth_connected).c_str());    
+      client.publish(String(String(userData.mbusinoName) + "/settings/ethLinkMode").c_str(), ethForced10M ? "forced 10M full duplex" : "auto negotiation");
 
       client.publish(String(String(userData.mbusinoName) + "/settings/ssid").c_str(), userData.ssid); 
       //client.publish(String(String(userData.mbusinoName) + "/settings/password").c_str(), String(userData.password)); 

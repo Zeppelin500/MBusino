@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- **W5500 Ethernet works again on switch ports with auto-negotiation (MBusinoNano, MBusinoNano5S):** since 1.0.2 the W5500 was always forced to 10M full duplex. On a switch port with auto-negotiation (the default, e.g. UniFi) this results in a duplex mismatch (port falls back to half duplex), DHCP fails and the 2 s ETH restart loop makes the port flap. Ethernet now starts with auto-negotiation and switches to forced 10M full duplex (and back) if no IP is received within 15 s after link up. The working link mode is stored in EEPROM and used on the next boot, so equipment that needs forced 10M (Fritzbox 7590, PoE extenders) keeps working.
-- The DHCP timeout now starts at the first link up after `ETH.begin()`; link flapping no longer restarts it.
+- **W5500 Ethernet works again on switch ports with auto-negotiation (MBusinoNano, MBusinoNano5S):** since 1.0.2 the W5500 was always forced to 10M full duplex. On a switch port with auto-negotiation (the default, e.g. UniFi) this results in a duplex mismatch (port falls back to half duplex), DHCP fails and the 2 s ETH restart loop makes the port flap. Ethernet now starts with auto-negotiation and switches to forced 10M full duplex (and back) if no IP is received within 15 s after link up, or if no link comes up at all within 20 s after `ETH.begin()`. Once a mode got an IP, it is kept until the next boot. The working link mode is stored in EEPROM and used on the next boot, so equipment that needs forced 10M (Fritzbox 7590, PoE extenders) keeps working.
+- The DHCP timeout now starts at the first link up after `ETH.begin()`; link flapping no longer restarts it. After unplugging a working cable it starts again at the next link up.
 - MQTT now also connects via Ethernet while the setup AP is running, if Ethernet got its IP after the AP was started.
+
+### Added
+
+- **Ethernet link mode setting in the web interface (MBusinoNano, MBusinoNano5S):** "automatic" (default, as described above), "auto negotiation" or "forced 10M full duplex". The fixed modes skip the automatic switching. The active mode is published as `<name>/settings/ethLinkMode`.
 
 ## [1.2.0] - 2026-10-14
 
