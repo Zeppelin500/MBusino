@@ -1,4 +1,10 @@
 void setupServer(){
+  server.on("/mbus.json", HTTP_GET, handleMbusJson);
+  server.on("/mbus/poll", HTTP_POST, handleMbusPoll); // before "/mbus", that handler matches "/mbus/..." too
+  server.on("/mbus", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/html", mbus_html);
+  });
+
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
   request->send_P(200, "text/html", html_buffer); 
   Serial.println("Webserver: Client Connected");

@@ -173,6 +173,7 @@ uint32_t minFreeHeap = 0;
 //outsourced program parts
 #include "networkEvents.h"
 #include "html.h"
+#include "mbusDebug.h"
 #include "mqtt.h"
 #include "guiServer.h"
 #include "autodiscover.h"
@@ -273,6 +274,7 @@ void setup() {
     Serial.println("MQTT set connection via Wifi");
   }
 
+  mbusLogBegin();
   client.setServer(userData.broker, userData.mqttPort);
   client.setCallback(callback);
 
@@ -420,7 +422,7 @@ void loop() {
   }
 
   if (!client.connected() ) {  
-    if((millis() - timerReconnect) > 5000){
+    if((millis() - timerReconnect) > 5000 && mbusLoopStatus == 0){ // a blocking connect attempt must not disturb a running M-Bus request
       Serial.println("MQTT no connection");   
       if(apMode == false){   
         reconnect();
@@ -485,8 +487,9 @@ void loop() {
       client.publish(String(String(userData.mbusinoName) + "/settings/freeHeap").c_str(), String(ESP.getFreeHeap()).c_str()); 
       client.publish(String(String(userData.mbusinoName) + "/settings/minFreeHeap").c_str(), String(minFreeHeap).c_str()); 
     }
+  }
 
-    ////////// M- Bus ###############################################
+    ////////// M- Bus ############################################### runs also without MQTT, the web interface shows the telegrams (/mbus)
 
 
     if(firstrun == true){
@@ -631,6 +634,7 @@ void loop() {
           recordCounter[currentAddressCounter] = 0;
           fcb[currentAddressCounter] = false;              
           client.publish(String(String(userData.mbusinoName)  +"/MBus/SlaveAddress"+String(currentAddress)+ "/MBUSerror").c_str(), "no_Data_received");
+          mbusLogAdd(MBUS_LOG_NO_DATA, currentAddress, NULL);
           mbusLoopStatus = 0;
           shc = true;
           mtPolling = false;
@@ -648,6 +652,7 @@ void loop() {
           bool mbus_good_frame = false;
           byte mbus_data[MBUS_DATA_SIZE] = { 0 };
           mbus_good_frame = mbus.get_response(mbus_data, sizeof(mbus_data));
+          mbusLogAdd(mbus_good_frame ? MBUS_LOG_OK : MBUS_LOG_BAD_FRAME, currentAddress, mbus_data);
 
           if(userData.telegramDebug == true){
           //------------------ only for debug, you will recieve the whole M-Bus telegram bytewise in HEX for analysis -----------------
@@ -683,6 +688,7 @@ void loop() {
             address = mbus_data[5]; 
             
             serializeJson(doc, jsonstring);
+            mbusLogSetJson(address, jsonstring);
             client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/error").c_str(), String(payload.getError()).c_str());  // kann auskommentiert werden wenn es läuft
             client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/jsonstring").c_str(), jsonstring);  
             client.publish(String(String(userData.mbusinoName) + "/MBus/SlaveAddress"+String(address)+ "/fcb").c_str(), String(fcb[currentAddressCounter]).c_str());      
@@ -806,7 +812,6 @@ void loop() {
     }
 
     heapCalc();
-  }
 }
 
 void heapCalc(){

@@ -10,6 +10,9 @@ void reconnect() {
     conCounter++;
     if(conCounter == 1){
       client.publish(String(String(userData.mbusinoName) + "/start").c_str(), "Bin hochgefahren, WLAN und MQTT steht");
+      if(adMbusMessageCounter > 2){ // M-Bus was already polled without MQTT, send the autodiscovery with the next telegrams
+        adMbusMessageCounter = 2;
+      }
     }
     else{
       client.publish(String(String(userData.mbusinoName) + "/reconnect").c_str(), "Online again!");
