@@ -12,7 +12,10 @@ void onEvent(arduino_event_id_t event) {
     case ARDUINO_EVENT_ETH_CONNECTED: 
       Serial.println("ETH Connected"); 
       eth_connected = true;
-      timerETHmessage = millis();
+      if(ethLinkSeen == false){ // start the DHCP timeout at the first link up, link flapping must not restart it
+        ethLinkSeen = true;
+        timerETHmessage = millis();
+      }
       timerNetworkChange = millis();
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:

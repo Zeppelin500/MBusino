@@ -41,6 +41,9 @@ You should have received a copy of the GNU General Public License along with thi
 
 #define MBUS_ADDRESS 254
 
+#define EEPROM_ETH_LINK_MODE 40 // last working Ethernet link mode, 1 = forced 10M full duplex, otherwise auto negotiation
+#define ETH_DHCP_TIMEOUT 15000 // ms after link up without IP before the other link mode is tried
+
 
 // Pins for an ESP32 C3 Supermini standard SPI
 #ifndef ETH_PHY_CS
@@ -131,6 +134,9 @@ bool wifiReconnect = false;
 uint8_t usedMQTTconection = 0;
 bool networkLost = false;
 bool gotIP = false;
+bool ethForced10M = false; // false = auto negotiation, true = forced 10M full duplex (needed by some strict equipment, e.g. Fritzbox 7590)
+bool ethForced10MStored = false; // link mode saved in EEPROM
+bool ethLinkSeen = false; // link was up at least once since the last ETH.begin()
 
 unsigned long timerMQTT = 15000;
 unsigned long timerMbus = 0;
@@ -168,6 +174,16 @@ uint32_t minFreeHeap = 0;
 
 void heapCalc();
 
+// apply the Ethernet link mode, must be called before every ETH.begin()
+void setEthLinkMode(){
+  ETH.setAutoNegotiation(!ethForced10M);
+  if(ethForced10M == true){
+    ETH.setFullDuplex(true);
+    ETH.setLinkSpeed(10);
+  }
+  ethLinkSeen = false;
+}
+
 void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT); // LED on if MQTT connectet to server
@@ -203,6 +219,10 @@ void setup() {
   else if(credentialsSaved == EEPROM_CREDENTIALS_NEW){  // Version after 1.0 (size of some variables has changed)
     EEPROM.get(100, userData );
   }
+  uint8_t ethLinkMode = 0;
+  EEPROM.get(EEPROM_ETH_LINK_MODE, ethLinkMode);
+  ethForced10M = (ethLinkMode == 1);
+  ethForced10MStored = ethForced10M;
   EEPROM.commit();
   EEPROM.end();
 
@@ -220,9 +240,7 @@ void setup() {
   
   Network.onEvent(onEvent);
   delay(100);
-  ETH.setAutoNegotiation(false);
-  ETH.setFullDuplex(true);
-  ETH.setLinkSpeed(10);
+  setEthLinkMode();
   ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI);
   delay(2000);
 
@@ -315,17 +333,25 @@ void loop() {
   ArduinoOTA.handle();
 
 
-  if(gotIP == false && eth_connected == true && (millis() - timerETHmessage > 2000) && waitForRestart == false){
-    Serial.println("no IP received, restart ETH");
+  if(gotIP == false && eth_connected == true && (millis() - timerETHmessage > ETH_DHCP_TIMEOUT) && waitForRestart == false){
+    ethForced10M = !ethForced10M; // try the other link mode
+    Serial.printf("no IP received, restart ETH with %s\n", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
     timerETHmessage = millis();
     ETH.end();
     delay(200);
     //SPI.end();
     delay(200);
-    ETH.setAutoNegotiation(false);
-    ETH.setFullDuplex(true);
-    ETH.setLinkSpeed(10);
+    setEthLinkMode();
     ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI,16);
+  }
+
+  if(gotIP == true && ethForced10M != ethForced10MStored){ // remember the working link mode for the next boot
+    uint8_t ethLinkMode = ethForced10M;
+    EEPROM.begin(512);
+    EEPROM.put(EEPROM_ETH_LINK_MODE, ethLinkMode);
+    EEPROM.commit();
+    EEPROM.end();
+    ethForced10MStored = ethForced10M;
   }
 /*
   if(gotIP == false && eth_connected == true && (millis() - timerETHmessage > 1000) && waitForRestart == false){
@@ -395,7 +421,7 @@ void loop() {
   if (!client.connected() ) {  
     if((millis() - timerReconnect) > 5000){
       Serial.println("MQTT no connection");   
-      if(apMode == false){   
+      if(apMode == false || gotIP == true){ // Ethernet may come up after the AP was started   
         reconnect();
       }
       else{
