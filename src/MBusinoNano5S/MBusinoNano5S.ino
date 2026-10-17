@@ -379,6 +379,12 @@ void setup() {
 
 
 void loop() {
+  //--- TEST DIAGNOSTICS (remove before merge): distinguishes "loop() never ran" from "stalled inside loop()" ---
+  static bool enterPrinted = false;
+  if(enterPrinted == false){
+    enterPrinted = true;
+    Serial.printf("[LOOP] enter at %lu ms\n", millis());
+  }
   //delay(50);
   heapCalc();
 
