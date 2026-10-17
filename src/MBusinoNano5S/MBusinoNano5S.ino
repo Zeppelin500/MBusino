@@ -360,6 +360,7 @@ void setup() {
   });
 
   ArduinoOTA.setPassword((const char *)"mbusino");
+  ArduinoOTA.setMdnsEnabled(false); // the mDNS component crashes (IGMP join in lwIP) when a netif appears or is torn down while it is running, e.g. Ethernet coming up while the setup AP is shutting down; MBusino does not use mDNS
   server.onNotFound(onRequest);
   ArduinoOTA.begin();
   server.begin();
