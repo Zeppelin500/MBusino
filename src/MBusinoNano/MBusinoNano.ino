@@ -352,28 +352,10 @@ void setup() {
 
 
 void loop() {
-  //--- TEST DIAGNOSTICS (remove before merge): distinguishes "loop() never ran" from "stalled inside loop()" ---
-  static bool enterPrinted = false;
-  if(enterPrinted == false){
-    enterPrinted = true;
-    Serial.printf("[LOOP] enter at %lu ms\n", millis());
-  }
   //delay(50);
   heapCalc();
 
   ArduinoOTA.handle();
-
-  //--- TEST DIAGNOSTICS (remove before merge): show when loop() really runs ---
-  static bool firstLoopDone = false;
-  if(firstLoopDone == false){
-    firstLoopDone = true;
-    Serial.printf("[LOOP] first iteration at %lu ms\n", millis());
-  }
-  static unsigned long lastHeartbeat = 0;
-  if((millis() - lastHeartbeat) > 5000){
-    lastHeartbeat = millis();
-    Serial.printf("[LOOP] alive at %lu ms\n", millis());
-  }
 
 
   bool ethNoIP = gotIP == false && eth_connected == true && (millis() - timerETHmessage > ETH_DHCP_TIMEOUT);
