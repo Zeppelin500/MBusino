@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-1.2.0-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-1.3.0-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus --> MQTT-Gateway with shields for ESPs
 
 A **Plug and Play** solution.
@@ -65,6 +65,12 @@ To save money, I place omnibus orders for all parts beside the M-Bus Master.
 * In known networks, you will find the IP of the portal under **MBusino** in your router.
 
 <img src="pictures/MBusino_Setup_Portal.jpg" width="300" height="600">
+
+## M-Bus debug page
+
+Open `http://<MBusino>/mbus` (while MQTT is connected) to watch the last 10 M-Bus polls - time, address, status (OK / no data / bad frame) and the raw telegram in hex - plus the last decoded telegram (header and records). The page refreshes every 2 s, shows the time until the next poll and has a **Poll now** button; the same data is available as JSON at `/mbus.json`.
+
+Available on all ESP32 variants (MBusino, MBusino5S, MBusinoNano, MBusinoNano5S).
 
 ## MQTT Output
 Use MQTT Explorer (PC) or [**MQTT Browser**](https://github.com/ZeppelinsBot/MQTTBrowser) (Android) to see the MQTT Output.
