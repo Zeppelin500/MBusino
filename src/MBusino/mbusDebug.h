@@ -1,11 +1,14 @@
 // M-Bus debug log for the web interface (/mbus): the last received telegrams and the last decoded telegram.
 // WARNING: the web server runs in a separate FreeRTOS task, every access is guarded by mbusLogMutex!
-
-#define MBUS_LOG_SIZE 10 // number of telegrams kept in the log
+// The page is ESP32-only (S2 Mini / C3): the ESP8266 core does not provide the FreeRTOS semaphore API.
 
 #define MBUS_LOG_OK 0
 #define MBUS_LOG_NO_DATA 1
 #define MBUS_LOG_BAD_FRAME 2
+
+#if defined(ESP32)
+
+#define MBUS_LOG_SIZE 10 // number of telegrams kept in the log
 
 struct mbusLogEntry {
   uint32_t time;    // millis() when the entry was added
@@ -134,3 +137,13 @@ void handleMbusPoll(AsyncWebServerRequest *request){
   }
   request->send(200, "text/plain", "ok");
 }
+
+#else // ESP8266: no FreeRTOS semaphores, the debug page stays unavailable
+
+inline void mbusLogBegin() {}
+inline void mbusLogAdd(uint8_t status, uint8_t address, const uint8_t *data) { (void)status; (void)address; (void)data; }
+inline void mbusLogSetJson(uint8_t address, const char *json) { (void)address; (void)json; }
+inline void handleMbusJson(AsyncWebServerRequest *request) { request->send(503, "text/plain", "debug page not available on ESP8266"); }
+inline void handleMbusPoll(AsyncWebServerRequest *request) { request->send(200, "text/plain", "ok"); }
+
+#endif
