@@ -7,11 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- **M-Bus debug page in the web interface (MBusinoNano, MBusinoNano5S):** `http://<MBusino>/mbus` shows the last 10 polls (time, address, status OK / no data / bad frame, raw telegram in hex) and the last decoded telegram (header and records). It refreshes every 2 s, shows the time until the next poll and has a "Poll now" button. The data is also available as JSON at `/mbus.json`. The page is linked on the setup page.
-
-### Changed
-
-- M-Bus polling and decoding now also run without an MQTT connection, so the debug page works while setting up a meter. MQTT reconnect attempts only start while no M-Bus request is running. If MQTT connects for the first time after M-Bus polling already started, the Home Assistant autodiscovery is sent with the next telegrams.
+- **M-Bus debug page in the web interface (MBusinoNano, MBusinoNano5S):** `http://<MBusino>/mbus` shows the last 10 polls (time, address, status OK / no data / bad frame, raw telegram in hex) and the last decoded telegram (header and records). It refreshes every 2 s, shows the time until the next poll and has a "Poll now" button. The data is also available as JSON at `/mbus.json`. The page is linked on the setup page. The M-Bus state machine keeps running only while MQTT is connected (unchanged), so the page shows the telegrams of the running MQTT session.
 
 ## [1.2.0] - 2026-10-14
 
