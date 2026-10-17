@@ -5,9 +5,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-17
+
 ### Added
 
-- **M-Bus debug page in the web interface (MBusinoNano, MBusinoNano5S):** `http://<MBusino>/mbus` shows the last 10 polls (time, address, status OK / no data / bad frame, raw telegram in hex) and the last decoded telegram (header and records). It refreshes every 2 s, shows the time until the next poll and has a "Poll now" button. The data is also available as JSON at `/mbus.json`. The page is linked on the setup page. The M-Bus state machine keeps running only while MQTT is connected (unchanged), so the page shows the telegrams of the running MQTT session.
+- **M-Bus debug page in the web interface (all variants):** `http://<MBusino>/mbus` shows the last 10 polls (time, address, status OK / no data / bad frame, raw telegram in hex) and the last decoded telegram (header and records). It refreshes every 2 s, shows the time until the next poll and has a "Poll now" button. The data is also available as JSON at `/mbus.json`. The page is linked on the setup page. The M-Bus state machine keeps running only while MQTT is connected (unchanged), so the page shows the telegrams of the running MQTT session.
+- **Ethernet link mode setting in the web interface (MBusinoNano, MBusinoNano5S):** "automatic" (default, as described above), "auto negotiation" or "forced 10M full duplex". The fixed modes skip the automatic switching. The active mode is published as `<name>/settings/ethLinkMode`.
+- Verbose `[ETH]` / `[NET]` serial logging for every transport and link mode decision (boot state, mode switch, AP shutdown, Wi-Fi shutdown, Ethernet loss and recovery), so the behaviour can be followed on the serial console during a test.
+
 ### Fixed
 
 - **W5500 Ethernet works again on switch ports with auto-negotiation (MBusinoNano, MBusinoNano5S):** since 1.0.2 the W5500 was always forced to 10M full duplex. On a switch port with auto-negotiation (the default, e.g. UniFi) this results in a duplex mismatch (port falls back to half duplex), DHCP fails and the 2 s ETH restart loop makes the port flap. Ethernet now starts with auto-negotiation and switches to forced 10M full duplex (and back) if no IP is received within 15 s after link up, or if no link comes up at all within 8 s after `ETH.begin()`. Once a mode got an IP, it is kept until the next boot. The working link mode is stored in EEPROM and used on the next boot, so equipment that needs forced 10M (Fritzbox 7590, PoE extenders) keeps working.
@@ -17,11 +22,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Controlled restart after losing a working Ethernet connection (MBusinoNano, MBusinoNano5S):** if an established Ethernet connection (link/IP) does not come back within 15 s, the device restarts and the boot re-picks the transport (Ethernet -> Wi-Fi -> setup AP). Previously a lost IP triggered a restart after only 1 s, while a pure link loss triggered none at all (the device could stay unreachable).
 - The "no link" timeout was reduced from 20 s to 8 s; link up is decided at PHY level well below 1 s, so strict equipment (Fritzbox 7590, PoE extenders) falls back to forced 10M full duplex noticeably faster.
 - **Crash when the setup AP was switched off (MBusinoNano, MBusinoNano5S):** the mDNS component started by `ArduinoOTA.begin()` died with a Guru Meditation (Load access fault in `igmp_lookfor_group`) when a netif appeared or was torn down - i.e. exactly when Ethernet got its IP while the setup AP was being shut down. Disabling mDNS for the OTA service removes the crash.
-
-### Added
-
-- **Ethernet link mode setting in the web interface (MBusinoNano, MBusinoNano5S):** "automatic" (default, as described above), "auto negotiation" or "forced 10M full duplex". The fixed modes skip the automatic switching. The active mode is published as `<name>/settings/ethLinkMode`.
-- Verbose `[ETH]` / `[NET]` serial logging for every transport and link mode decision (boot state, mode switch, AP shutdown, Wi-Fi shutdown, Ethernet loss and recovery), so the behaviour can be followed on the serial console during a test.
 
 ### Changed
 
