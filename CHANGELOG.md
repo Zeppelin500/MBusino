@@ -5,6 +5,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **M-Bus debug page in the web interface (MBusinoNano, MBusinoNano5S):** `http://<MBusino>/mbus` shows the last 10 polls (time, address, status OK / no data / bad frame, raw telegram in hex) and the last decoded telegram (header and records). It refreshes every 2 s, shows the time until the next poll and has a "Poll now" button. The data is also available as JSON at `/mbus.json`. The page is linked on the setup page. The M-Bus state machine keeps running only while MQTT is connected (unchanged), so the page shows the telegrams of the running MQTT session.
 ### Fixed
 
 - **W5500 Ethernet works again on switch ports with auto-negotiation (MBusinoNano, MBusinoNano5S):** since 1.0.2 the W5500 was always forced to 10M full duplex. On a switch port with auto-negotiation (the default, e.g. UniFi) this results in a duplex mismatch (port falls back to half duplex), DHCP fails and the 2 s ETH restart loop makes the port flap. Ethernet now starts with auto-negotiation and switches to forced 10M full duplex (and back) if no IP is received within 15 s after link up, or if no link comes up at all within 8 s after `ETH.begin()`. Once a mode got an IP, it is kept until the next boot. The working link mode is stored in EEPROM and used on the next boot, so equipment that needs forced 10M (Fritzbox 7590, PoE extenders) keeps working.
