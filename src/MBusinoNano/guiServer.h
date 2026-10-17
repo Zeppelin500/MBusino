@@ -74,6 +74,14 @@ void setupServer(){
           credentialsReceived = true;
           }
       }      
+      if (request->hasParam("ethMode")) {
+        inputMessage = request->getParam("ethMode")->value();
+        inputParam = "ethMode";
+        if(inputMessage != NULL && inputMessage.toInt() <= ETH_MODE_FORCED10M){
+          ethModeSetting = inputMessage.toInt();
+          credentialsReceived = true;
+          }
+      }
       if (request->hasParam("mbusInterval")) {
         inputMessage = request->getParam("mbusInterval")->value();
         inputParam = "mbusInterval";

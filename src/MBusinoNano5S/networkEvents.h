@@ -12,25 +12,40 @@ void onEvent(arduino_event_id_t event) {
     case ARDUINO_EVENT_ETH_CONNECTED: 
       Serial.println("ETH Connected"); 
       eth_connected = true;
-      timerETHmessage = millis();
+      if(ethLinkSeen == false){ // start the DHCP timeout at the first link up, link flapping must not restart it
+        ethLinkSeen = true;
+        timerETHmessage = millis();
+      }
       timerNetworkChange = millis();
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
-      Serial.println("ETH Got IP");
+      Serial.printf("[ETH] %lu ms: Got IP\n", millis());
       Serial.println(ETH);
       eth_connected = true;
       gotIP = true;
+      if(ethLostSince != 0){ // Ethernet came back within the grace period
+        Serial.printf("[ETH] %lu ms: back after %lu ms, no restart\n", millis(), millis() - ethLostSince);
+        ethLostSince = 0;
+      }
       break;
     case ARDUINO_EVENT_ETH_LOST_IP:
-      Serial.println("ETH Lost IP");
+      Serial.printf("[ETH] %lu ms: Lost IP\n", millis());
       eth_connected = false;
-      Serial.println("Lost ETH IP, restart soon");
-      timerReboot = millis();
-      waitForRestart = true;
+      if(ethLostSince == 0){ // start the grace period, loop() restarts if Ethernet does not come back
+        ethLostSince = millis();
+        Serial.printf("[ETH] %lu ms: grace period started, restart if Ethernet does not return\n", millis());
+      }
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
-      Serial.println("ETH Disconnected");
+      Serial.println("[ETH] Disconnected");
       eth_connected = false;
+      if(gotIP == true){ // cable was unplugged, start the DHCP timeout again at the next link up
+        ethLinkSeen = false;
+        if(ethLostSince == 0){ // start the grace period only for an established connection
+          ethLostSince = millis();
+          Serial.printf("[ETH] %lu ms: grace period started, restart if Ethernet does not return\n", millis());
+        }
+      }
       gotIP = false;
       break;
     case ARDUINO_EVENT_ETH_STOP:

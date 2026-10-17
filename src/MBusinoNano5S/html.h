@@ -71,6 +71,12 @@ const char index_html[] PROGMEM = R"rawliteral(
           <option value='1'>(1) yes</option>
           <option value='' selected>choose option</option>
         </select>  stored: %u <br><br>             
+        <label for='ethMode'>Ethernet link mode:</label><br><select name='ethMode' id='ethMode'>
+          <option value='0'>(0) automatic</option>
+          <option value='1'>(1) auto negotiation</option>
+          <option value='2'>(2) forced 10M full duplex</option>
+          <option value='' selected>choose option</option>
+        </select>  stored: %u <br><br>
         <div class='form-floating'><label>M-Bus publish interval sec.</label><input type='text' value='%u' class='form-control' name='mbusInterval'></div>
         <div class='form-floating'><label>MQTT Broker</label><input type='text' value='%s' class='form-control' maxlength = '64' name='broker'></div>
         <div class='form-floating'><label>MQTT Port</label><input type='text' value='%u' class='form-control' name='mqttPort'></div>
