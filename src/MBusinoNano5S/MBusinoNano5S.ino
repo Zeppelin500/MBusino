@@ -44,7 +44,8 @@ You should have received a copy of the GNU General Public License along with thi
 #define EEPROM_ETH_LINK_MODE 40 // last working Ethernet link mode, 1 = forced 10M full duplex, otherwise auto negotiation
 #define EEPROM_ETH_MODE_SETTING 41 // Ethernet link mode chosen in the web interface, see ETH_MODE_...
 #define ETH_DHCP_TIMEOUT 15000 // ms after link up without IP before the other link mode is tried
-#define ETH_LINK_TIMEOUT 20000 // ms after ETH.begin() without link up before the other link mode is tried
+#define ETH_LINK_TIMEOUT 8000 // ms after ETH.begin() without link up before the other link mode is tried. Link up is decided at PHY level well below 1 s, so 8 s is already a generous margin; the previous 20 s only delayed the fallback for strict equipment (Fritzbox 7590, PoE extenders)
+#define ETH_LOSS_GRACE 15000 // ms an already working Ethernet connection (IP) may stay away before a controlled restart; the boot then re-picks the transport (Ethernet -> Wi-Fi -> setup AP)
 
 #define ETH_MODE_AUTO 0      // try auto negotiation and forced 10M full duplex, remember the working one
 #define ETH_MODE_AUTONEG 1   // always auto negotiation
@@ -158,6 +159,7 @@ bool ethLinkSeen = false; // link was up at least once since the last ETH.begin(
 bool ethModeConfirmed = false; // got an IP with the current link mode since start
 uint8_t ethModeSetting = ETH_MODE_AUTO;
 unsigned long timerETHbegin = 0;
+unsigned long ethLostSince = 0; // millis() when an established Ethernet connection (IP) was lost, 0 = not lost; used for the restart grace period in loop()
 
 unsigned long timerMQTT = 15000;
 unsigned long timerMbus = 0;
@@ -203,6 +205,7 @@ void setEthLinkMode(){
   }
   ethLinkSeen = false;
   timerETHbegin = millis();
+  Serial.printf("[ETH] link mode applied: %s\n", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
 }
 
 void setup() {
@@ -260,6 +263,7 @@ void setup() {
   }else if(ethModeSetting == ETH_MODE_FORCED10M){
     ethForced10M = true;
   }
+  Serial.printf("[ETH] stored link mode from EEPROM: %s, web setting: %u\n", ethForced10M ? "forced 10M full duplex" : "auto negotiation", ethModeSetting);
   EEPROM.commit();
   EEPROM.end();
 
@@ -385,7 +389,7 @@ void loop() {
     if(ethModeSetting == ETH_MODE_AUTO && ethModeConfirmed == false){
       ethForced10M = !ethForced10M; // try the other link mode
     }
-    Serial.printf("%s, restart ETH with %s\n", ethNoLink ? "no link" : "no IP received", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+    Serial.printf("[ETH] %s, restart ETH with %s\n", ethNoLink ? "no link" : "no IP received", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
     timerETHmessage = millis();
     ETH.end();
     delay(200);
@@ -398,12 +402,47 @@ void loop() {
   if(gotIP == true && ethModeConfirmed == false){
     ethModeConfirmed = true;
     if(ethModeSetting == ETH_MODE_AUTO && ethForced10M != ethForced10MStored){ // remember the working link mode for the next boot
+      Serial.printf("[ETH] link mode %s got an IP, remembering it for the next boot\n", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
       uint8_t ethLinkMode = ethForced10M;
       EEPROM.begin(512);
       EEPROM.put(EEPROM_ETH_LINK_MODE, ethLinkMode);
       EEPROM.commit();
       EEPROM.end();
       ethForced10MStored = ethForced10M;
+    }
+  }
+
+  //--- keep exactly one transport alive: Ethernet > Wi-Fi > setup AP -------------
+  // As soon as Ethernet has an IP it is the only transport. The setup AP and a
+  // possibly connected Wi-Fi STA are shut down here, otherwise the device ends up
+  // with two IPs and MQTT would flip between them on every link change.
+  if(gotIP == true && eth_connected == true){
+    if(apMode == true){
+      Serial.println("[NET] Ethernet has an IP -> shutting down the setup AP");
+      dnsServer.stop();
+      WiFi.softAPdisconnect(true);
+      apMode = false;
+    }
+    if(WiFi.getMode() != WIFI_OFF){
+      Serial.println("[NET] Ethernet has an IP -> turning Wi-Fi off (single transport)");
+      WiFi.disconnect(true);
+      WiFi.mode(WIFI_OFF);
+    }
+  }
+
+  //--- Ethernet loss handling ---------------------------------------------------
+  // A working Ethernet connection may briefly drop (switch reboot, cable wiggle,
+  // STP). Give it a grace period and restart only if it does not come back; after
+  // the restart the boot picks the transport again (Ethernet -> Wi-Fi -> AP).
+  // Without this the device could end up without any usable connection.
+  if(ethLostSince != 0){
+    if(eth_connected == true && gotIP == true){
+      ethLostSince = 0; // safety net, the ETH_GOT_IP event normally clears it already
+    }
+    else if((millis() - ethLostSince) > ETH_LOSS_GRACE){
+      Serial.printf("[NET] Ethernet gone for more than %lu ms -> restarting to re-pick the transport\n", (unsigned long)ETH_LOSS_GRACE);
+      Serial.flush();
+      ESP.restart();
     }
   }
 /*
@@ -416,9 +455,14 @@ void loop() {
 */
 
   if(wifiReconnect == true && (millis() - timerWifiReconnect > 2000)){
-    Serial.println("try to reconnect"); 
     wifiReconnect = false;
-    WiFi.reconnect();
+    if(eth_connected == true){ // Ethernet is the active transport, do not bring Wi-Fi up in addition
+      Serial.println("[NET] Wi-Fi reconnect skipped, Ethernet is connected");
+    }
+    else{
+      Serial.println("try to reconnect");
+      WiFi.reconnect();
+    }
   }
 
 
@@ -533,7 +577,7 @@ void loop() {
       if(usedMQTTconection == 2){
         client.publish(String(String(userData.mbusinoName) + "/settings/MQTTconnectedVia").c_str(), "WiFi");
       }
-      long rssi = WiFi.RSSI();
+      long rssi = (WiFi.getMode() != WIFI_OFF) ? WiFi.RSSI() : 0; // Wi-Fi is off while Ethernet is the transport, an RSSI value would be meaningless
       client.publish(String(String(userData.mbusinoName) + "/settings/RSSI").c_str(), String(rssi).c_str()); 
       client.publish(String(String(userData.mbusinoName) + "/settings/version").c_str(), MBUSINO_VERSION);  
       client.publish(String(String(userData.mbusinoName) + "/settings/freeHeap").c_str(), String(ESP.getFreeHeap()).c_str()); 

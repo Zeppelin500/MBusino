@@ -19,23 +19,32 @@ void onEvent(arduino_event_id_t event) {
       timerNetworkChange = millis();
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
-      Serial.println("ETH Got IP");
+      Serial.println("[ETH] Got IP");
       Serial.println(ETH);
       eth_connected = true;
       gotIP = true;
+      if(ethLostSince != 0){ // Ethernet came back within the grace period
+        Serial.printf("[ETH] back after %lu ms, no restart\n", millis() - ethLostSince);
+        ethLostSince = 0;
+      }
       break;
     case ARDUINO_EVENT_ETH_LOST_IP:
-      Serial.println("ETH Lost IP");
+      Serial.println("[ETH] Lost IP");
       eth_connected = false;
-      Serial.println("Lost ETH IP, restart soon");
-      timerReboot = millis();
-      waitForRestart = true;
+      if(ethLostSince == 0){ // start the grace period, loop() restarts if Ethernet does not come back
+        ethLostSince = millis();
+        Serial.println("[ETH] grace period started, restart if Ethernet does not return");
+      }
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
-      Serial.println("ETH Disconnected");
+      Serial.println("[ETH] Disconnected");
       eth_connected = false;
       if(gotIP == true){ // cable was unplugged, start the DHCP timeout again at the next link up
         ethLinkSeen = false;
+        if(ethLostSince == 0){ // start the grace period only for an established connection
+          ethLostSince = millis();
+          Serial.println("[ETH] grace period started, restart if Ethernet does not return");
+        }
       }
       gotIP = false;
       break;
