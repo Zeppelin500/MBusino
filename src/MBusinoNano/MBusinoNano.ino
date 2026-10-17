@@ -395,7 +395,7 @@ void loop() {
   }
 
   if (!client.connected() ) {  
-    if((millis() - timerReconnect) > 5000 && mbusLoopStatus == 0){ // a blocking connect attempt must not disturb a running M-Bus request
+    if((millis() - timerReconnect) > 5000){
       Serial.println("MQTT no connection");   
       if(apMode == false){   
         reconnect();
@@ -440,9 +440,8 @@ void loop() {
       client.publish(String(String(userData.mbusinoName) + "/settings/freeHeap").c_str(), String(ESP.getFreeHeap()).c_str()); 
       client.publish(String(String(userData.mbusinoName) + "/settings/minFreeHeap").c_str(), String(minFreeHeap).c_str()); 
     }
-  }
 
-  ////////// M- Bus ############################################### runs also without MQTT, the web interface shows the telegrams (/mbus)
+  ////////// M- Bus ###############################################
 
     if(initializeSlave == true){
       initializeSlave = false;
@@ -664,6 +663,7 @@ void loop() {
         }
         break;      
     } //Switch
+  }
 }
 
 void heapCalc(){
