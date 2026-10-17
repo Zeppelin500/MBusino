@@ -384,6 +384,18 @@ void loop() {
 
   ArduinoOTA.handle();
 
+  //--- TEST DIAGNOSTICS (remove before merge): show when loop() really runs ---
+  static bool firstLoopDone = false;
+  if(firstLoopDone == false){
+    firstLoopDone = true;
+    Serial.printf("[LOOP] first iteration at %lu ms\n", millis());
+  }
+  static unsigned long lastHeartbeat = 0;
+  if((millis() - lastHeartbeat) > 5000){
+    lastHeartbeat = millis();
+    Serial.printf("[LOOP] alive at %lu ms\n", millis());
+  }
+
 
   bool ethNoIP = gotIP == false && eth_connected == true && (millis() - timerETHmessage > ETH_DHCP_TIMEOUT);
   bool ethNoLink = ethLinkSeen == false && ethModeConfirmed == false && ethModeSetting == ETH_MODE_AUTO && (millis() - timerETHbegin > ETH_LINK_TIMEOUT); // with the wrong mode some W5500 get no link at all
@@ -465,10 +477,10 @@ void loop() {
   if(wifiReconnect == true && (millis() - timerWifiReconnect > 2000)){
     wifiReconnect = false;
     if(eth_connected == true){ // Ethernet is the active transport, do not bring Wi-Fi up in addition
-      Serial.println("[NET] Wi-Fi reconnect skipped, Ethernet is connected");
+      Serial.printf("[NET] %lu ms: Wi-Fi reconnect skipped, Ethernet is connected\n", millis());
     }
     else if(WiFi.getMode() == WIFI_OFF){ // Wi-Fi was switched off for the Ethernet transport, do not bring it back silently
-      Serial.println("[NET] Wi-Fi reconnect skipped, Wi-Fi is off (Ethernet transport)");
+      Serial.printf("[NET] %lu ms: Wi-Fi reconnect skipped, Wi-Fi is off (Ethernet transport)\n", millis());
     }
     else{
       Serial.println("try to reconnect");
