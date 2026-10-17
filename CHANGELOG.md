@@ -13,11 +13,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Exactly one transport at a time (MBusinoNano, MBusinoNano5S):** as soon as Ethernet has an IP, the setup AP and a connected Wi-Fi STA are shut down. Previously the AP stayed on forever once it had been started, and a Wi-Fi connection could stay active next to Ethernet; the device then had two IPs and MQTT flipped between them on every link change.
 - **Controlled restart after losing a working Ethernet connection (MBusinoNano, MBusinoNano5S):** if an established Ethernet connection (link/IP) does not come back within 15 s, the device restarts and the boot re-picks the transport (Ethernet -> Wi-Fi -> setup AP). Previously a lost IP triggered a restart after only 1 s, while a pure link loss triggered none at all (the device could stay unreachable).
 - The "no link" timeout was reduced from 20 s to 8 s; link up is decided at PHY level well below 1 s, so strict equipment (Fritzbox 7590, PoE extenders) falls back to forced 10M full duplex noticeably faster.
+- **Crash when the setup AP was switched off (MBusinoNano, MBusinoNano5S):** the mDNS component started by `ArduinoOTA.begin()` died with a Guru Meditation (Load access fault in `igmp_lookfor_group`) when a netif appeared or was torn down - i.e. exactly when Ethernet got its IP while the setup AP was being shut down. Disabling mDNS for the OTA service removes the crash.
 
 ### Added
 
 - **Ethernet link mode setting in the web interface (MBusinoNano, MBusinoNano5S):** "automatic" (default, as described above), "auto negotiation" or "forced 10M full duplex". The fixed modes skip the automatic switching. The active mode is published as `<name>/settings/ethLinkMode`.
 - Verbose `[ETH]` / `[NET]` serial logging for every transport and link mode decision (boot state, mode switch, AP shutdown, Wi-Fi shutdown, Ethernet loss and recovery), so the behaviour can be followed on the serial console during a test.
+
+### Changed
+
+- **OTA is no longer advertised via mDNS (MBusinoNano, MBusinoNano5S):** the device is no longer reachable as `<name>.local`. The web interface and ArduinoOTA keep working over the IP; the mDNS service was started only by `ArduinoOTA.begin()` and is not used anywhere else in the firmware.
 
 ## [1.2.0] - 2026-10-14
 
