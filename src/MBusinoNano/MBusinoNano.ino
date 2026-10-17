@@ -148,6 +148,7 @@ bool ethModeConfirmed = false; // got an IP with the current link mode since sta
 uint8_t ethModeSetting = ETH_MODE_AUTO;
 unsigned long timerETHbegin = 0;
 unsigned long ethLostSince = 0; // millis() when an established Ethernet connection (IP) was lost, 0 = not lost; used for the restart grace period in loop()
+unsigned long ethRestarting = 0; // millis() when loop() intentionally restarted ETH for a link mode change, 0 = not restarting; suppresses transport switching while ETH re-initialises
 
 unsigned long timerMQTT = 15000;
 unsigned long timerMbus = 0;
@@ -194,7 +195,7 @@ void setEthLinkMode(){
   }
   ethLinkSeen = false;
   timerETHbegin = millis();
-  Serial.printf("[ETH] link mode applied: %s\n", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+  Serial.printf("[ETH] %lu ms: link mode applied: %s\n", millis(), ethForced10M ? "forced 10M full duplex" : "auto negotiation");
 }
 
 void setup() {
@@ -346,6 +347,7 @@ void setup() {
   server.begin();
 
   client.setBufferSize(6000);
+  Serial.printf("[BOOT] setup done at %lu ms\n", millis());
 }
 
 
@@ -362,7 +364,8 @@ void loop() {
     if(ethModeSetting == ETH_MODE_AUTO && ethModeConfirmed == false){
       ethForced10M = !ethForced10M; // try the other link mode
     }
-    Serial.printf("[ETH] %s, restart ETH with %s\n", ethNoLink ? "no link" : "no IP received", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+    Serial.printf("[ETH] %lu ms: %s, restart ETH with %s\n", millis(), ethNoLink ? "no link" : "no IP received", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+    ethRestarting = millis(); // suppress transport switching until ETH is back
     timerETHmessage = millis();
     ETH.end();
     delay(200);
@@ -375,7 +378,7 @@ void loop() {
   if(gotIP == true && ethModeConfirmed == false){
     ethModeConfirmed = true;
     if(ethModeSetting == ETH_MODE_AUTO && ethForced10M != ethForced10MStored){ // remember the working link mode for the next boot
-      Serial.printf("[ETH] link mode %s got an IP, remembering it for the next boot\n", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+      Serial.printf("[ETH] %lu ms: link mode %s got an IP, remembering it for the next boot\n", millis(), ethForced10M ? "forced 10M full duplex" : "auto negotiation");
       uint8_t ethLinkMode = ethForced10M;
       EEPROM.begin(512);
       EEPROM.put(EEPROM_ETH_LINK_MODE, ethLinkMode);
@@ -385,19 +388,24 @@ void loop() {
     }
   }
 
+  // an intentional ETH restart (link mode change) is finished once an IP is back, or after the grace period at the latest
+  if(ethRestarting != 0 && (gotIP == true || (millis() - ethRestarting) > ETH_LOSS_GRACE)){
+    ethRestarting = 0;
+  }
+
   //--- keep exactly one transport alive: Ethernet > Wi-Fi > setup AP -------------
   // As soon as Ethernet has an IP it is the only transport. The setup AP and a
   // possibly connected Wi-Fi STA are shut down here, otherwise the device ends up
   // with two IPs and MQTT would flip between them on every link change.
   if(gotIP == true && eth_connected == true){
     if(apMode == true){
-      Serial.println("[NET] Ethernet has an IP -> shutting down the setup AP");
+      Serial.printf("[NET] %lu ms: Ethernet has an IP -> shutting down the setup AP\n", millis());
       dnsServer.stop();
       WiFi.softAPdisconnect(true);
       apMode = false;
     }
     if(WiFi.getMode() != WIFI_OFF){
-      Serial.println("[NET] Ethernet has an IP -> turning Wi-Fi off (single transport)");
+      Serial.printf("[NET] %lu ms: Ethernet has an IP -> turning Wi-Fi off (single transport)\n", millis());
       WiFi.disconnect(true);
       WiFi.mode(WIFI_OFF);
     }
@@ -413,7 +421,7 @@ void loop() {
       ethLostSince = 0; // safety net, the ETH_GOT_IP event normally clears it already
     }
     else if((millis() - ethLostSince) > ETH_LOSS_GRACE){
-      Serial.printf("[NET] Ethernet gone for more than %lu ms -> restarting to re-pick the transport\n", (unsigned long)ETH_LOSS_GRACE);
+      Serial.printf("[NET] %lu ms: Ethernet gone for more than %lu ms -> restarting to re-pick the transport\n", millis(), (unsigned long)ETH_LOSS_GRACE);
       Serial.flush();
       ESP.restart();
     }
@@ -431,6 +439,9 @@ void loop() {
     wifiReconnect = false;
     if(eth_connected == true){ // Ethernet is the active transport, do not bring Wi-Fi up in addition
       Serial.println("[NET] Wi-Fi reconnect skipped, Ethernet is connected");
+    }
+    else if(WiFi.getMode() == WIFI_OFF){ // Wi-Fi was switched off for the Ethernet transport, do not bring it back silently
+      Serial.println("[NET] Wi-Fi reconnect skipped, Wi-Fi is off (Ethernet transport)");
     }
     else{
       Serial.println("try to reconnect");
@@ -474,7 +485,9 @@ void loop() {
   }
 
   //to notice Changes in Network an assign the right connection to the MQTT client
-  if((eth_connected == false) && (usedMQTTconection == 1) && (millis()-timerNetworkChange) > 5000){
+  //Do not fall back to Wi-Fi while ETH is intentionally re-initialised (link mode change)
+  //or when Wi-Fi is switched off for the Ethernet transport.
+  if((eth_connected == false) && (usedMQTTconection == 1) && ethRestarting == 0 && (WiFi.getMode() != WIFI_OFF) && (millis()-timerNetworkChange) > 5000){
     client.setClient(wfClient);
     usedMQTTconection = 2;
     Serial.println("MQTT set connection via Wifi");

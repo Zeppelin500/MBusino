@@ -19,21 +19,21 @@ void onEvent(arduino_event_id_t event) {
       timerNetworkChange = millis();
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
-      Serial.println("[ETH] Got IP");
+      Serial.printf("[ETH] %lu ms: Got IP\n", millis());
       Serial.println(ETH);
       eth_connected = true;
       gotIP = true;
       if(ethLostSince != 0){ // Ethernet came back within the grace period
-        Serial.printf("[ETH] back after %lu ms, no restart\n", millis() - ethLostSince);
+        Serial.printf("[ETH] %lu ms: back after %lu ms, no restart\n", millis(), millis() - ethLostSince);
         ethLostSince = 0;
       }
       break;
     case ARDUINO_EVENT_ETH_LOST_IP:
-      Serial.println("[ETH] Lost IP");
+      Serial.printf("[ETH] %lu ms: Lost IP\n", millis());
       eth_connected = false;
       if(ethLostSince == 0){ // start the grace period, loop() restarts if Ethernet does not come back
         ethLostSince = millis();
-        Serial.println("[ETH] grace period started, restart if Ethernet does not return");
+        Serial.printf("[ETH] %lu ms: grace period started, restart if Ethernet does not return\n", millis());
       }
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
@@ -43,7 +43,7 @@ void onEvent(arduino_event_id_t event) {
         ethLinkSeen = false;
         if(ethLostSince == 0){ // start the grace period only for an established connection
           ethLostSince = millis();
-          Serial.println("[ETH] grace period started, restart if Ethernet does not return");
+          Serial.printf("[ETH] %lu ms: grace period started, restart if Ethernet does not return\n", millis());
         }
       }
       gotIP = false;
