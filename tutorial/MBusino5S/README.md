@@ -2,7 +2,7 @@
 
 MBusino5S work on **ESP8266 D1 Mini** or **ESP32 S2 Mini**. For both boards are .bin files provided.
 
-https://github.com/Zeppelin500/MBusino/blob/main/src/MBusino5S/build
+https://github.com/Zeppelin500/MBusino/tree/main/src/MBusino5S/build
 
 The Pinout configuration of the ESP32 S2 mini is exactly the same like D1 mini. Equip only the two outside pin headers. 
 

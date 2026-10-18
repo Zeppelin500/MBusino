@@ -37,7 +37,7 @@ https://github.com/Zeppelin500/MBusino/tree/main/src/MBusinoNano5S/build/esp32.e
 **MBusinoNano5S**
 
 * Offset 0x 0000    MBusinoNano5S.ino.bootloader.bin
-* Offset 0x 8000    MBusinNano5S.ino.partitions.bin
+* Offset 0x 8000    MBusinoNano5S.ino.partitions.bin
 * Offset 0x 10000    MBusinoNano5S.ino.bin 
 
 --> done
