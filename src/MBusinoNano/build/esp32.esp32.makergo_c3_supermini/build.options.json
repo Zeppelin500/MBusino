@@ -4,6 +4,6 @@
   "customBuildProperties": "",
   "fqbn": "esp32:esp32:makergo_c3_supermini",
   "hardwareFolders": "/home/clawbot/.arduino15/packages/esp32/hardware/esp32/3.3.7,/home/clawbot/.arduino15/packages/esp32/hardware/esp32/3.3.7",
-  "otherLibrariesFolders": "/home/clawbot/Arduino/libraries",
+  "otherLibrariesFolders": "/home/clawbot/Arduino/libraries,/home/clawbot/Arduino/libraries",
   "sketchLocation": "/home/clawbot/.openclaw/workspace/MBusino/src/MBusinoNano"
 }
