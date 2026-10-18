@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-10-18
+
+### Changed
+
+- **The web update page shows the upload progress and what happens after it (all variants):** pressing *Update* used to freeze the page until the whole file was written, then show only the plain text `success, restart now` / `FAIL`, and finally leave the user guessing when to reload - because the device had already restarted. The page now submits via `XMLHttpRequest` with a live progress bar (`upload.onprogress`, honest because the browser streams the file into the flash in the same rhythm), shows the transfer percentage, verifies/reboots and then polls `GET /` until the device answers again before redirecting home. Timeouts are bounded: the upload aborts after 3 minutes with a message, and if the device does not come back within 60 s the page says so instead of polling forever (with the button re-enabled). Empty and non-`.bin` selections are rejected client-side. On failure the server now returns the actual reason (`Update.errorString()` on ESP32, `Update.getErrorString()` on ESP8266, e.g. "not enough space") instead of a bare `FAIL`, so the page can show why an update was rejected.
+- **The update response is no longer raced by the success reboot (all variants):** after a successful update only the error path stamped `timerReboot`, so on success `millis() - timerReboot > 1000` was already true and the device could restart on the very next `loop()` pass while the response was still in the async web server's queue (the browser sometimes saw a dropped connection instead of `success`). The handler now stamps `timerReboot` on both paths, giving the response ~1 s (1.5 s on MBusino5S) to leave the queue first. The reboot delay itself and the error case (no restart) are unchanged.
+
+### Fixed
+
+- **Documentation: the README now states correctly that the Nano variants keep the LED on while MQTT is connected** (previously "the Nano variants switch the LED off", which the code never did - the LED is active-low and `mqtt.h` writes LOW after a successful connect; the same wrong claim in the 1.3.1 changelog entry and in the Nano code comments was corrected, no code behaviour change). Also: the MBusino5S tutorial build link scheme and the Nano5S flash-partition typo in the German tutorial.
+
 ## [1.3.1] - 2026-10-18
 
 ### Added

@@ -40,7 +40,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.3.1"
+#define MBUSINO_VERSION "1.3.2"
 
 #define MBUS_ADDRESS 254
 
@@ -412,10 +412,23 @@ void setup() {
   });
   server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request){
     waitForRestart = !Update.hasError();
+    // Stamp the reboot timer on BOTH paths: on success it gives this response time to
+    // leave the async queue before the device restarts (before, only the error path set
+    // it, so a success reboot could hit the very next loop() pass); on error it is moot
+    // because waitForRestart stays false.
+    timerReboot = millis();
+    String updResult;
     if(Update.hasError()==true){
-      timerReboot = millis();
+      #if defined(ESP8266)
+      updResult = String("FAIL: ") + Update.getErrorString();
+      #else
+      updResult = String("FAIL: ") + Update.errorString();
+      #endif
     }
-    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", waitForRestart?"success, restart now":"FAIL");
+    else{
+      updResult = "success, restart now";
+    }
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", updResult);
     response->addHeader("Connection", "close");
     request->send(response);
   },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
