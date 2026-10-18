@@ -77,3 +77,14 @@ mqtt:
 
 
 
+
+## IP-Blinkcode (LED)
+
+Solange das Gerät eine IP hat, aber noch nicht mit MQTT verbunden ist, blinkt die eingebaute LED die letzte Oktette seiner IP-Adresse:
+
+* zuerst ein **Marker**: LED 1,5 s dauerhaft an
+* dann die drei Ziffern (Hunderter, Zehner, Einer): jede Ziffer *n* als *n* kurze Blinks (250 ms an / 250 ms aus)
+* eine **Null** ist ein schnelles Flackern (6× 50 ms an/aus)
+* Beispiel **.123**: lang an - 1× - 2× - 3× - lang an ...
+
+So lässt sich die IP des Setup-Portals direkt an der LED ablesen, statt sie im Router zu suchen. Sobald MQTT verbunden ist, hört der Code auf.
