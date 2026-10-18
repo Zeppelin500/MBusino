@@ -70,3 +70,14 @@ With the ESPHome Webtool, you will loose al your datas during update. Use instea
 ![Update](https://github.com/Zeppelin500/MBusino/blob/main/pictures/update.png)
 
 
+
+## IP blink code (LED)
+
+As long as the device has an IP but is not (yet) connected to MQTT, the built-in LED blinks the last octet of its IP address:
+
+* a **marker** first: LED on for 1.5 s
+* then the three digits (hundreds, tens, units): each digit *n* as *n* short blinks (250 ms on / 250 ms off)
+* a **zero** is a fast flicker (6 times 50 ms on / 50 ms off)
+* example **.123**: long on - 1x - 2x - 3x - long on ...
+
+So the IP of the setup portal can be read off the LED instead of searching for it in the router. Once MQTT is connected the code stops.

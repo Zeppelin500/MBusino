@@ -1,5 +1,5 @@
 # MBusino
-[![version](https://img.shields.io/badge/version-1.3.0-brightgreen.svg)](CHANGELOG.md)<br/>
+[![version](https://img.shields.io/badge/version-1.3.1-brightgreen.svg)](CHANGELOG.md)<br/>
 ### M-Bus --> MQTT-Gateway with shields for ESPs
 
 A **Plug and Play** solution.
@@ -62,7 +62,7 @@ To save money, I place omnibus orders for all parts beside the M-Bus Master.
 
 * SSID **MBusino Setup Portal** IP(normally not needed): 192.168.4.1
 * If Mbusino do not find a known network, he start an AP for 5 minutes. After this period, he will restart and search again.
-* In known networks, you will find the IP of the portal under **MBusino** in your router.
+* In known networks, you will find the IP of the portal under **MBusino** in your router. The LED also blinks the last octet of that IP (see *LED status and IP blink code* below).
 
 <img src="pictures/MBusino_Setup_Portal.jpg" width="300" height="600">
 
@@ -71,6 +71,19 @@ To save money, I place omnibus orders for all parts beside the M-Bus Master.
 Open `http://<MBusino>/mbus` (while MQTT is connected) to watch the last 10 M-Bus polls - time, address, status (OK / no data / bad frame) and the raw telegram in hex - plus the last decoded telegram (header and records). The page refreshes every 2 s, shows the time until the next poll and has a **Poll now** button; the same data is available as JSON at `/mbus.json`.
 
 Available on all ESP32 variants (MBusino, MBusino5S, MBusinoNano, MBusinoNano5S).
+
+## LED status and IP blink code
+
+The built-in LED shows the state of the device:
+
+* **IP known, MQTT not (yet) connected** - the LED blinks the **last octet** of the assigned IP address, so the address for the setup portal no longer has to be looked up in the router (e.g. after a cable was plugged in):
+  * a **marker** first: LED on for 1.5 s
+  * then the three digits of the last octet (hundreds, tens, units): each digit *n* as *n* short blinks (250 ms on / 250 ms off)
+  * a **zero** is shown as a fast flicker (6 times 50 ms on / 50 ms off) instead of a pause, so its position stays recognisable
+  * example **.123**: long on - 1x blink - 2x - 3x - long on ...
+* **MQTT connected** - the blink code stops; MBusino/MBusino5S show the usual alive pulse, the Nano variants switch the LED off.
+
+The code runs only while MQTT is not connected and does not affect the network connection itself.
 
 ## MQTT Output
 Use MQTT Explorer (PC) or [**MQTT Browser**](https://github.com/ZeppelinsBot/MQTTBrowser) (Android) to see the MQTT Output.

@@ -33,7 +33,7 @@ You should have received a copy of the GNU General Public License along with thi
 #include <EEPROM.h>
 #include <MBusCom.h>
 
-#define MBUSINO_VERSION "1.3.0"
+#define MBUSINO_VERSION "1.3.1"
 
 // EEPROM flag constants
 #define EEPROM_CREDENTIALS_OLD 500
@@ -46,6 +46,7 @@ You should have received a copy of the GNU General Public License along with thi
 #define ETH_DHCP_TIMEOUT 15000 // ms after link up without IP before the other link mode is tried
 #define ETH_LINK_TIMEOUT 8000 // ms after ETH.begin() without link up before the other link mode is tried. Link up is decided at PHY level well below 1 s, so 8 s is already a generous margin; the previous 20 s only delayed the fallback for strict equipment (Fritzbox 7590, PoE extenders)
 #define ETH_LOSS_GRACE 15000 // ms an already working Ethernet connection (IP) may stay away before a controlled restart; the boot then re-picks the transport (Ethernet -> Wi-Fi -> setup AP)
+#define ETH_MODE_RETRY_MAX 2 // how many times the link-mode fallback (auto negotiation <-> forced 10M) is restarted before giving up; without a cable or with a dead DHCP server the restart would otherwise loop forever
 
 #define ETH_MODE_AUTO 0      // try auto negotiation and forced 10M full duplex, remember the working one
 #define ETH_MODE_AUTONEG 1   // always auto negotiation
@@ -157,6 +158,7 @@ bool ethForced10M = false; // false = auto negotiation, true = forced 10M full d
 bool ethForced10MStored = false; // link mode saved in EEPROM
 bool ethLinkSeen = false; // link was up at least once since the last ETH.begin()
 bool ethModeConfirmed = false; // got an IP with the current link mode since start
+uint8_t ethModeRetry = 0; // how many times the ETH link-mode fallback has restarted ETH since the last confirmed link mode
 uint8_t ethModeSetting = ETH_MODE_AUTO;
 unsigned long timerETHbegin = 0;
 unsigned long ethLostSince = 0; // millis() when an established Ethernet connection (IP) was lost, 0 = not lost; used for the restart grace period in loop()
@@ -208,6 +210,90 @@ void setEthLinkMode(){
   ethLinkSeen = false;
   timerETHbegin = millis();
   Serial.printf("[ETH] %lu ms: link mode applied: %s\n", millis(), ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+}
+
+// IP blink code on the LED: while the device has an IP (Ethernet or Wi-Fi) but MQTT is
+// not connected, the LED shows the last octet (0-255) of that IP as blink code, so the
+// address of the device can be read off without a serial console (e.g. of the setup
+// portal). Fully non-blocking (millis state machine): marker = LED on 1500 ms, then the
+// three digits (hundreds, tens, units) of the octet, each digit n as n times 250 ms on /
+// 250 ms off; a zero shows as a flicker (6 times 50 ms on / 50 ms off, ~600 ms) instead
+// of a silent pause, so it stays clearly countable. A fixed pause of 750 ms separates
+// marker and digits.
+// The blink code only runs while MQTT is not connected; reconnect() in mqtt.h keeps
+// switching the LED on (not connected) and off (connected) as before.
+// LED polarity: the built-in LED on the ESP32-C3 Nano is active-low (LOW = lit,
+// confirmed on hardware; mqtt.h also writes LOW after a successful MQTT connect), so
+// the blink code writes the pin only via IP_LED_ON/IP_LED_OFF and never a raw HIGH/LOW.
+const uint8_t IP_LED_ON = LOW;    // level that lights up the LED (active-low)
+const uint8_t IP_LED_OFF = HIGH;  // level that switches the LED off
+uint8_t ipBlinkState = 0;    // 0 = marker on, 1 = pause, 2 = blink on, 3 = blink off
+uint8_t ipBlinkSlot = 0;     // 0 = hundreds, 1 = tens, 2 = units of the last IP octet
+uint8_t ipBlinkBlinks = 0;   // blinks of the current slot still to run
+bool ipBlinkFlicker = false; // true while a zero slot flickers (short on/off times)
+bool ipBlinkLedOn = false;   // LED state the blink code currently wants (true = lit)
+bool ipBlinkRunning = false; // false = the next tick starts a new round at the marker
+unsigned long timerIpBlink = 0;
+
+void ipBlinkTick(uint8_t octet){
+  if(ipBlinkRunning == false){ // start a new round with the marker
+    ipBlinkRunning = true;
+    ipBlinkLedOn = true;
+    ipBlinkSlot = 0;
+    ipBlinkState = 0;
+    timerIpBlink = millis();
+  }
+  if(ipBlinkState == 0 && millis() - timerIpBlink >= 1500){ // marker: LED on for 1500 ms
+    ipBlinkLedOn = false;
+    ipBlinkSlot = 0;
+    ipBlinkState = 1;
+    timerIpBlink = millis();
+  }
+  else if(ipBlinkState == 1 && millis() - timerIpBlink >= 750){ // fixed pause before the next digit or the marker
+    if(ipBlinkSlot > 2){ // all three digits done, back to the marker
+      ipBlinkLedOn = true;
+      ipBlinkState = 0;
+      timerIpBlink = millis();
+    }
+    else{
+      uint8_t divisor = (ipBlinkSlot == 0) ? 100 : ((ipBlinkSlot == 1) ? 10 : 1);
+      uint8_t digit = (octet / divisor) % 10;
+      if(digit == 0){ // a zero flickers (6 short flashes) instead of staying silent
+        ipBlinkFlicker = true;
+        ipBlinkBlinks = 6;
+      }
+      else{
+        ipBlinkFlicker = false;
+        ipBlinkBlinks = digit;
+      }
+      ipBlinkLedOn = true;
+      ipBlinkState = 2;
+      timerIpBlink = millis();
+    }
+  }
+  else if(ipBlinkState == 2 && millis() - timerIpBlink >= (ipBlinkFlicker ? 50 : 250)){ // end of a blink (short flashes while flickering)
+    ipBlinkLedOn = false;
+    ipBlinkState = 3;
+    timerIpBlink = millis();
+  }
+  else if(ipBlinkState == 3 && millis() - timerIpBlink >= (ipBlinkFlicker ? 50 : 250)){ // pause between two blinks of a digit
+    ipBlinkBlinks--;
+    if(ipBlinkBlinks > 0){
+      ipBlinkLedOn = true;
+      ipBlinkState = 2;
+    }
+    else{ // digit or flicker done, the next digit starts with its pause
+      ipBlinkFlicker = false;
+      ipBlinkSlot++;
+      ipBlinkState = 1;
+    }
+    timerIpBlink = millis();
+  }
+  digitalWrite(LED_BUILTIN, ipBlinkLedOn ? IP_LED_ON : IP_LED_OFF); // write on every pass, so a HIGH from a failed MQTT connect attempt cannot leave the LED stuck
+}
+
+void ipBlinkStop(){
+  ipBlinkRunning = false; // no LED write here: on MQTT connect mqtt.h switches the LED off itself
 }
 
 void setup() {
@@ -276,9 +362,27 @@ void setup() {
   snprintf(html_buffer, sizeof(html_buffer), index_html,userData.ssid,userData.mbusinoName,userData.haAutodisc,userData.telegramDebug,ethModeSetting,userData.mbusInterval/1000,userData.broker,userData.mqttPort,userData.mqttUser,userData.mbusSlaves,userData.mbusAddress1,userData.mbusAddress2,userData.mbusAddress3,userData.mbusAddress4,userData.mbusAddress5);
   
   WiFi.onEvent(WiFiEvent);
+#if defined(ESP32)
+  WiFi.onEvent(WiFiDiagEvent);
+#endif
   WiFi.hostname(userData.mbusinoName);
   //WiFi.hostname(String(String(userData.mbusinoName)+"-WiFi").c_str());
   WiFi.mode(WIFI_STA);
+#if defined(ESP32)
+  // WiFi diagnostics (scratch build test/wifi-diag): scan before connecting
+  Serial.printf("[WIFI-DIAG] stored SSID='%s'\n", userData.ssid);
+  int wifiDiagScanN = WiFi.scanNetworks();
+  Serial.printf("[WIFI-DIAG] scan found %d networks\n", wifiDiagScanN);
+  bool wifiDiagTargetFound = false;
+  for(int i = 0; i < wifiDiagScanN; i++){
+    if(WiFi.SSID(i) == String(userData.ssid)){ wifiDiagTargetFound = true; }
+    if(i < 15){
+      Serial.printf("[WIFI-DIAG]   %2d: '%s' rssi=%d ch=%d enc=%d%s\n", i, WiFi.SSID(i).c_str(), (int)WiFi.RSSI(i), (int)WiFi.channel(i), (int)WiFi.encryptionType(i), (WiFi.SSID(i) == String(userData.ssid)) ? "  <-- TARGET" : "");
+    }
+  }
+  Serial.printf("[WIFI-DIAG] target SSID '%s' %s in scan list\n", userData.ssid, wifiDiagTargetFound ? "found" : "NOT found");
+  WiFi.scanDelete();
+#endif
   WiFi.begin(userData.ssid, userData.password);  
   
   Network.onEvent(onEvent);
@@ -391,22 +495,31 @@ void loop() {
   bool ethNoIP = gotIP == false && eth_connected == true && (millis() - timerETHmessage > ETH_DHCP_TIMEOUT);
   bool ethNoLink = ethLinkSeen == false && ethModeConfirmed == false && ethModeSetting == ETH_MODE_AUTO && (millis() - timerETHbegin > ETH_LINK_TIMEOUT); // with the wrong mode some W5500 get no link at all
   if((ethNoIP == true || ethNoLink == true) && waitForRestart == false){
-    if(ethModeSetting == ETH_MODE_AUTO && ethModeConfirmed == false){
-      ethForced10M = !ethForced10M; // try the other link mode
+    if(ethModeRetry >= ETH_MODE_RETRY_MAX){ // both link modes already failed: without a cable (or with a dead DHCP server) the restart would loop forever
+      if(ethModeRetry == ETH_MODE_RETRY_MAX){
+        Serial.printf("[ETH] %lu ms: no link in any mode, stopping the link-mode fallback (cable missing or device off)\n", millis());
+        ethModeRetry = 99;
+      }
+    } else {
+      if(ethModeSetting == ETH_MODE_AUTO && ethModeConfirmed == false){
+        ethForced10M = !ethForced10M; // try the other link mode
+      }
+      Serial.printf("[ETH] %lu ms: %s, restart ETH with %s\n", millis(), ethNoLink ? "no link" : "no IP received", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
+      ethRestarting = millis(); // suppress transport switching until ETH is back
+      timerETHmessage = millis();
+      ETH.end();
+      delay(200);
+      //SPI.end();
+      delay(200);
+      setEthLinkMode();
+      ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI,16);
+      ethModeRetry++;
     }
-    Serial.printf("[ETH] %lu ms: %s, restart ETH with %s\n", millis(), ethNoLink ? "no link" : "no IP received", ethForced10M ? "forced 10M full duplex" : "auto negotiation");
-    ethRestarting = millis(); // suppress transport switching until ETH is back
-    timerETHmessage = millis();
-    ETH.end();
-    delay(200);
-    //SPI.end();
-    delay(200);
-    setEthLinkMode();
-    ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI,16);
   }
 
   if(gotIP == true && ethModeConfirmed == false){
     ethModeConfirmed = true;
+    ethModeRetry = 0; // the link mode works again, allow the fallback from scratch
     if(ethModeSetting == ETH_MODE_AUTO && ethForced10M != ethForced10MStored){ // remember the working link mode for the next boot
       Serial.printf("[ETH] %lu ms: link mode %s got an IP, remembering it for the next boot\n", millis(), ethForced10M ? "forced 10M full duplex" : "auto negotiation");
       uint8_t ethLinkMode = ethForced10M;
@@ -511,7 +624,17 @@ void loop() {
     if((millis() - timerLedAPmode) > 500 && digitalRead(LED_BUILTIN) == HIGH){
       digitalWrite(LED_BUILTIN,LOW);
       timerLedAPmode = millis();
-    }    
+    }
+  }
+
+  //--- LED: IP blink code while the device has an IP but MQTT is not connected --------
+  // Runs only with a real IP (Ethernet or Wi-Fi) and no setup AP; the AP keeps its
+  // 500 ms blink above. On MQTT connect, reconnect() in mqtt.h switches the LED off again.
+  if(apMode == false && client.connected() == false && (gotIP == true || WiFi.status() == WL_CONNECTED)){
+    ipBlinkTick((usedMQTTconection == 1) ? ETH.localIP()[3] : WiFi.localIP()[3]); // show the last octet of the IP of the active transport
+  }
+  else{
+    ipBlinkStop();
   }
 
   //to notice Changes in Network an assign the right connection to the MQTT client

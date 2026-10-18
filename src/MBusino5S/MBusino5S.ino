@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.3.0"
+#define MBUSINO_VERSION "1.3.1"
 
 // EEPROM flag constants
 #define EEPROM_CALIBRATED_FLAG 500
@@ -237,6 +237,95 @@ uint16_t pulseInterval = 1000;
 #include "networkEvents.h"
 #endif
 
+#if defined(ESP32)
+// IP blink code on the LED: while the device has an IP but MQTT is not connected, the
+// LED shows the last octet (0-255) of that IP as blink code, so the address of the
+// device can be read off without a serial console (e.g. of the setup portal). Fully
+// non-blocking (millis state machine): marker = LED on 1500 ms, then the three digits
+// (hundreds, tens, units) of the octet, each digit n as n times 250 ms on / 250 ms off;
+// a zero shows as a flicker (6 times 50 ms on / 50 ms off, ~600 ms) instead of a silent
+// pause, so it stays clearly countable. A fixed pause of 750 ms separates marker and
+// digits.
+// LED polarity: the blink code writes the pin only via IP_LED_ON/IP_LED_OFF. On this
+// board (ESP32 lolin_s2_mini) the alive pulse below treats HIGH as "on" (unchanged
+// behaviour), so the blink code does the same. If the LED should turn out to hang
+// inversely, only this constant has to be flipped.
+const uint8_t IP_LED_ON = HIGH;   // level that lights up the LED
+const uint8_t IP_LED_OFF = LOW;   // level that switches the LED off
+uint8_t ipBlinkState = 0;    // 0 = marker on, 1 = pause, 2 = blink on, 3 = blink off
+uint8_t ipBlinkSlot = 0;     // 0 = hundreds, 1 = tens, 2 = units of the last IP octet
+uint8_t ipBlinkBlinks = 0;   // blinks of the current slot still to run
+bool ipBlinkFlicker = false; // true while a zero slot flickers (short on/off times)
+bool ipBlinkLedOn = false;   // LED state the blink code currently wants (true = on)
+bool ipBlinkRunning = false; // false = the next tick starts a new round at the marker
+unsigned long timerIpBlink = 0;
+
+void ipBlinkTick(uint8_t octet){
+  if(ipBlinkRunning == false){ // start a new round with the marker
+    ipBlinkRunning = true;
+    ipBlinkLedOn = true;
+    ipBlinkSlot = 0;
+    ipBlinkState = 0;
+    timerIpBlink = millis();
+  }
+  if(ipBlinkState == 0 && millis() - timerIpBlink >= 1500){ // marker: LED on for 1500 ms
+    ipBlinkLedOn = false;
+    ipBlinkSlot = 0;
+    ipBlinkState = 1;
+    timerIpBlink = millis();
+  }
+  else if(ipBlinkState == 1 && millis() - timerIpBlink >= 750){ // fixed pause before the next digit or the marker
+    if(ipBlinkSlot > 2){ // all three digits done, back to the marker
+      ipBlinkLedOn = true;
+      ipBlinkState = 0;
+      timerIpBlink = millis();
+    }
+    else{
+      uint8_t divisor = (ipBlinkSlot == 0) ? 100 : ((ipBlinkSlot == 1) ? 10 : 1);
+      uint8_t digit = (octet / divisor) % 10;
+      if(digit == 0){ // a zero flickers (6 short flashes) instead of staying silent
+        ipBlinkFlicker = true;
+        ipBlinkBlinks = 6;
+      }
+      else{
+        ipBlinkFlicker = false;
+        ipBlinkBlinks = digit;
+      }
+      ipBlinkLedOn = true;
+      ipBlinkState = 2;
+      timerIpBlink = millis();
+    }
+  }
+  else if(ipBlinkState == 2 && millis() - timerIpBlink >= (ipBlinkFlicker ? 50 : 250)){ // end of a blink (short flashes while flickering)
+    ipBlinkLedOn = false;
+    ipBlinkState = 3;
+    timerIpBlink = millis();
+  }
+  else if(ipBlinkState == 3 && millis() - timerIpBlink >= (ipBlinkFlicker ? 50 : 250)){ // pause between two blinks of a digit
+    ipBlinkBlinks--;
+    if(ipBlinkBlinks > 0){
+      ipBlinkLedOn = true;
+      ipBlinkState = 2;
+    }
+    else{ // digit or flicker done, the next digit starts with its pause
+      ipBlinkFlicker = false;
+      ipBlinkSlot++;
+      ipBlinkState = 1;
+    }
+    timerIpBlink = millis();
+  }
+  digitalWrite(LED_BUILTIN, ipBlinkLedOn ? IP_LED_ON : IP_LED_OFF); // write on every pass, so the LED can never stay in a stale state
+  ledStatus = ipBlinkLedOn; // the alive pulse continues consistently when the blink code ends
+}
+
+void ipBlinkStop(){
+  if(ipBlinkRunning == true){
+    ipBlinkRunning = false;
+    ledStatus = ipBlinkLedOn;
+  }
+}
+#endif
+
 void setup() {
   #if defined(ESP32)
   pinMode(LED_BUILTIN, OUTPUT);
@@ -301,6 +390,7 @@ void setup() {
 
   #if defined(ESP32)
   WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiDiagEvent);
   #endif
   WiFi.hostname(userData.mbusinoName);
   mbusLogBegin();
@@ -308,6 +398,21 @@ void setup() {
   client.setCallback(callback);
 
   WiFi.mode(WIFI_STA);
+#if defined(ESP32)
+  // WiFi diagnostics (scratch build test/wifi-diag): scan before connecting
+  Serial.printf("[WIFI-DIAG] stored SSID='%s'\n", userData.ssid);
+  int wifiDiagScanN = WiFi.scanNetworks();
+  Serial.printf("[WIFI-DIAG] scan found %d networks\n", wifiDiagScanN);
+  bool wifiDiagTargetFound = false;
+  for(int i = 0; i < wifiDiagScanN; i++){
+    if(WiFi.SSID(i) == String(userData.ssid)){ wifiDiagTargetFound = true; }
+    if(i < 15){
+      Serial.printf("[WIFI-DIAG]   %2d: '%s' rssi=%d ch=%d enc=%d%s\n", i, WiFi.SSID(i).c_str(), (int)WiFi.RSSI(i), (int)WiFi.channel(i), (int)WiFi.encryptionType(i), (WiFi.SSID(i) == String(userData.ssid)) ? "  <-- TARGET" : "");
+    }
+  }
+  Serial.printf("[WIFI-DIAG] target SSID '%s' %s in scan list\n", userData.ssid, wifiDiagTargetFound ? "found" : "NOT found");
+  WiFi.scanDelete();
+#endif
   WiFi.begin(userData.ssid, userData.password);
 
   byte tries = 0;
@@ -420,15 +525,21 @@ void loop() {
   }
 
   #if defined(ESP32)
-  if(millis() - timerPulse >= pulseInterval){ // Blink of the internal LED to see MBusino is still alive and the network status
-    timerPulse = millis();
-    //Serial.println("pulse"); 
-    if(ledStatus == false){
-      ledStatus = true;
-      digitalWrite(LED_BUILTIN, HIGH);
-    }else{
-      ledStatus = false;
-      digitalWrite(LED_BUILTIN, LOW);
+  if(WiFi.status() == WL_CONNECTED && apMode == false && client.connected() == false){
+    ipBlinkTick(WiFi.localIP()[3]); // the LED shows the last octet of the assigned IP until MQTT is connected
+  }
+  else{
+    ipBlinkStop(); // MQTT connected or no IP: the alive pulse takes the LED back
+    if(millis() - timerPulse >= pulseInterval){ // Blink of the internal LED to see MBusino is still alive and the network status
+      timerPulse = millis();
+      //Serial.println("pulse"); 
+      if(ledStatus == false){
+        ledStatus = true;
+        digitalWrite(LED_BUILTIN, HIGH);
+      }else{
+        ledStatus = false;
+        digitalWrite(LED_BUILTIN, LOW);
+      }
     }
   }
 
