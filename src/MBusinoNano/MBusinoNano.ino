@@ -209,8 +209,9 @@ void setEthLinkMode(){
 // 250 ms off; a zero shows as a flicker (6 times 50 ms on / 50 ms off, ~600 ms) instead
 // of a silent pause, so it stays clearly countable. A fixed pause of 750 ms separates
 // marker and digits.
-// The blink code only runs while MQTT is not connected; reconnect() in mqtt.h keeps
-// switching the LED on (not connected) and off (connected) as before.
+// The blink code only runs while MQTT is not connected; reconnect() in mqtt.h lights
+// the LED (LOW = lit, active-low) after a successful MQTT connect and switches it
+// off (HIGH) only after a failed connect attempt.
 // LED polarity: the built-in LED on the ESP32-C3 Nano is active-low (LOW = lit,
 // confirmed on hardware; mqtt.h also writes LOW after a successful MQTT connect), so
 // the blink code writes the pin only via IP_LED_ON/IP_LED_OFF and never a raw HIGH/LOW.
@@ -282,13 +283,13 @@ void ipBlinkTick(uint8_t octet){
 }
 
 void ipBlinkStop(){
-  ipBlinkRunning = false; // no LED write here: on MQTT connect mqtt.h switches the LED off itself
+  ipBlinkRunning = false; // no LED write here: on MQTT connect mqtt.h lights the LED itself (LOW = lit)
 }
 
 void setup() {
 
-  pinMode(LED_BUILTIN, OUTPUT); // LED on if MQTT connectet to server
-  digitalWrite(LED_BUILTIN,HIGH);
+  pinMode(LED_BUILTIN, OUTPUT); // active-low LED: HIGH = off at boot, mqtt.h lights it (LOW) once MQTT is connected
+  digitalWrite(LED_BUILTIN, HIGH);
   Serial.begin(115200);
   mbus.begin();
 
@@ -602,7 +603,7 @@ void loop() {
 
   //--- LED: IP blink code while the device has an IP but MQTT is not connected --------
   // Runs only with a real IP (Ethernet or Wi-Fi) and no setup AP; the AP keeps its
-  // 500 ms blink above. On MQTT connect, reconnect() in mqtt.h switches the LED off again.
+  // 500 ms blink above. On MQTT connect, reconnect() in mqtt.h lights the LED again (LOW = lit, steady on).
   if(apMode == false && client.connected() == false && (gotIP == true || WiFi.status() == WL_CONNECTED)){
     ipBlinkTick((usedMQTTconection == 1) ? ETH.localIP()[3] : WiFi.localIP()[3]); // show the last octet of the IP of the active transport
   }

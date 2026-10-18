@@ -81,7 +81,7 @@ The built-in LED shows the state of the device:
   * then the three digits of the last octet (hundreds, tens, units): each digit *n* as *n* short blinks (250 ms on / 250 ms off)
   * a **zero** is shown as a fast flicker (6 times 50 ms on / 50 ms off) instead of a pause, so its position stays recognisable
   * example **.123**: long on - 1x blink - 2x - 3x - long on ...
-* **MQTT connected** - the blink code stops; MBusino/MBusino5S show the usual alive pulse, the Nano variants switch the LED off.
+* **MQTT connected** - the blink code stops; MBusino/MBusino5S show the usual alive pulse, the Nano variants keep the LED **on permanently** (their built-in LED is active-low: LOW = lit), so a steadily lit LED means "broker connected".
 
 The code runs only while MQTT is not connected and does not affect the network connection itself.
 
