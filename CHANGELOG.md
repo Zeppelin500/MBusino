@@ -5,6 +5,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **The web update page shows the upload progress and what happens after it (all variants):** pressing *Update* used to freeze the page until the whole file was written, then show only the plain text `success, restart now` / `FAIL`, and finally leave the user guessing when to reload - because the device had already restarted. The page now submits via `XMLHttpRequest` with a live progress bar (`upload.onprogress`, honest because the browser streams the file into the flash in the same rhythm), shows the transfer percentage, verifies/reboots and then polls `GET /` until the device answers again before redirecting home. Timeouts are bounded: the upload aborts after 3 minutes with a message, and if the device does not come back within 60 s the page says so instead of polling forever (with the button re-enabled). Empty and non-`.bin` selections are rejected client-side. On failure the server now returns the actual reason (`Update.errorString()` on ESP32, `Update.getErrorString()` on ESP8266, e.g. "not enough space") instead of a bare `FAIL`, so the page can show why an update was rejected.
+- **The update response is no longer raced by the success reboot (all variants):** after a successful update only the error path stamped `timerReboot`, so on success `millis() - timerReboot > 1000` was already true and the device could restart on the very next `loop()` pass while the response was still in the async web server's queue (the browser sometimes saw a dropped connection instead of `success`). The handler now stamps `timerReboot` on both paths, giving the response ~1 s (1.5 s on MBusino5S) to leave the queue first. The reboot delay itself and the error case (no restart) are unchanged.
+
 ## [1.3.1] - 2026-10-18
 
 ### Added

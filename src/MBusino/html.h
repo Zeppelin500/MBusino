@@ -122,17 +122,155 @@ const char update_html[] PROGMEM = R"rawliteral(
       h1 {
         text-align: center
       }
+
+      #ustate {
+        text-align: center;
+        min-height: 1.5em
+      }
+
+      #ustate.err {
+        color: #ffd2d2
+      }
+
+      #ustate.ok {
+        color: #d7ffe0
+      }
+
+      #ubar {
+        display: none;
+        width: 80%;
+        max-width: 420px;
+        height: 18px;
+        margin: 10px auto;
+        border: 1px solid #fff;
+        border-radius: 9px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, .18)
+      }
+
+      #ubarfill {
+        height: 100%;
+        width: 0;
+        background: #fff;
+        transition: width .2s
+      }
     </style>
   </head>
   <body>
     <main class='form-signin'>
        	<h1 class=''><i>MBusino</i> update</h1><br>
           <p style='text-align:center'> select a xxx.bin file </p><br>
-			    <form style='text-align:center' method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'>
+			    <form id='uform' style='text-align:center' method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update' id='ufile' accept='.bin'><input type='submit' id='ubtn' value='Update'>
          	</form><br/>
+          <div id='ubar'><div id='ubarfill'></div></div>
+          <p id='ustate'></p>
           <p style='text-align:center'> MBusino will restart after update </p><br>
           <p style='text-align:center'><a href='/' style='color:#3F4CFB'>home</a></p>
     </main>
+    <script>
+      (function () {
+        var form = document.getElementById('uform'),
+            fileIn = document.getElementById('ufile'),
+            btn = document.getElementById('ubtn'),
+            bar = document.getElementById('ubar'),
+            fill = document.getElementById('ubarfill'),
+            state = document.getElementById('ustate'),
+            xhr = null,
+            deadline = 0,
+            waiting = false;
+
+        function say(text, cls) {
+          state.textContent = text;
+          state.className = cls || '';
+        }
+
+        function enable() {
+          btn.disabled = false;
+          fileIn.disabled = false;
+        }
+
+        function pollBack() {
+          if (Date.now() > deadline) {
+            waiting = false;
+            say('The device did not come back within 60 s. Check power and network, then reload this page.', 'err');
+            enable();
+            return;
+          }
+          waiting = true;
+          fetch('/?alive=' + Date.now(), { cache: 'no-store' }).then(function () {
+            waiting = false;
+            location.href = '/';
+          }).catch(function () {
+            waiting = false;
+            setTimeout(pollBack, 400);
+          });
+        }
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          if (xhr) { return; }
+          if (!fileIn.files.length) { say('Please select a .bin file first.', 'err'); return; }
+          if (!/\.bin$/i.test(fileIn.files[0].name)) { say('Only .bin files can be flashed.', 'err'); return; }
+
+          var fd = new FormData(form);
+          xhr = new XMLHttpRequest();
+          btn.disabled = true;
+          fileIn.disabled = true;
+          bar.style.display = 'block';
+          fill.style.width = '0%';
+          say('Uploading and flashing... keep the device powered and do not close this page.');
+
+          xhr.upload.addEventListener('progress', function (ev) {
+            if (ev.lengthComputable) {
+              var pct = Math.round(ev.loaded / ev.total * 100);
+              fill.style.width = pct + '%';
+              if (pct >= 100) {
+                say('Uploaded. Verifying and rebooting...');
+              } else {
+                say('Uploading and flashing ' + pct + '% - keep the device powered.');
+              }
+            }
+          });
+
+          xhr.addEventListener('load', function () {
+            var txt = (xhr.responseText || '').replace(/^\s+|\s+$/g, '');
+            if (txt.indexOf('success') === 0) {
+              fill.style.width = '100%';
+              say('Update successful - waiting for the device to come back...', 'ok');
+              deadline = Date.now() + 60000;
+              xhr = null;
+              pollBack();
+            } else {
+              say('Update failed: ' + (txt || 'no answer from the device'), 'err');
+              xhr = null;
+              enable();
+            }
+          });
+
+          xhr.addEventListener('error', function () {
+            say('Connection lost during the update. Check the device, then reload this page.', 'err');
+            xhr = null;
+            enable();
+          });
+
+          xhr.addEventListener('timeout', function () {
+            say('The update took longer than 3 minutes - aborted. Check the connection and try again.', 'err');
+            xhr = null;
+            enable();
+          });
+
+          xhr.addEventListener('abort', function () {
+            xhr = null;
+            enable();
+            say('Upload aborted.');
+          });
+
+          xhr.open('POST', '/update');
+          xhr.timeout = 180000;
+          xhr.send(fd);
+        });
+      })();
+    </script>
   </body>
 </html>)rawliteral";
 
