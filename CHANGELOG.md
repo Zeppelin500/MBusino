@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.3] - 2026-10-22
+
+### Changed
+
+- **OneWire: switched from Paul Stoffregen's OneWire 2.3.8 to OneWireNg 0.14.1 (MBusino, MBusino5S):** the old library silently blocks GPIO > 33 in `directModeOutput()` (the check was written for the classic ESP32, where GPIO 34-39 are input-only). On the ESP32-S2 (lolin S2 mini) these pins are fully output-capable, so the DS18B20 sensors on S6 (GPIO 35) and S7 (GPIO 33) never worked - no error, no warning, the bus just stayed silent (see PaulStoffregen/OneWire issue #122, same board, same symptom). OneWireNg supports the ESP32-S2 (tested upstream on an ESP32-S2-WROVER) and ships a drop-in `OneWire.h` compatibility wrapper, so the DallasTemperature-based sensor code is unchanged; the one-wire bus objects are now default-constructed and bound to their GPIO via `begin(pin)` in `setup()` as recommended by the OneWireNg author. ESP8266 builds are supported by OneWireNg as well. Note: the external 4.7 kOhm pull-up on each data line is still required.
+
 ## [1.3.2] - 2026-10-18
 
 ### Changed
