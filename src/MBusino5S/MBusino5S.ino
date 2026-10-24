@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 
 #include <PubSubClient.h>
-#include <OneWire.h>            // Library for OneWire Bus
+#include <OneWire.h>            // OneWireNg compat wrapper (pstolarz/OneWireNg) - replaces the old OneWire lib, which blocks GPIO > 33
 #include <DallasTemperature.h>  //Library for DS18B20 Sensors
 #include <Wire.h>
 #include <ESPAsyncWebServer.h> 
@@ -42,7 +42,7 @@ HardwareSerial MbusSerial(1);
 MBusCom mbus(&MbusSerial,37,39);
 #endif
 
-#define MBUSINO_VERSION "1.3.2"
+#define MBUSINO_VERSION "1.3.3"
 
 // EEPROM flag constants
 #define EEPROM_CALIBRATED_FLAG 500
@@ -76,14 +76,15 @@ DNSServer dnsServer;
 
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-OneWire oneWire1(ONE_WIRE_BUS1);
-OneWire oneWire2(ONE_WIRE_BUS2);
-OneWire oneWire3(ONE_WIRE_BUS3);
-OneWire oneWire4(ONE_WIRE_BUS4);
-OneWire oneWire5(ONE_WIRE_BUS5);
+// OneWireNg: default ctor here, GPIO is bound via begin() in setup() - the lib author warns against constructing with the pin globally
+OneWire oneWire1;
+OneWire oneWire2;
+OneWire oneWire3;
+OneWire oneWire4;
+OneWire oneWire5;
 
-OneWire oneWire6(ONE_WIRE_BUS6);
-OneWire oneWire7(ONE_WIRE_BUS7);
+OneWire oneWire6;
+OneWire oneWire7;
 
 
 // Pass our oneWire reference to Dallas Temperature.
@@ -497,6 +498,13 @@ void setup() {
   client.setBufferSize(6000);
 
   // Start up the library
+  oneWire1.begin(ONE_WIRE_BUS1);
+  oneWire2.begin(ONE_WIRE_BUS2);
+  oneWire3.begin(ONE_WIRE_BUS3);
+  oneWire4.begin(ONE_WIRE_BUS4);
+  oneWire5.begin(ONE_WIRE_BUS5);
+  oneWire6.begin(ONE_WIRE_BUS6);
+  oneWire7.begin(ONE_WIRE_BUS7);
   if(userData.extension > 0){
     sensor1.begin();
     sensor2.begin();

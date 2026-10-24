@@ -85033,7 +85033,7 @@ LOAD /home/clawbot/.arduino15/packages/esp32/tools/esp-rv32/2511/bin/../lib/gcc/
 .debug_str      0x00000000   0x1b407c
  *(.debug_str)
  .debug_str     0x00000000   0x1b407c /home/clawbot/.cache/arduino/sketches/A073F7673CBA1C222CE8FA1C5ABD88E4/sketch/MBusinoNano.ino.cpp.o
-                              0x516fe (size before relaxing)
+                              0x516f6 (size before relaxing)
  .debug_str     0x001b407c     0x20b1 /home/clawbot/.cache/arduino/sketches/A073F7673CBA1C222CE8FA1C5ABD88E4/libraries/SPI/SPI.cpp.o
  .debug_str     0x001b407c     0xaeb4 /home/clawbot/.cache/arduino/sketches/A073F7673CBA1C222CE8FA1C5ABD88E4/libraries/Ethernet/ETH.cpp.o
  .debug_str     0x001b407c     0x8321 /home/clawbot/.cache/arduino/sketches/A073F7673CBA1C222CE8FA1C5ABD88E4/libraries/Network/NetworkClient.cpp.o
