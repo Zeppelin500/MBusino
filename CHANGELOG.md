@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.4] - 2026-11-09
+
+### Changed
+
+- Updated the MBusinoLib dependency 0.10.0 -> 0.11.0 (buffer bounds checks, unused error codes removed, snprintf/fortify fix - all output-neutral). All six firmware variants rebuilt against 0.11.0.
+
 ## [1.3.3] - 2026-10-22
 
 ### Changed
