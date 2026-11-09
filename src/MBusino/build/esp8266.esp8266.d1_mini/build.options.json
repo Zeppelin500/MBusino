@@ -1,0 +1,9 @@
+{
+  "additionalFiles": "../..,../..,../..,../..,../..,../..,../..,../..",
+  "compiler.optimization_flags": "",
+  "customBuildProperties": "",
+  "fqbn": "esp8266:esp8266:d1_mini",
+  "hardwareFolders": "/home/clawbot/.arduino15/packages/esp8266/hardware/esp8266/3.1.2,/home/clawbot/.arduino15/packages/esp8266/hardware/esp8266/3.1.2",
+  "otherLibrariesFolders": "/home/clawbot/Arduino/libraries",
+  "sketchLocation": "/home/clawbot/.openclaw/workspace/MBusino/src/MBusino"
+}
